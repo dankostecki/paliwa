@@ -550,12 +550,15 @@
       <!-- CPI vs FUEL -->
       <div class="ana-section">
         <h3>Ceny paliw vs inflacja CPI r/r (%)</h3>
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
           <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesuniecie CPI:</span>
           <input type="range" id="cpiOffset" min="-12" max="12" value="0" step="1"
             style="width:200px; accent-color:#7b61ff;">
-          <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:90px;">0 mies.</span>
-          <span style="color:var(--muted); font-size:11px;">(ujemne = CPI wczesniej, dodatnie = CPI pozniej)</span>
+          <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:80px;">0 mies.</span>
+          <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdz najlepsze dopasowanie</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
+          <span id="corrDisplay" style="font-size:13px; font-weight:900; color:var(--text);"></span>
         </div>
         <div class="ana-chart" id="cpiChartBox" style="height:420px;"></div>
       </div>
@@ -1245,6 +1248,91 @@
         drawCpiChart(fuel, allFuelData[fuel], cpiData, offset);
         drawHistogram(fuel, allFuelData[fuel]);
       }
+      updateCorrDisplay();
+    }
+
+    /**
+     * Pearson correlation between fuel prices and CPI at a given month offset.
+     * Resamples fuel data to monthly (avg per month) to match CPI granularity.
+     */
+    function calcCorrelation(fuelRows, cpi, offsetMonths){
+      // Resample fuel to monthly averages
+      const monthMap = {};
+      for(const r of fuelRows){
+        const key = r.date.getUTCFullYear() + "-" + String(r.date.getUTCMonth()+1).padStart(2,"0");
+        if(!monthMap[key]) monthMap[key] = [];
+        monthMap[key].push(r.price);
+      }
+      const fuelMonthly = {};
+      for(const [k,v] of Object.entries(monthMap)){
+        fuelMonthly[k] = v.reduce((a,b) => a+b, 0) / v.length;
+      }
+
+      // Build paired arrays: fuel month <-> CPI month+offset
+      const pairs = [];
+      for(const c of cpi){
+        const shifted = new Date(c.date);
+        shifted.setUTCMonth(shifted.getUTCMonth() + offsetMonths);
+        const key = shifted.getUTCFullYear() + "-" + String(shifted.getUTCMonth()+1).padStart(2,"0");
+        if(fuelMonthly[key] !== undefined){
+          pairs.push({ fuel: fuelMonthly[key] / 1000, cpi: c.cpi });
+        }
+      }
+
+      if(pairs.length < 4) return null;
+
+      const n = pairs.length;
+      const sumX = pairs.reduce((a,p) => a + p.fuel, 0);
+      const sumY = pairs.reduce((a,p) => a + p.cpi, 0);
+      const sumXY = pairs.reduce((a,p) => a + p.fuel * p.cpi, 0);
+      const sumX2 = pairs.reduce((a,p) => a + p.fuel * p.fuel, 0);
+      const sumY2 = pairs.reduce((a,p) => a + p.cpi * p.cpi, 0);
+
+      const num = n * sumXY - sumX * sumY;
+      const den = Math.sqrt((n * sumX2 - sumX*sumX) * (n * sumY2 - sumY*sumY));
+
+      if(den === 0) return null;
+      const r = num / den;
+      return { r, r2: r*r, n: pairs.length };
+    }
+
+    function updateCorrDisplay(){
+      const fuel = currentAnaFuel;
+      const offset = getCpiOffset();
+      const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
+      const corr = calcCorrelation(fuelRows, cpiData, offset);
+      const el = document.getElementById("corrDisplay");
+
+      if(!corr){
+        el.textContent = "";
+        return;
+      }
+
+      const rColor = corr.r > 0.6 ? "var(--green)" : corr.r > 0.3 ? "var(--amber)" : corr.r > 0 ? "var(--muted)" : "var(--red)";
+      const strength = Math.abs(corr.r) > 0.8 ? "bardzo silna" :
+                       Math.abs(corr.r) > 0.6 ? "silna" :
+                       Math.abs(corr.r) > 0.4 ? "umiarkowana" :
+                       Math.abs(corr.r) > 0.2 ? "slaba" : "brak";
+
+      el.innerHTML = `Pearson r = <span style="color:${rColor}; font-size:15px;">${corr.r.toFixed(3)}</span>`
+        + ` &nbsp; R\u00B2 = <span style="color:${rColor};">${corr.r2.toFixed(3)}</span>`
+        + ` &nbsp; <span style="color:var(--muted); font-weight:400;">(${strength} korelacja, n=${corr.n} miesiecy)</span>`;
+    }
+
+    function findBestOffset(){
+      const fuel = currentAnaFuel;
+      const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
+
+      let bestOffset = 0;
+      let bestR2 = -1;
+      for(let off = -12; off <= 12; off++){
+        const corr = calcCorrelation(fuelRows, cpiData, off);
+        if(corr && corr.r2 > bestR2){
+          bestR2 = corr.r2;
+          bestOffset = off;
+        }
+      }
+      return bestOffset;
     }
 
     function redrawCpiOnly(){
@@ -1252,6 +1340,7 @@
       const offset = getCpiOffset();
       const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
       drawCpiChart(fuel, fuelRows, cpiData, offset);
+      updateCorrDisplay();
     }
 
     // Analiza fuel sub-select
@@ -1266,6 +1355,14 @@
 
     // CPI offset slider
     document.getElementById("cpiOffset").addEventListener("input", () => {
+      updateOffsetLabel();
+      redrawCpiOnly();
+    });
+
+    // Auto-find best offset
+    document.getElementById("btnAutoOffset").addEventListener("click", () => {
+      const best = findBestOffset();
+      document.getElementById("cpiOffset").value = best;
       updateOffsetLabel();
       redrawCpiOnly();
     });
