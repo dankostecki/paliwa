@@ -551,15 +551,11 @@
       <div class="ana-section">
         <h3>Ceny paliw vs inflacja CPI r/r (%)</h3>
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
-          <div class="period-tabs" id="cpiGranularity" style="margin-right:8px;">
-            <button class="period-tab active" data-gran="daily">Dzienne</button>
-            <button class="period-tab" data-gran="monthly">Miesiecznie</button>
-          </div>
-          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Offset CPI:</span>
+          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesuniecie CPI:</span>
           <input type="range" id="cpiOffset" min="-12" max="12" value="0" step="1"
-            style="width:180px; accent-color:#7b61ff;">
+            style="width:200px; accent-color:#7b61ff;">
           <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:80px;">0 mies.</span>
-          <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Auto-dopasuj</button>
+          <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdz najlepsze dopasowanie</button>
         </div>
         <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
           <span id="corrDisplay" style="font-size:13px; font-weight:900; color:var(--text);"></span>
@@ -573,24 +569,8 @@
         <div class="ana-chart" id="histChartBox" style="height:380px;"></div>
       </div>
 
-      <!-- IMPACT ESTIMATOR -->
-      <div class="ana-section">
-        <h3>Estymator wplywu cen paliw na CPI</h3>
-        <div class="stats-grid" id="impactGrid"></div>
-        <div style="display:flex; align-items:center; gap:12px; margin:14px 0; flex-wrap:wrap;">
-          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Symulacja: zmiana ceny paliwa o</span>
-          <input type="number" id="impactInput" value="100" step="50" min="-2000" max="2000"
-            style="width:90px; background:rgba(7,12,18,.85); border:1px solid rgba(255,255,255,.15); color:#fff; font:inherit; padding:8px 10px; border-radius:10px; text-align:center;">
-          <span style="color:var(--muted); font-size:12px;">zl/m3</span>
-          <span style="font-size:11px; color:var(--muted);">|</span>
-          <span id="impactResult" style="font-weight:900; font-size:15px; color:var(--amber);"></span>
-        </div>
-        <div id="impactNote" style="color:var(--muted); font-size:11px; margin-top:4px;"></div>
-      </div>
-
       <div class="footnote">
         Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m3, netto). Opracowanie wlasne.
-        <br>Estymator wplywu oparty na regresji liniowej zmian miesiecznych — przyblizone szacunki, nie prognoza.
       </div>
     </div><!-- /analizaPanel -->
   </div>
@@ -1063,31 +1043,10 @@
       `;
     }
 
-    let cpiGranularity = "daily"; // "daily" or "monthly"
-
-    function resampleToMonthly(fuelRows){
-      const monthMap = {};
-      for(const r of fuelRows){
-        const key = r.date.getUTCFullYear() + "-" + String(r.date.getUTCMonth()+1).padStart(2,"0");
-        if(!monthMap[key]) monthMap[key] = { sum: 0, count: 0, lastDate: r.date };
-        monthMap[key].sum += r.price;
-        monthMap[key].count++;
-        if(r.date > monthMap[key].lastDate) monthMap[key].lastDate = r.date;
-      }
-      return Object.entries(monthMap)
-        .map(([k,v]) => ({ dateStr: "01-" + k.split("-")[1] + "-" + k.split("-")[0], date: v.lastDate, price: Math.round(v.sum / v.count) }))
-        .sort((a,b) => a.date - b.date);
-    }
-
     function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
       offsetMonths = offsetMonths || 0;
       const fLabel = FUEL_LABELS[fuelKey] || fuelKey;
       const fColor = fuelKey === "benzyna" ? "#ff4b4b" : "#ffcc66";
-      const isMonthly = cpiGranularity === "monthly";
-
-      const displayRows = isMonthly ? resampleToMonthly(fuelRows) : fuelRows;
-      const mode = isMonthly ? "lines+markers" : "lines";
-      const lw = isMonthly ? 2.5 : 2;
 
       // Shift CPI dates by offset months
       const shiftedCpi = cpi.map(r => {
@@ -1098,15 +1057,13 @@
 
       const offsetLabel = offsetMonths === 0 ? "" :
         (offsetMonths > 0 ? ` [+${offsetMonths} mies.]` : ` [${offsetMonths} mies.]`);
-      const granLabel = isMonthly ? " (mies.)" : "";
 
       const traces = [{
-        x: displayRows.map(r => new Date(r.date)),
-        y: displayRows.map(r => r.price / 1000),
-        type: "scatter", mode: mode,
-        name: fLabel + " (tys. PLN/m3)" + granLabel,
-        line: { width: lw, color: fColor },
-        marker: isMonthly ? { size: 6, color: fColor } : undefined,
+        x: fuelRows.map(r => new Date(r.date)),
+        y: fuelRows.map(r => r.price / 1000),
+        type: "scatter", mode: "lines",
+        name: fLabel + " (tys. PLN/m3)",
+        line: { width: 2, color: fColor },
         yaxis: "y",
         hovertemplate: "%{x|%m/%Y}<br><b>%{y:.3f} tys.</b><extra>" + fLabel + "</extra>"
       }, {
@@ -1120,17 +1077,16 @@
         hovertemplate: "%{x|%m/%Y}<br><b>%{y:.1f}%</b><extra>CPI</extra>"
       }];
 
+      // If 'oba': PB95 (red) first, then Ekodiesel (yellow), then CPI
       if(fuelKey === "oba" && allFuelData.diesel){
-        const dieselDisplay = isMonthly ? resampleToMonthly(allFuelData.diesel) : allFuelData.diesel;
-        traces[0].name = "Benzyna 95" + granLabel;
+        traces[0].name = "Benzyna 95 (tys. PLN/m3)";
         traces[0].line.color = "#ff4b4b";
         traces.splice(1, 0, {
-          x: dieselDisplay.map(r => new Date(r.date)),
-          y: dieselDisplay.map(r => r.price / 1000),
-          type: "scatter", mode: mode,
-          name: "Ekodiesel" + granLabel,
-          line: { width: lw, color: "#ffcc66" },
-          marker: isMonthly ? { size: 6, color: "#ffcc66" } : undefined,
+          x: allFuelData.diesel.map(r => new Date(r.date)),
+          y: allFuelData.diesel.map(r => r.price / 1000),
+          type: "scatter", mode: "lines",
+          name: "Ekodiesel (tys. PLN/m3)",
+          line: { width: 2, color: "#ffcc66" },
           yaxis: "y",
           hovertemplate: "%{x|%m/%Y}<br><b>%{y:.3f} tys.</b><extra>Ekodiesel</extra>"
         });
@@ -1293,7 +1249,6 @@
         drawHistogram(fuel, allFuelData[fuel]);
       }
       updateCorrDisplay();
-      renderImpact();
     }
 
     /**
@@ -1386,7 +1341,6 @@
       const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
       drawCpiChart(fuel, fuelRows, cpiData, offset);
       updateCorrDisplay();
-      renderImpact();
     }
 
     // Analiza fuel sub-select
@@ -1412,159 +1366,6 @@
       updateOffsetLabel();
       redrawCpiOnly();
     });
-
-    // Granularity toggle (daily/monthly)
-    document.getElementById("cpiGranularity").addEventListener("click", (e) => {
-      const btn = e.target.closest(".period-tab");
-      if(!btn) return;
-      cpiGranularity = btn.dataset.gran;
-      document.querySelectorAll("#cpiGranularity .period-tab").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      redrawCpiOnly();
-    });
-
-    // ===== IMPACT ESTIMATOR =====
-    // Linear regression: delta_CPI_m/m = alpha + beta * delta_fuel_m/m
-    // We use the best offset to align data
-
-    function buildMonthlyChanges(fuelRows){
-      const monthly = resampleToMonthly(fuelRows);
-      const changes = [];
-      for(let i = 1; i < monthly.length; i++){
-        changes.push({
-          date: monthly[i].date,
-          dFuel: monthly[i].price - monthly[i-1].price, // PLN/m3
-          fuelPrice: monthly[i].price
-        });
-      }
-      return changes;
-    }
-
-    function buildCpiChanges(cpi){
-      const changes = [];
-      for(let i = 1; i < cpi.length; i++){
-        changes.push({
-          date: cpi[i].date,
-          dCpi: cpi[i].cpi - cpi[i-1].cpi // pp change in CPI r/r
-        });
-      }
-      return changes;
-    }
-
-    function linearRegression(xArr, yArr){
-      const n = xArr.length;
-      if(n < 4) return null;
-      const sx = xArr.reduce((a,v) => a+v, 0);
-      const sy = yArr.reduce((a,v) => a+v, 0);
-      const sxy = xArr.reduce((a,v,i) => a + v*yArr[i], 0);
-      const sx2 = xArr.reduce((a,v) => a + v*v, 0);
-      const sy2 = yArr.reduce((a,v) => a + v*v, 0);
-
-      const beta = (n*sxy - sx*sy) / (n*sx2 - sx*sx);
-      const alpha = (sy - beta*sx) / n;
-
-      const num = n*sxy - sx*sy;
-      const den = Math.sqrt((n*sx2 - sx*sx) * (n*sy2 - sy*sy));
-      const r = den === 0 ? 0 : num / den;
-
-      return { alpha, beta, r, r2: r*r, n };
-    }
-
-    function computeImpact(fuelRows, cpi, offsetMonths){
-      const fuelChanges = buildMonthlyChanges(fuelRows);
-      const cpiChanges = buildCpiChanges(cpi);
-
-      // Pair: for each CPI change month, find the fuel change (offset-shifted)
-      const pairs = [];
-      for(const cc of cpiChanges){
-        const targetDate = new Date(cc.date);
-        targetDate.setUTCMonth(targetDate.getUTCMonth() + offsetMonths);
-        const targetKey = targetDate.getUTCFullYear() + "-" + String(targetDate.getUTCMonth()+1).padStart(2,"0");
-
-        const fc = fuelChanges.find(f => {
-          const fKey = f.date.getUTCFullYear() + "-" + String(f.date.getUTCMonth()+1).padStart(2,"0");
-          return fKey === targetKey;
-        });
-
-        if(fc){
-          pairs.push({ dFuel: fc.dFuel, dCpi: cc.dCpi });
-        }
-      }
-
-      if(pairs.length < 4) return null;
-
-      const xs = pairs.map(p => p.dFuel);
-      const ys = pairs.map(p => p.dCpi);
-      const reg = linearRegression(xs, ys);
-      if(!reg) return null;
-
-      return { ...reg, pairs: pairs.length };
-    }
-
-    let lastImpactReg = null;
-
-    function renderImpact(){
-      const fuel = currentAnaFuel === "oba" ? "benzyna" : currentAnaFuel;
-      const fuelRows = allFuelData[fuel];
-      const offset = getCpiOffset();
-      const fLabel = FUEL_LABELS[fuel];
-
-      const reg = computeImpact(fuelRows, cpiData, offset);
-      lastImpactReg = reg;
-      const grid = document.getElementById("impactGrid");
-
-      if(!reg){
-        grid.innerHTML = `<div class="stat-card"><div class="label">Brak danych</div><div class="value">-</div></div>`;
-        return;
-      }
-
-      // beta = zmiana CPI (pp) na 1 PLN/m3 zmiany paliwa
-      const betaPer100 = (reg.beta * 100).toFixed(3);
-      const betaPer500 = (reg.beta * 500).toFixed(3);
-
-      grid.innerHTML = `
-        <div class="stat-card">
-          <div class="label">Wspolczynnik beta</div>
-          <div class="value" style="font-size:18px;">${reg.beta.toFixed(5)}</div>
-          <div class="sub">zmiana CPI (pp) na 1 zl/m3 zmiany paliwa</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">+100 zl/m3</div>
-          <div class="value" style="color:var(--amber);">${betaPer100} pp</div>
-          <div class="sub">szacowana zmiana CPI r/r</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">+500 zl/m3</div>
-          <div class="value" style="color:var(--red);">${betaPer500} pp</div>
-          <div class="sub">szacowana zmiana CPI r/r</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">R\u00B2 regresji</div>
-          <div class="value">${reg.r2.toFixed(3)}</div>
-          <div class="sub">dopasowanie modelu (n=${reg.pairs} mies.)</div>
-        </div>
-      `;
-
-      document.getElementById("impactNote").textContent =
-        `Model: \u0394CPI = ${reg.alpha.toFixed(4)} + ${reg.beta.toFixed(5)} \u00D7 \u0394cena_paliwa. ` +
-        `Oparty na ${fLabel}, offset ${offset} mies., ${reg.pairs} obserwacji.`;
-
-      updateImpactCalc();
-    }
-
-    function updateImpactCalc(){
-      const val = parseFloat(document.getElementById("impactInput").value) || 0;
-      const el = document.getElementById("impactResult");
-      if(!lastImpactReg){
-        el.textContent = "";
-        return;
-      }
-      const impact = (lastImpactReg.beta * val).toFixed(3);
-      const sign = impact >= 0 ? "+" : "";
-      el.innerHTML = `szacowany wplyw na CPI: <span style="color:${impact >= 0 ? 'var(--red)' : 'var(--green)'}; font-size:17px;">${sign}${impact} pp</span>`;
-    }
-
-    document.getElementById("impactInput").addEventListener("input", updateImpactCalc);
 
     // ===== PERIOD TAB SWITCHING =====
     els.periodTabs.addEventListener("click", (e) => {
