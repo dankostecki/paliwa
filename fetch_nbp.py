@@ -25,9 +25,20 @@ def fetch_rates():
     resp.raise_for_status()
     root = ET.fromstring(resp.content)
 
-    # Data obowiązywania jest na pierwszej tabelce
-    tabela = root.find("tabela") or root
-    date = tabela.attrib.get("obowiazuje_od") or root.attrib.get("obowiazuje_od")
+    # Szukaj daty obowiązywania - może być na <tabela> lub na root
+    date = None
+    tabela = root.find("tabela")
+    if tabela is not None:
+        date = tabela.attrib.get("obowiazuje_od")
+    if not date:
+        date = root.attrib.get("obowiazuje_od")
+    # Fallback: przeszukaj wszystkie elementy
+    if not date:
+        for elem in root.iter():
+            d = elem.attrib.get("obowiazuje_od")
+            if d:
+                date = d
+                break
 
     rates = {}
     for pozycja in root.iter("pozycja"):
@@ -40,6 +51,7 @@ def fetch_rates():
             except ValueError:
                 pass
 
+    print(f"NBP debug: date={date}, rates={rates}")
     return date, rates
 
 
