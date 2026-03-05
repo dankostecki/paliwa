@@ -135,28 +135,6 @@
     #stopyPanel.visible{ display: block; }
 
     /* ===== STOPY PANEL ===== */
-    .stopy-cards{
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-      gap: 12px;
-      margin: 16px 0;
-    }
-    .stopy-card{
-      background: rgba(7,12,18,.85);
-      border: 1px solid rgba(0,212,170,.12);
-      border-radius: 14px;
-      padding: 16px 18px;
-      box-shadow: var(--shadow);
-    }
-    .stopy-card .label{ font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
-    .stopy-card .value{ font-size: 22px; font-weight: 900; color: #fff; }
-    .stopy-card .value .teal{ color: #00d4aa; }
-    .stopy-card .sub{ font-size: 11px; color: var(--muted); margin-top: 4px; }
-    .stopy-card .delta{ font-size: 11px; margin-top: 3px; font-weight: 700; }
-    .stopy-card .delta.up{ color: #34ff9a; }
-    .stopy-card .delta.down{ color: #ff4b4b; }
-    .stopy-card .delta.flat{ color: var(--muted); }
-
     .stopy-section{ margin: 22px 0; }
     .stopy-section h3{
       font-size: 13px;
@@ -173,6 +151,7 @@
       border-radius: 18px;
       overflow: hidden;
       box-shadow: var(--shadow);
+      position: relative;
     }
 
     .stopy-compare-bar{
@@ -200,36 +179,48 @@
       border-radius: 18px;
       overflow: auto;
       box-shadow: var(--shadow);
+      max-height: 75vh;
     }
     .stopy-table{
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
     }
     .stopy-table th{
-      padding: 10px 14px;
       text-align: right;
-      font-size: 11px;
+      padding: 14px 12px;
+      color: rgba(255,255,255,.78);
       font-weight: 900;
-      letter-spacing: .5px;
+      letter-spacing: .8px;
       text-transform: uppercase;
-      color: var(--muted);
-      background: rgba(7,12,18,.95);
-      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: rgba(7,12,18,.97);
+      border-bottom: 1px solid rgba(255,255,255,.10);
       position: sticky;
       top: 0;
+      z-index: 2;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
     }
     .stopy-table th:first-child, .stopy-table td:first-child{ text-align: left; }
     .stopy-table td{
-      padding: 9px 14px;
+      padding: 10px 12px;
       text-align: right;
-      border-bottom: 1px solid rgba(255,255,255,.04);
-      color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      color: rgba(255,255,255,.86);
+      vertical-align: middle;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
     }
     .stopy-table tr:last-child td{ border-bottom: none; }
-    .stopy-table tr:hover td{ background: rgba(0,212,170,.04); }
+    .stopy-table tbody tr{
+      cursor: default;
+      transition: background .12s ease, transform .05s ease;
+    }
+    .stopy-table tbody tr:hover td{ background: rgba(0,212,170,.06); }
+    .stopy-table tbody tr:active{ transform: translateY(1px); }
     .stopy-table .session-badge{
       display: inline-block;
       font-size: 10px;
@@ -242,7 +233,37 @@
     .stopy-table .session-badge.morning{ background: rgba(255,204,102,.15); color: #ffcc66; }
     .stopy-table .session-badge.afternoon{ background: rgba(123,97,255,.15); color: #9b81ff; }
     .stopy-table .teal{ color: #00d4aa; }
-    .stopy-table .muted{ color: var(--muted); font-size: 12px; }
+    .stopy-table .muted{ color: var(--muted); }
+    .stopy-table .clickable-cell{
+      cursor: pointer;
+      transition: background .12s ease, color .12s ease;
+    }
+    .stopy-table .clickable-cell:hover{ background: rgba(0,212,170,.12) !important; color: #fff; }
+    .stopy-table th.clickable{
+      cursor: pointer;
+      user-select: none;
+      transition: color .15s ease, background .15s ease;
+    }
+    .stopy-table th.clickable:hover{ color: #fff; background: rgba(0,212,170,.14); }
+    .stopy-table th.clickable::after{ content: " \25B6"; font-size: 9px; opacity: .45; vertical-align: middle; }
+
+    /* ===== RESIZE HANDLE dla wykresow ===== */
+    .chart-resizable{
+      resize: vertical;
+      overflow: hidden;
+      min-height: 200px;
+    }
+    .chart-resizable::after{
+      content: "";
+      display: block;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(transparent, rgba(0,212,170,.18));
+      cursor: ns-resize;
+      border-radius: 0 0 18px 18px;
+      pointer-events: none;
+    }
 
     .stats-grid{
       display: grid;
@@ -699,45 +720,6 @@
     <!-- ===== STOPY PANEL ===== -->
     <div id="stopyPanel">
 
-      <!-- STAT CARDS -->
-      <div class="stopy-cards" id="stopyCards">
-        <div class="stopy-card">
-          <div class="label">NBP Stopa ref.</div>
-          <div class="value" id="sc-nbp">—</div>
-          <div class="sub" id="sc-nbp-date">ładowanie...</div>
-        </div>
-        <div class="stopy-card">
-          <div class="label">WIBOR 3M</div>
-          <div class="value" id="sc-wibor">—</div>
-          <div class="sub" id="sc-wibor-date">ładowanie...</div>
-        </div>
-        <div class="stopy-card">
-          <div class="label">Spread WIBOR – NBP</div>
-          <div class="value" id="sc-spread">—</div>
-          <div class="delta flat" id="sc-spread-label"></div>
-        </div>
-        <div class="stopy-card">
-          <div class="label">FRA 1×4</div>
-          <div class="value teal" id="sc-fra1x4">—</div>
-          <div class="sub" id="sc-fra-date">ładowanie...</div>
-        </div>
-        <div class="stopy-card">
-          <div class="label">FRA 3×6</div>
-          <div class="value teal" id="sc-fra3x6">—</div>
-          <div class="delta flat" id="sc-fra3x6-delta"></div>
-        </div>
-        <div class="stopy-card">
-          <div class="label">FRA 6×9</div>
-          <div class="value teal" id="sc-fra6x9">—</div>
-          <div class="delta flat" id="sc-fra6x9-delta"></div>
-        </div>
-        <div class="stopy-card">
-          <div class="label">FRA 9×12</div>
-          <div class="value teal" id="sc-fra9x12">—</div>
-          <div class="delta flat" id="sc-fra9x12-delta"></div>
-        </div>
-      </div>
-
       <!-- KRZYWA FRA -->
       <div class="stopy-section">
         <h3>Krzywa stop procentowych</h3>
@@ -749,26 +731,26 @@
           <button class="btn" id="stopyCompareAdd" style="font-size:11px;padding:6px 14px;border-color:rgba(0,212,170,.35);color:#00d4aa;">Dodaj</button>
           <button class="btn" id="stopyCompareClear" style="font-size:11px;padding:6px 14px;border-color:rgba(255,255,255,.12);color:var(--muted);">Wyczysc</button>
         </div>
-        <div class="stopy-curve-wrap">
-          <div id="stopyCurveChart" style="height:380px;"></div>
+        <div class="stopy-curve-wrap chart-resizable" id="stopyCurveWrap" style="height:380px;">
+          <div id="stopyCurveChart" style="width:100%;height:100%;"></div>
         </div>
       </div>
 
       <!-- HISTORIA -->
       <div class="stopy-section">
         <h3>Historia — FRA + WIBOR + NBP</h3>
-        <div class="stopy-table-wrap" style="max-height:480px;">
+        <div class="stopy-table-wrap">
           <table class="stopy-table">
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Sesja</th>
-                <th>NBP ref.</th>
-                <th>WIBOR 3M</th>
-                <th>FRA 1×4</th>
-                <th>FRA 3×6</th>
-                <th>FRA 6×9</th>
-                <th>FRA 9×12</th>
+                <th class="clickable" id="thStopyNbp">NBP ref.</th>
+                <th class="clickable" id="thStopyWibor">WIBOR 3M</th>
+                <th class="clickable" id="thStopyFra1x4">FRA 1×4</th>
+                <th class="clickable" id="thStopyFra3x6">FRA 3×6</th>
+                <th class="clickable" id="thStopyFra6x9">FRA 6×9</th>
+                <th class="clickable" id="thStopyFra9x12">FRA 9×12</th>
               </tr>
             </thead>
             <tbody id="stopyTbody"></tbody>
@@ -796,6 +778,20 @@
         </div>
       </div>
       <div id="chart"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: stopy line chart -->
+  <div class="modal" id="stopyModal">
+    <div class="panel">
+      <div class="head">
+        <div class="title" id="stopyModalTitle"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="stopyBtnShowAll">Caly zakres</button>
+          <button class="btn" id="stopyBtnClose">Zamknij (Esc)</button>
+        </div>
+      </div>
+      <div id="stopyChart"></div>
     </div>
   </div>
 
@@ -1822,7 +1818,7 @@
     });
 
     window.addEventListener("keydown", (e) => {
-      if(e.key === "Escape"){ closeModal(); closeBarModal(); }
+      if(e.key === "Escape"){ closeModal(); closeBarModal(); closeStopyModal(); }
     });
 
     loadData().catch(err => {
@@ -1833,52 +1829,183 @@
     // ===== STOPY PANEL =====
     let stopyLoaded = false;
     let stopyNbp = [], stopyWibor = [], stopyFra = [];
-    // Kolory dla porownywanych krzywych historycznych
     const COMPARE_COLORS = ["#ffcc66","#7b61ff","#ff4b4b","#34ff9a","#ff7a7a"];
-    let compareEntries = []; // {label, nbp, wibor, fra}
+    let compareEntries = [];
 
     function fmt(v, d=2){ return v != null ? v.toFixed(d)+"%" : "—"; }
-    function fmtDelta(v){
-      if(v == null) return {text:"", cls:"flat"};
-      const sign = v > 0 ? "▲" : v < 0 ? "▼" : "=";
-      const cls  = v > 0 ? "up" : v < 0 ? "down" : "flat";
-      return {text: `${sign} ${Math.abs(v).toFixed(3)} pp`, cls};
-    }
 
-    // Znajdz najblizszy wpis NBP dla danej daty (lub wczesniejszy)
     function nbpForDate(date){
       let result = null;
       for(const e of stopyNbp){ if(e.date <= date) result = e; }
       return result;
     }
-    // Znajdz najblizszy wpis WIBOR dla danej daty (lub wczesniejszy)
     function wiborForDate(date){
       let result = null;
       for(const e of stopyWibor){ if(e.date <= date) result = e; }
       return result;
     }
 
+    // ===== STOPY MODAL =====
+    const stopyModal = document.getElementById("stopyModal");
+    function openStopyModal(){ stopyModal.style.display = "flex"; }
+    function closeStopyModal(){ stopyModal.style.display = "none"; }
+
+    document.getElementById("stopyBtnClose").addEventListener("click", closeStopyModal);
+    stopyModal.addEventListener("click", (e) => { if(e.target === stopyModal) closeStopyModal(); });
+    document.getElementById("stopyBtnShowAll").addEventListener("click", () => {
+      Plotly.relayout("stopyChart", { "xaxis.autorange": true, "yaxis.autorange": true });
+    });
+
+    // Konfiguracja serii — klucz: {label, color, getPoints(highlightTs), ytitle, decimals}
+    const STOPY_SERIES = {
+      nbp: {
+        label: "NBP Stopa ref.",
+        color: "#00d4aa",
+        decimals: 2,
+        ytitle: "Stopa (%)",
+        getPoints: () => stopyNbp.map(e => ({ x: new Date(e.date + "T12:00:00Z"), y: e.ref, ts: e.date })),
+      },
+      wibor: {
+        label: "WIBOR 3M",
+        color: "#7b61ff",
+        decimals: 2,
+        ytitle: "Stopa (%)",
+        getPoints: () => stopyWibor.map(e => ({ x: new Date(e.date + "T12:00:00Z"), y: e.wibor_3m, ts: e.date })),
+      },
+      fra1x4: {
+        label: "FRA 1\xd74",
+        color: "#ffcc66",
+        decimals: 3,
+        ytitle: "Stopa (%)",
+        getPoints: () => stopyFra.filter(e => e.fra_1x4 != null).map(e => ({ x: new Date(e.timestamp), y: e.fra_1x4, ts: e.timestamp })),
+      },
+      fra3x6: {
+        label: "FRA 3\xd76",
+        color: "#ff7a7a",
+        decimals: 3,
+        ytitle: "Stopa (%)",
+        getPoints: () => stopyFra.filter(e => e.fra_3x6 != null).map(e => ({ x: new Date(e.timestamp), y: e.fra_3x6, ts: e.timestamp })),
+      },
+      fra6x9: {
+        label: "FRA 6\xd79",
+        color: "#34ff9a",
+        decimals: 3,
+        ytitle: "Stopa (%)",
+        getPoints: () => stopyFra.filter(e => e.fra_6x9 != null).map(e => ({ x: new Date(e.timestamp), y: e.fra_6x9, ts: e.timestamp })),
+      },
+      fra9x12: {
+        label: "FRA 9\xd712",
+        color: "#4dd0ff",
+        decimals: 3,
+        ytitle: "Stopa (%)",
+        getPoints: () => stopyFra.filter(e => e.fra_9x12 != null).map(e => ({ x: new Date(e.timestamp), y: e.fra_9x12, ts: e.timestamp })),
+      },
+    };
+
+    function drawStopyChart(seriesKey, highlightTs){
+      const cfg = STOPY_SERIES[seriesKey];
+      if(!cfg) return;
+      const pts = cfg.getPoints();
+      if(!pts.length) return;
+
+      const d = cfg.decimals;
+      const hoverFmt = d === 2
+        ? "%{x|%d-%m-%Y}<br><b>%{y:.2f}%</b><extra></extra>"
+        : "%{x|%d-%m-%Y %H:%M}<br><b>%{y:.3f}%</b><extra></extra>";
+
+      // Tryb: NBP (step) vs reszta (lines)
+      const mode = seriesKey === "nbp" ? "lines" : "lines";
+      const shape = seriesKey === "nbp" ? "hv" : "linear";
+
+      const trace = {
+        x: pts.map(p => p.x),
+        y: pts.map(p => p.y),
+        type: "scatter",
+        mode: mode,
+        line: { width: 2.5, color: cfg.color, shape },
+        hovertemplate: hoverFmt,
+        name: cfg.label,
+      };
+
+      const traces = [trace];
+
+      // Marker dla klikniętego punktu
+      if(highlightTs){
+        const hit = pts.find(p => p.ts === highlightTs);
+        if(hit){
+          traces.push({
+            x: [hit.x], y: [hit.y],
+            type: "scatter", mode: "markers",
+            marker: { size: 11, color: cfg.color, line: { color: "#fff", width: 2 } },
+            hovertemplate: `<b>Wybrana sesja</b><br>${hoverFmt}`,
+            showlegend: false,
+          });
+        }
+      }
+
+      const lastVal = pts[pts.length - 1]?.y;
+      const titleText = `${cfg.label} \u2014 ${lastVal != null ? lastVal.toFixed(d) + "%" : ""}`;
+
+      const layout = {
+        title: {
+          text: titleText,
+          font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
+          x: 0.01, xanchor: "left",
+        },
+        paper_bgcolor: "#070c12",
+        plot_bgcolor: "#0a0f16",
+        margin: { l: 70, r: 40, t: 45, b: 50 },
+        xaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          rangeslider: { visible: true, thickness: 0.08 },
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: "Data", font: { color: "rgba(255,255,255,.70)" } },
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+        },
+        yaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: cfg.ytitle, font: { color: "rgba(255,255,255,.70)" } },
+          ticksuffix: "%",
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+          autorange: true, rangemode: "normal",
+        },
+        font: { color: "rgba(255,255,255,.80)", family: "monospace" },
+        dragmode: "zoom",
+        hovermode: "closest",
+        showlegend: false,
+        annotations: [{
+          text: "Opracowanie w\u0142asne | dane: NBP, stooq.pl, patria.cz",
+          showarrow: false,
+          xref: "paper", yref: "paper",
+          x: 1, y: -0.15,
+          xanchor: "right", yanchor: "top",
+          font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" },
+        }],
+      };
+
+      document.getElementById("stopyModalTitle").textContent = cfg.label;
+      openStopyModal();
+
+      Plotly.newPlot("stopyChart", traces, layout, {
+        responsive: true, scrollZoom: true, displayModeBar: true,
+        toImageButtonOptions: { format: "png", width: 1400, height: 700, filename: cfg.label.replace(/[^a-zA-Z0-9_\-]/g, "_") },
+      }).then(() => {
+        attachYAutoScale("stopyChart", pts, p => p.y);
+      });
+    }
+
+    // ===== KRZYWA STOP =====
     function buildCurveTrace(nbp, wibor, fra, name, color){
-      const ref    = nbp?.ref ?? null;
-      const wib    = wibor?.wibor_3m ?? null;
-      const f1x4   = fra?.fra_1x4 ?? null;
-      const f3x6   = fra?.fra_3x6 ?? null;
-      const f6x9   = fra?.fra_6x9 ?? null;
-      const f9x12  = fra?.fra_9x12 ?? null;
-
-      const xs = [0, 3, 4, 6, 9, 12];
-      const ys = [ref, wib, f1x4, f3x6, f6x9, f9x12];
-      const labels = ["NBP ref (0M)","WIBOR 3M (3M)","FRA 1×4 (4M)","FRA 3×6 (6M)","FRA 6×9 (9M)","FRA 9×12 (12M)"];
-
       return {
-        x: xs,
-        y: ys,
-        text: labels,
+        x: [0, 3, 4, 6, 9, 12],
+        y: [nbp?.ref ?? null, wibor?.wibor_3m ?? null, fra?.fra_1x4 ?? null, fra?.fra_3x6 ?? null, fra?.fra_6x9 ?? null, fra?.fra_9x12 ?? null],
+        text: ["NBP ref (0M)","WIBOR 3M (3M)","FRA 1\xd74 (4M)","FRA 3\xd76 (6M)","FRA 6\xd79 (9M)","FRA 9\xd712 (12M)"],
         hovertemplate: "%{text}: <b>%{y:.3f}%</b><extra></extra>",
         mode: "lines+markers",
-        name: name,
-        line: { color, width: 2.5 },
-        marker: { size: 7, color },
+        name, line: { color, width: 2.5 }, marker: { size: 7, color },
         type: "scatter",
       };
     }
@@ -1889,25 +2016,20 @@
       const latestWib = latestFra ? wiborForDate(latestFra.date) : (stopyWibor.length ? stopyWibor[stopyWibor.length-1] : null);
 
       const traces = [];
-
-      // Aktualna krzywa
       if(latestFra || latestNbp){
         traces.push(buildCurveTrace(latestNbp, latestWib, latestFra, "Aktualna", "#00d4aa"));
       }
-
-      // Porownania historyczne
       compareEntries.forEach((c, i) => {
         traces.push(buildCurveTrace(c.nbp, c.wibor, c.fra, c.label, COMPARE_COLORS[i % COMPARE_COLORS.length]));
       });
 
       const layout = {
-        paper_bgcolor: "transparent",
-        plot_bgcolor: "transparent",
+        paper_bgcolor: "transparent", plot_bgcolor: "transparent",
         font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: 12 },
         margin: { l: 55, r: 20, t: 20, b: 50 },
         xaxis: {
           tickvals: [0,3,4,6,9,12],
-          ticktext: ["NBP ref\n(0M)","WIBOR 3M\n(3M)","FRA 1×4\n(4M)","FRA 3×6\n(6M)","FRA 6×9\n(9M)","FRA 9×12\n(12M)"],
+          ticktext: ["NBP ref\n(0M)","WIBOR 3M\n(3M)","FRA 1\xd74\n(4M)","FRA 3\xd76\n(6M)","FRA 6\xd79\n(9M)","FRA 9\xd712\n(12M)"],
           gridcolor: "#1a2433", color: "#8aa2be", showline: false, fixedrange: true,
         },
         yaxis: {
@@ -1921,80 +2043,49 @@
       Plotly.react("stopyCurveChart", traces, layout, { responsive: true, displayModeBar: false });
     }
 
-    function renderStopyCards(){
-      const latestFra   = stopyFra.length  ? stopyFra[stopyFra.length - 1]   : null;
-      const latestNbp   = latestFra ? nbpForDate(latestFra.date)   : (stopyNbp.length   ? stopyNbp[stopyNbp.length-1]     : null);
-      const latestWibor = latestFra ? wiborForDate(latestFra.date) : (stopyWibor.length ? stopyWibor[stopyWibor.length-1] : null);
-
-      // Poprzednia sesja FRA (do delty)
-      const prevFra = stopyFra.length > 1 ? stopyFra[stopyFra.length - 2] : null;
-
-      document.getElementById("sc-nbp").textContent       = latestNbp   ? fmt(latestNbp.ref)          : "—";
-      document.getElementById("sc-nbp-date").textContent  = latestNbp   ? `obowiazuje od ${latestNbp.date}` : "brak danych";
-      document.getElementById("sc-wibor").textContent     = latestWibor ? fmt(latestWibor.wibor_3m)   : "—";
-      document.getElementById("sc-wibor-date").textContent= latestWibor ? `fixng ${latestWibor.date}` : "brak danych";
-
-      if(latestNbp && latestWibor){
-        const spread = latestWibor.wibor_3m - latestNbp.ref;
-        const d = fmtDelta(spread);
-        document.getElementById("sc-spread").textContent      = fmt(spread, 3);
-        document.getElementById("sc-spread-label").textContent = "WIBOR – NBP ref";
-        document.getElementById("sc-spread-label").className   = `delta ${d.cls}`;
-      }
-
-      const fraFields = [
-        ["sc-fra1x4", "sc-fra-date",    "fra_1x4"],
-        ["sc-fra3x6",  "sc-fra3x6-delta","fra_3x6"],
-        ["sc-fra6x9",  "sc-fra6x9-delta","fra_6x9"],
-        ["sc-fra9x12", "sc-fra9x12-delta","fra_9x12"],
-      ];
-      fraFields.forEach(([valId, subId, key], i) => {
-        const val  = latestFra?.[key] ?? null;
-        const prev = prevFra?.[key]   ?? null;
-        document.getElementById(valId).textContent = fmt(val, 3);
-        if(i === 0){
-          const session = latestFra?.session === "morning" ? "poranna" : latestFra?.session === "afternoon" ? "popoLudniowa" : "";
-          document.getElementById(subId).textContent = latestFra ? `${latestFra.date} · sesja ${session}` : "brak danych";
-        } else {
-          const d = fmtDelta(val != null && prev != null ? val - prev : null);
-          const el = document.getElementById(subId);
-          el.textContent = d.text;
-          el.className   = `delta ${d.cls}`;
-        }
-      });
-    }
-
+    // ===== TABELA HISTORII =====
     function renderStopyTable(){
       const tbody = document.getElementById("stopyTbody");
-      if(!stopyFra.length){ tbody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;padding:24px;">Brak danych historycznych</td></tr>`; return; }
+      if(!stopyFra.length){
+        tbody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;padding:24px;">Brak danych historycznych</td></tr>`;
+        return;
+      }
 
-      const rows = [...stopyFra].reverse().map(fra => {
-        const nbp  = nbpForDate(fra.date);
-        const wib  = wiborForDate(fra.date);
+      const rowsHtml = [...stopyFra].reverse().map(fra => {
+        const nbp = nbpForDate(fra.date);
+        const wib = wiborForDate(fra.date);
         const badge = fra.session === "morning"
           ? `<span class="session-badge morning">rano</span>`
           : `<span class="session-badge afternoon">popol.</span>`;
+        const ts = fra.timestamp;
+        const nbpDate = nbp?.date ?? "";
+        const wibDate = wib?.date ?? fra.date;
         return `<tr>
           <td>${fra.date}</td>
           <td>${badge}</td>
-          <td class="teal">${fmt(nbp?.ref, 2)}</td>
-          <td>${fmt(wib?.wibor_3m, 2)}</td>
-          <td>${fmt(fra.fra_1x4, 3)}</td>
-          <td>${fmt(fra.fra_3x6, 3)}</td>
-          <td>${fmt(fra.fra_6x9, 3)}</td>
-          <td>${fmt(fra.fra_9x12, 3)}</td>
+          <td class="teal clickable-cell" data-series="nbp" data-ts="${nbpDate}" title="Kliknij — wykres NBP ref.">${fmt(nbp?.ref, 2)}</td>
+          <td class="clickable-cell" data-series="wibor" data-ts="${wibDate}" title="Kliknij — wykres WIBOR 3M">${fmt(wib?.wibor_3m, 2)}</td>
+          <td class="clickable-cell" data-series="fra1x4" data-ts="${ts}" title="Kliknij — wykres FRA 1x4">${fmt(fra.fra_1x4, 3)}</td>
+          <td class="clickable-cell" data-series="fra3x6" data-ts="${ts}" title="Kliknij — wykres FRA 3x6">${fmt(fra.fra_3x6, 3)}</td>
+          <td class="clickable-cell" data-series="fra6x9" data-ts="${ts}" title="Kliknij — wykres FRA 6x9">${fmt(fra.fra_6x9, 3)}</td>
+          <td class="clickable-cell" data-series="fra9x12" data-ts="${ts}" title="Kliknij — wykres FRA 9x12">${fmt(fra.fra_9x12, 3)}</td>
         </tr>`;
       });
-      tbody.innerHTML = rows.join("");
+      tbody.innerHTML = rowsHtml.join("");
+
+      // Delegacja kliknięć na komórkach
+      tbody.addEventListener("click", (e) => {
+        const cell = e.target.closest(".clickable-cell");
+        if(!cell) return;
+        drawStopyChart(cell.dataset.series, cell.dataset.ts);
+      }, { once: false });
     }
 
     function populateCompareSelect(){
       const sel = document.getElementById("stopyCompareSel");
-      // Zbierz unikalne daty z fra_history
-      const dates = [...new Set(stopyFra.map(e => e.date + " · " + (e.session === "morning" ? "rano" : "popol.") + "|" + e.timestamp))];
       sel.innerHTML = `<option value="">-- wybierz date --</option>` +
         stopyFra.slice().reverse().map(e =>
-          `<option value="${e.timestamp}">${e.date} · ${e.session === "morning" ? "rano" : "popol."}</option>`
+          `<option value="${e.timestamp}">${e.date} \xb7 ${e.session === "morning" ? "rano" : "popol."}</option>`
         ).join("");
     }
 
@@ -2007,7 +2098,6 @@
           fetch("data/fra_history.json").then(r => r.json()),
         ]);
         stopyLoaded = true;
-        renderStopyCards();
         renderCurve();
         renderStopyTable();
         populateCompareSelect();
@@ -2018,18 +2108,30 @@
       }
     }
 
+    // Resize wrappera krzywej → przerysuj Plotly
+    new ResizeObserver(() => {
+      const chartDiv = document.getElementById("stopyCurveChart");
+      if(chartDiv && chartDiv.data) Plotly.Plots.resize(chartDiv);
+    }).observe(document.getElementById("stopyCurveWrap"));
+
+    // Klikalne nagłówki kolumn — otwierają pełne wykresy historii
+    document.getElementById("thStopyNbp").addEventListener("click",    () => drawStopyChart("nbp"));
+    document.getElementById("thStopyWibor").addEventListener("click",  () => drawStopyChart("wibor"));
+    document.getElementById("thStopyFra1x4").addEventListener("click", () => drawStopyChart("fra1x4"));
+    document.getElementById("thStopyFra3x6").addEventListener("click", () => drawStopyChart("fra3x6"));
+    document.getElementById("thStopyFra6x9").addEventListener("click", () => drawStopyChart("fra6x9"));
+    document.getElementById("thStopyFra9x12").addEventListener("click",() => drawStopyChart("fra9x12"));
+
     // Porownanie krzywych
     document.getElementById("stopyCompareAdd").addEventListener("click", () => {
       const sel = document.getElementById("stopyCompareSel");
       const ts  = sel.value;
       if(!ts) return;
-      if(compareEntries.find(c => c.ts === ts)) return; // juz dodane
+      if(compareEntries.find(c => c.ts === ts)) return;
       const fra = stopyFra.find(e => e.timestamp === ts);
       if(!fra) return;
-      const nbp  = nbpForDate(fra.date);
-      const wib  = wiborForDate(fra.date);
-      const label = `${fra.date} · ${fra.session === "morning" ? "rano" : "popol."}`;
-      compareEntries.push({ts, label, nbp, wibor: wib, fra});
+      const label = `${fra.date} \xb7 ${fra.session === "morning" ? "rano" : "popol."}`;
+      compareEntries.push({ ts, label, nbp: nbpForDate(fra.date), wibor: wiborForDate(fra.date), fra });
       renderCurve();
     });
 
