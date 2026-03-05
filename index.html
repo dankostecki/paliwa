@@ -536,9 +536,9 @@
     <!-- ===== ANALYTICS PANEL ===== -->
     <div id="analizaPanel">
       <div class="ana-fuel-select" id="anaFuelSelect">
-        <button class="ana-fuel-btn active" data-anafuel="benzyna">PB95</button>
+        <button class="ana-fuel-btn active" data-anafuel="benzyna">Benzyna 95</button>
         <button class="ana-fuel-btn" data-anafuel="diesel">Ekodiesel</button>
-        <button class="ana-fuel-btn" data-anafuel="oba">Oba paliwa</button>
+        <button class="ana-fuel-btn" data-anafuel="oba">Benzyna 95 + Ekodiesel</button>
       </div>
 
       <!-- STATS -->
@@ -550,6 +550,13 @@
       <!-- CPI vs FUEL -->
       <div class="ana-section">
         <h3>Ceny paliw vs inflacja CPI r/r (%)</h3>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesuniecie CPI:</span>
+          <input type="range" id="cpiOffset" min="-12" max="12" value="0" step="1"
+            style="width:200px; accent-color:#7b61ff;">
+          <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:90px;">0 mies.</span>
+          <span style="color:var(--muted); font-size:11px;">(ujemne = CPI wczesniej, dodatnie = CPI pozniej)</span>
+        </div>
         <div class="ana-chart" id="cpiChartBox" style="height:420px;"></div>
       </div>
 
@@ -1033,9 +1040,20 @@
       `;
     }
 
-    function drawCpiChart(fuelKey, fuelRows, cpi){
+    function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
+      offsetMonths = offsetMonths || 0;
       const fLabel = FUEL_LABELS[fuelKey] || fuelKey;
       const fColor = fuelKey === "benzyna" ? "#ff4b4b" : "#ffcc66";
+
+      // Shift CPI dates by offset months
+      const shiftedCpi = cpi.map(r => {
+        const d = new Date(r.date);
+        d.setUTCMonth(d.getUTCMonth() + offsetMonths);
+        return { date: d, cpi: r.cpi };
+      });
+
+      const offsetLabel = offsetMonths === 0 ? "" :
+        (offsetMonths > 0 ? ` [+${offsetMonths} mies.]` : ` [${offsetMonths} mies.]`);
 
       const traces = [{
         x: fuelRows.map(r => new Date(r.date)),
@@ -1046,19 +1064,21 @@
         yaxis: "y",
         hovertemplate: "%{x|%m/%Y}<br><b>%{y:.3f} tys.</b><extra>" + fLabel + "</extra>"
       }, {
-        x: cpi.map(r => new Date(r.date)),
-        y: cpi.map(r => r.cpi),
+        x: shiftedCpi.map(r => new Date(r.date)),
+        y: shiftedCpi.map(r => r.cpi),
         type: "scatter", mode: "lines+markers",
-        name: "CPI r/r (%)",
+        name: "CPI r/r (%)" + offsetLabel,
         line: { width: 2.5, color: "#7b61ff", dash: "dot" },
         marker: { size: 5, color: "#7b61ff" },
         yaxis: "y2",
         hovertemplate: "%{x|%m/%Y}<br><b>%{y:.1f}%</b><extra>CPI</extra>"
       }];
 
-      // If 'oba', add diesel too
+      // If 'oba': PB95 (red) first, then Ekodiesel (yellow), then CPI
       if(fuelKey === "oba" && allFuelData.diesel){
-        traces.unshift({
+        traces[0].name = "Benzyna 95 (tys. PLN/m3)";
+        traces[0].line.color = "#ff4b4b";
+        traces.splice(1, 0, {
           x: allFuelData.diesel.map(r => new Date(r.date)),
           y: allFuelData.diesel.map(r => r.price / 1000),
           type: "scatter", mode: "lines",
@@ -1067,12 +1087,13 @@
           yaxis: "y",
           hovertemplate: "%{x|%m/%Y}<br><b>%{y:.3f} tys.</b><extra>Ekodiesel</extra>"
         });
-        traces[1].name = "PB95 (tys. PLN/m3)";
       }
+
+      const titleFuel = fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel;
 
       const layout = {
         title: {
-          text: fLabel + " vs Inflacja CPI r/r",
+          text: titleFuel + " vs Inflacja CPI r/r" + offsetLabel,
           font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
           x: 0.01, xanchor: "left"
         },
@@ -1083,7 +1104,7 @@
           tickfont: { color: "rgba(255,255,255,.6)" }
         },
         yaxis: {
-          title: { text: "Cena (tys. PLN/m3)", font: { color: fColor } },
+          title: { text: "Cena (tys. PLN/m3)", font: { color: fuelKey === "oba" ? "#ff4b4b" : fColor } },
           showgrid: true, gridcolor: "rgba(255,255,255,.06)",
           tickfont: { color: "rgba(255,255,255,.6)" },
           side: "left"
@@ -1134,7 +1155,7 @@
 
       if(fuelKey === "oba" && allFuelData.diesel){
         const dPrices = allFuelData.diesel.map(r => r.price / 1000);
-        traces[0].name = "PB95";
+        traces[0].name = "Benzyna 95";
         traces[0].marker = { color: "rgba(255,75,75,.5)", line: { color: "#ff4b4b", width: 1 } };
         traces.push({
           x: dPrices,
@@ -1151,7 +1172,7 @@
 
       const layout = {
         title: {
-          text: "Rozklad cen — " + fLabel,
+          text: "Rozklad cen — " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel),
           font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
           x: 0.01, xanchor: "left"
         },
@@ -1201,18 +1222,36 @@
       renderAnalytics();
     }
 
+    function getCpiOffset(){
+      return parseInt(document.getElementById("cpiOffset").value) || 0;
+    }
+
+    function updateOffsetLabel(){
+      const v = getCpiOffset();
+      const label = v === 0 ? "0 mies." : (v > 0 ? `+${v} mies.` : `${v} mies.`);
+      document.getElementById("cpiOffsetLabel").textContent = label;
+    }
+
     function renderAnalytics(){
       const fuel = currentAnaFuel;
+      const offset = getCpiOffset();
 
       if(fuel === "oba"){
         renderStats("benzyna", allFuelData.benzyna);
-        drawCpiChart("oba", allFuelData.benzyna, cpiData);
+        drawCpiChart("oba", allFuelData.benzyna, cpiData, offset);
         drawHistogram("oba", allFuelData.benzyna);
       } else {
         renderStats(fuel, allFuelData[fuel]);
-        drawCpiChart(fuel, allFuelData[fuel], cpiData);
+        drawCpiChart(fuel, allFuelData[fuel], cpiData, offset);
         drawHistogram(fuel, allFuelData[fuel]);
       }
+    }
+
+    function redrawCpiOnly(){
+      const fuel = currentAnaFuel;
+      const offset = getCpiOffset();
+      const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
+      drawCpiChart(fuel, fuelRows, cpiData, offset);
     }
 
     // Analiza fuel sub-select
@@ -1223,6 +1262,12 @@
       document.querySelectorAll(".ana-fuel-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       renderAnalytics();
+    });
+
+    // CPI offset slider
+    document.getElementById("cpiOffset").addEventListener("input", () => {
+      updateOffsetLabel();
+      redrawCpiOnly();
     });
 
     // ===== PERIOD TAB SWITCHING =====
