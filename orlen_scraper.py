@@ -139,12 +139,20 @@ def save_json(filepath, data):
 def append_json(filepath, date_str, price):
     data = load_json(filepath)
 
+    # JSON jest posortowany DESC (najnowsza data pierwsza)
+    # Szybkie sprawdzenie: jesli najnowszy wpis ma ta sama date — pomijamy
+    if data and data[0].get("data_zmiany") == date_str:
+        log.info(f"JSON: {date_str} juz istnieje w {filepath.name}")
+        return False
+
+    # Dla pewnosci sprawdz tez glebiej (na wypadek blednej kolejnosci)
     for entry in data:
         if entry.get("data_zmiany") == date_str:
             log.info(f"JSON: {date_str} juz istnieje w {filepath.name}")
             return False
 
-    data.append({"data_zmiany": date_str, "cena_pln_m3": price})
+    # Wstaw na poczatek (zachowaj kolejnosc DESC)
+    data.insert(0, {"data_zmiany": date_str, "cena_pln_m3": price})
     save_json(filepath, data)
     log.info(f"JSON: +{date_str} -> {price} w {filepath.name}")
     return True
