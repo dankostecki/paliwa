@@ -1,0 +1,1068 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Monitor Hurtowych Cen Paliw</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#05080c;
+      --panel:#070c12;
+      --grid:#1a2433;
+      --text:#cfe6ff;
+      --muted:#8aa2be;
+      --green:#34ff9a;
+      --red:#ff4b4b;
+      --amber:#ffcc66;
+      --shadow: 0 20px 60px rgba(0,0,0,.55);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:
+        radial-gradient(1200px 800px at 20% 0%, rgba(255,75,75,.10), transparent 60%),
+        radial-gradient(900px 700px at 80% 10%, rgba(255,204,102,.06), transparent 55%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    /* ===== TERMINAL SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #ff4b4b; border-radius: 10px; border: 2px solid #0a0a0a; }
+    ::-webkit-scrollbar-thumb:hover { background: #ff6b6b; }
+    ::-webkit-scrollbar-corner { background: #0a0a0a; }
+    * { scrollbar-width: thin; scrollbar-color: #ff4b4b #0a0a0a; }
+
+    .topbar{
+      background: linear-gradient(90deg, #ff3b3b, #ff7a7a);
+      color:#160607;
+      padding: 14px 18px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      position: sticky;
+      top:0;
+      z-index: 5;
+    }
+    .topbar .sub{
+      display:block;
+      font-weight:800;
+      opacity:.9;
+      margin-top:6px;
+      text-transform:none;
+      letter-spacing:0;
+    }
+
+    .wrap{
+      max-width: 1250px;
+      margin: 18px auto 48px;
+      padding: 0 16px;
+    }
+
+    /* ===== FUEL TYPE TABS ===== */
+    .fuel-tabs{
+      display: flex;
+      gap: 0;
+      margin: 14px 0 0;
+      background: rgba(7,12,18,.85);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      width: fit-content;
+    }
+    .fuel-tab{
+      padding: 12px 24px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-right: 1px solid rgba(255,255,255,.06);
+      font-family: inherit;
+      position: relative;
+      transition: all .15s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fuel-tab:last-child { border-right: none; }
+    .fuel-tab:hover{
+      color: var(--text);
+      background: rgba(255,255,255,.04);
+    }
+    .fuel-tab.active{
+      color: #fff;
+      background: rgba(255,75,75,.18);
+    }
+    .fuel-tab.active::after{
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ff3b3b, #ff7a7a);
+      border-radius: 3px 3px 0 0;
+    }
+    .fuel-tab .dot{
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .fuel-tab .dot.benzyna{ background: #ff4b4b; box-shadow: 0 0 8px rgba(255,75,75,.5); }
+    .fuel-tab .dot.diesel{ background: #ffcc66; box-shadow: 0 0 8px rgba(255,204,102,.5); }
+    .fuel-tab.active .cursor-blink{
+      display: inline-block;
+      width: 2px; height: 14px;
+      background: var(--green);
+      margin-left: 4px;
+      animation: blink 1s step-end infinite;
+    }
+    .fuel-tab:not(.active) .cursor-blink{ display: none; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ===== PERIOD TABS (D/D T/T M/M) ===== */
+    .period-tabs{
+      display: flex;
+      gap: 0;
+      background: rgba(7,12,18,.85);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .period-tab{
+      padding: 10px 18px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-right: 1px solid rgba(255,255,255,.06);
+      font-family: inherit;
+      position: relative;
+      transition: all .15s ease;
+    }
+    .period-tab:last-child { border-right: none; }
+    .period-tab:hover{
+      color: var(--text);
+      background: rgba(255,255,255,.04);
+    }
+    .period-tab.active{
+      color: #fff;
+      background: rgba(52,255,154,.12);
+    }
+    .period-tab.active::after{
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #34ff9a, #66ffbb);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin: 12px 0 12px;
+    }
+    .controls-left{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill{
+      background: rgba(7,12,18,.85);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 999px;
+      padding: 10px 12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      box-shadow: var(--shadow);
+    }
+    .pill label{ color: var(--muted); font-size: 12px; }
+    .pill select, .pill input{
+      background: transparent;
+      border: none;
+      color: var(--text);
+      outline: none;
+      font: inherit;
+      padding: 2px 4px;
+    }
+    .pill select option { background: #0a0e14; color: var(--text); }
+    .pill input{ width: 260px; max-width: 60vw; }
+
+    .alert{
+      display:none;
+      background: rgba(255,204,102,.12);
+      border: 1px solid rgba(255,204,102,.35);
+      color: var(--amber);
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .tablebox{
+      background: rgba(7,12,18,.78);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    col.c1{ width:70px; }
+    col.c2{ width:150px; }
+    col.c3{ width:180px; }
+    col.c4{ width:190px; }
+    col.c5{ width:180px; }
+    col.c6{ width:120px; }
+
+    thead th{
+      text-align:left;
+      padding: 14px 12px;
+      color: rgba(255,255,255,.78);
+      font-weight: 900;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      background: rgba(7,12,18,.97);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    thead th.clickable{
+      cursor: pointer;
+      transition: color .15s ease, background .15s ease;
+      user-select: none;
+    }
+    thead th.clickable:hover{
+      color: #fff;
+      background: rgba(255,75,75,.15);
+    }
+    thead th.clickable::after{
+      content: " \25B6";
+      font-size: 9px;
+      opacity: .45;
+      vertical-align: middle;
+    }
+
+    tbody td{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      color: rgba(255,255,255,.86);
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+
+    tbody tr{
+      cursor: pointer;
+      transition: background .12s ease, transform .05s ease;
+    }
+    tbody tr:hover{ background: rgba(255,75,75,.06); }
+    tbody tr:active{ transform: translateY(1px); }
+
+    .num{ text-align:right; }
+    .muted{ color: var(--muted); }
+    .pos{ color: var(--green); font-weight: 900; }
+    .neg{ color: var(--red); font-weight: 900; }
+
+    .tag{
+      background: rgba(255,75,75,.16);
+      border: 1px solid rgba(255,75,75,.35);
+      color: #ffd0d0;
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-weight: 900;
+      display:inline-block;
+    }
+
+    .modal{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 50;
+    }
+    .modal .panel{
+      width: min(1200px, 98vw);
+      height: min(720px, 88vh);
+      background: rgba(7,12,18,.92);
+      border: 1px solid rgba(255,75,75,.22);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal .head{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.28);
+      flex-wrap: wrap;
+    }
+    .modal .head .title{
+      font-weight: 900;
+      letter-spacing:.5px;
+      text-transform: uppercase;
+      font-size: 13px;
+    }
+    .btn{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 12px;
+      font: inherit;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn:hover{ background: rgba(255,255,255,.09); }
+
+    #chart{ flex:1; min-height: 0; }
+    #barChart{ flex:1; min-height: 0; }
+
+    .footnote{
+      margin-top: 10px;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+    }
+    .hint{ color: rgba(255,255,255,.55); font-size: 12px; margin-left: 6px; }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    Monitor Hurtowych Cen Paliw
+    <span class="sub">
+      Zrodlo: Orlen | Wiersz = wykres ceny | Naglowek ZMIANA = wykres slupkowy | D/D T/T M/M = okres
+    </span>
+  </div>
+
+  <div class="wrap">
+    <!-- FUEL TYPE TABS -->
+    <div class="fuel-tabs" id="fuelTabs">
+      <button class="fuel-tab active" data-fuel="benzyna">
+        <span class="dot benzyna"></span>
+        Benzyna Eurosuper 95
+        <span class="cursor-blink"></span>
+      </button>
+      <button class="fuel-tab" data-fuel="diesel">
+        <span class="dot diesel"></span>
+        Olej Napedowy Ekodiesel
+        <span class="cursor-blink"></span>
+      </button>
+    </div>
+
+    <div class="controls">
+      <div class="controls-left">
+        <div class="pill">
+          <label>Plik</label>
+          <select id="sourceSelect">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+
+        <!-- PERIOD SWITCHER -->
+        <div class="period-tabs" id="periodTabs">
+          <button class="period-tab active" data-period="dd">D/D</button>
+          <button class="period-tab" data-period="ww">T/T</button>
+          <button class="period-tab" data-period="mm">M/M</button>
+        </div>
+      </div>
+
+      <div class="pill">
+        <label>Szukaj</label>
+        <input id="searchInput" type="text" placeholder="np. 2026-03, 05-03-2026, 4.833..." />
+      </div>
+    </div>
+
+    <div class="alert" id="hiAlert"></div>
+
+    <div class="tablebox" id="tableBox">
+      <table>
+        <colgroup>
+          <col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>LP</th>
+            <th>DATA</th>
+            <th class="num">CENA (tys. PLN/m3)</th>
+            <th class="num clickable" id="thChangeZl">ZMIANA D/D (zl)</th>
+            <th class="num clickable" id="thChangePct">ZMIANA D/D (%)</th>
+            <th>FLAGA</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="footnote">
+      * Cena jako <b>tys. PLN/m3</b>. D/D = zmiana dzienna, T/T = zmiana tyg. (7 dni), M/M = zmiana mies. (30 dni).
+      <br>Kliknij naglowek kolumny ZMIANA aby otworzyc wykres slupkowy historii zmian.
+    </div>
+  </div>
+
+  <!-- MODAL: price line chart -->
+  <div class="modal" id="modal">
+    <div class="panel">
+      <div class="head">
+        <div></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="btnShowAll">Caly zakres</button>
+          <button class="btn" id="btnClose">Zamknij (Esc)</button>
+        </div>
+      </div>
+      <div id="chart"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: bar chart for changes -->
+  <div class="modal" id="barModal">
+    <div class="panel">
+      <div class="head">
+        <div></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="barBtnShowAll">Caly zakres</button>
+          <button class="btn" id="barBtnClose">Zamknij (Esc)</button>
+        </div>
+      </div>
+      <div id="barChart"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const FUEL_FILES = {
+      benzyna: {
+        csv: "Benzyna_Eurosuper95_2022-2026.csv",
+        json: "Benzyna_Eurosuper95_2022-2026.json",
+      },
+      diesel: {
+        csv: "Olej_Napedowy_Ekodiesel_2022-2026.csv",
+        json: "Olej_Napedowy_Ekodiesel_2022-2026.json",
+      }
+    };
+
+    const FUEL_LABELS = {
+      benzyna: "Benzyna Eurosuper 95",
+      diesel: "Olej Napedowy Ekodiesel"
+    };
+
+    const PERIOD_CONFIG = {
+      dd: { label: "D/D", days: 1,  zlCol: "ZMIANA D/D (zl)", pctCol: "ZMIANA D/D (%)", barTitle: "ZMIAN DZIENNYCH" },
+      ww: { label: "T/T", days: 7,  zlCol: "ZMIANA T/T (zl)", pctCol: "ZMIANA T/T (%)", barTitle: "ZMIAN TYGODNIOWYCH" },
+      mm: { label: "M/M", days: 30, zlCol: "ZMIANA M/M (zl)", pctCol: "ZMIANA M/M (%)", barTitle: "ZMIAN MIESIECZNYCH" },
+    };
+
+    // ===== STATE =====
+    let currentFuel = "benzyna";
+    let currentPeriod = "dd";
+    let rows = [];
+    let rowsDesc = [];
+    let filtered = [];
+    let chartReady = false;
+
+    // ===== DOM =====
+    const els = {
+      sourceSelect: document.getElementById("sourceSelect"),
+      tbody:        document.getElementById("tbody"),
+      searchInput:  document.getElementById("searchInput"),
+      hiAlert:      document.getElementById("hiAlert"),
+      modal:        document.getElementById("modal"),
+      btnClose:     document.getElementById("btnClose"),
+      btnShowAll:   document.getElementById("btnShowAll"),
+      barModal:     document.getElementById("barModal"),
+      barBtnClose:  document.getElementById("barBtnClose"),
+      barBtnShowAll:document.getElementById("barBtnShowAll"),
+      fuelTabs:     document.getElementById("fuelTabs"),
+      periodTabs:   document.getElementById("periodTabs"),
+      thChangeZl:   document.getElementById("thChangeZl"),
+      thChangePct:  document.getElementById("thChangePct"),
+    };
+
+    // ===== HELPERS =====
+    function parseDateDDMMYYYY(s){
+      const t = (s || "").trim();
+      const m = t.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if(!m) return null;
+      const [_, dd, mm, yyyy] = m;
+      return new Date(Date.UTC(+yyyy, +mm - 1, +dd));
+    }
+
+    function fmtPriceThousands(plnPerM3){
+      return (plnPerM3 / 1000).toFixed(3);
+    }
+
+    /**
+     * Compute changes for a given lookback period.
+     * D/D (days=1): previous entry in the dataset.
+     * T/T (days=7): nearest entry to 7 calendar days ago.
+     * M/M (days=30): nearest entry to 30 calendar days ago.
+     */
+    function computeChanges(rowsAsc, periodDays){
+      const DAY_MS = 24 * 3600 * 1000;
+      for (let i = 0; i < rowsAsc.length; i++){
+        const cur = rowsAsc[i];
+
+        if(periodDays === 1){
+          const prev = rowsAsc[i - 1];
+          if(!prev){
+            cur.changeAbs = null;
+            cur.changePct = null;
+            cur.changeRef = null;
+            continue;
+          }
+          const diff = cur.price - prev.price;
+          cur.changeAbs = diff;
+          cur.changePct = prev.price === 0 ? null : (diff / prev.price) * 100;
+          cur.changeRef = prev.dateStr;
+        } else {
+          const targetTime = cur.date.getTime() - periodDays * DAY_MS;
+          let best = null;
+          let bestDist = Infinity;
+
+          for (let j = i - 1; j >= 0; j--){
+            const dist = Math.abs(rowsAsc[j].date.getTime() - targetTime);
+            if(dist < bestDist){
+              bestDist = dist;
+              best = rowsAsc[j];
+            }
+            if(rowsAsc[j].date.getTime() < targetTime - 10 * DAY_MS) break;
+          }
+
+          const minDays = Math.floor(periodDays * 0.5);
+          const actualDays = best ? Math.round((cur.date - best.date) / DAY_MS) : 0;
+
+          if(!best || actualDays < minDays){
+            cur.changeAbs = null;
+            cur.changePct = null;
+            cur.changeRef = null;
+            continue;
+          }
+
+          const diff = cur.price - best.price;
+          cur.changeAbs = diff;
+          cur.changePct = best.price === 0 ? null : (diff / best.price) * 100;
+          cur.changeRef = best.dateStr;
+        }
+      }
+      return rowsAsc;
+    }
+
+    function bestHighSinceMessage(rowsAsc){
+      const last = rowsAsc[rowsAsc.length - 1];
+      if(!last) return null;
+
+      let maxSoFar = -Infinity;
+      for (const r of rowsAsc) maxSoFar = Math.max(maxSoFar, r.price);
+
+      if (last.price >= maxSoFar){
+        return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYZSZA W HISTORII (od ${rowsAsc[0].dateStr}).`;
+      }
+
+      let lastHigherDate = null;
+      for (let i = rowsAsc.length - 1; i >= 0; i--){
+        if (rowsAsc[i].price > last.price){
+          lastHigherDate = rowsAsc[i].dateStr;
+          break;
+        }
+      }
+      return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYZSZA OD ${lastHigherDate}.`;
+    }
+
+    function setAlert(msg){
+      if(!msg){ els.hiAlert.style.display = "none"; return; }
+      els.hiAlert.textContent = msg;
+      els.hiAlert.style.display = "block";
+    }
+
+    function signClass(n){
+      if(n == null) return "muted";
+      return n >= 0 ? "pos" : "neg";
+    }
+
+    function formatZl(n){
+      if(n == null) return "\u2014";
+      const abs = Math.abs(n);
+      return `${n>=0?"+":"\u2212"}${abs.toFixed(0)} zl`;
+    }
+
+    function formatPct(n){
+      if(n == null) return "\u2014";
+      const v = Math.abs(n).toFixed(2);
+      return `${n>=0?"+":"\u2212"}${v}%`;
+    }
+
+    // ===== UPDATE COLUMN HEADERS =====
+    function updateHeaders(){
+      const cfg = PERIOD_CONFIG[currentPeriod];
+      els.thChangeZl.textContent  = cfg.zlCol;
+      els.thChangePct.textContent = cfg.pctCol;
+    }
+
+    // ===== RENDER TABLE =====
+    function renderTable(dataDesc){
+      els.tbody.innerHTML = "";
+      dataDesc.forEach((r, idx) => {
+        const tr = document.createElement("tr");
+        const refHint = r.changeRef ? ` title="vs ${r.changeRef}"` : "";
+
+        let flag = "";
+        if(idx === 0){
+          flag = currentPeriod === "dd"
+            ? `<span class="tag">DZISIAJ</span>`
+            : `<span class="tag">OSTATNI</span>`;
+        }
+
+        tr.innerHTML = `
+          <td class="num muted">${idx + 1}</td>
+          <td>${r.dateStr}</td>
+          <td class="num">${fmtPriceThousands(r.price)}</td>
+          <td class="num ${signClass(r.changeAbs)}"${refHint}>${formatZl(r.changeAbs)}</td>
+          <td class="num ${signClass(r.changePct)}"${refHint}>${formatPct(r.changePct)}</td>
+          <td>${flag}</td>
+        `;
+
+        tr.addEventListener("click", () => openChartAtDate(r.dateStr));
+        els.tbody.appendChild(tr);
+      });
+    }
+
+    function applyFilter(){
+      const q = els.searchInput.value.trim().toLowerCase();
+      if(!q){
+        filtered = rowsDesc.slice();
+      } else {
+        filtered = rowsDesc.filter(r => {
+          const hay = `${r.dateStr} ${fmtPriceThousands(r.price)} ${r.price} ${r.changeAbs ?? ""} ${r.changePct ?? ""}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      renderTable(filtered);
+    }
+
+    /**
+     * Sample rows for weekly/monthly view.
+     * T/T: one row per ISO week (last entry of each week).
+     * M/M: one row per calendar month (last entry of each month).
+     * D/D: all rows.
+     */
+    function sampleRows(rowsAsc, period){
+      if(period === "dd") return rowsAsc.slice();
+
+      const sampled = [];
+      const keyFn = period === "ww"
+        ? (d) => {
+            // ISO week: year + week number
+            const tmp = new Date(d.getTime());
+            tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+            return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`;
+          }
+        : (d) => {
+            // Month: year-month
+            return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}`;
+          };
+
+      let lastKey = null;
+      let lastRow = null;
+
+      for(const r of rowsAsc){
+        const key = keyFn(r.date);
+        if(key !== lastKey){
+          if(lastRow) sampled.push(lastRow);
+          lastKey = key;
+        }
+        lastRow = r;
+      }
+      if(lastRow) sampled.push(lastRow); // push final period's last entry
+      return sampled;
+    }
+
+    let displayRows = []; // sampled rows for table & bar chart
+
+    function recomputeAndRender(){
+      const cfg = PERIOD_CONFIG[currentPeriod];
+
+      // First compute changes on ALL daily rows
+      computeChanges(rows, cfg.days);
+
+      // Then sample for display
+      displayRows = sampleRows(rows, currentPeriod);
+      rowsDesc = displayRows.slice().sort((a,b) => b.date - a.date);
+
+      updateHeaders();
+      applyFilter();
+    }
+
+    // ===== LOAD DATA =====
+    async function loadCSV(path){
+      const res = await fetch(path, { cache: "no-store" });
+      if(!res.ok) throw new Error(`CSV: ${res.status} ${res.statusText}`);
+      const text = await res.text();
+      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+      const out = [];
+      for (const row of parsed.data){
+        const dateStr = (row.data_zmiany || row.Data_zmiany || row.DATA || "").trim();
+        const priceRaw = row.cena_pln_m3 ?? row.Cena_PLN_m3 ?? row["Cena [PLN/m3]"] ?? row.Cena ?? "";
+        const price = Number(String(priceRaw).replace(/\s+/g, ""));
+        const date = parseDateDDMMYYYY(dateStr);
+        if(!dateStr || !Number.isFinite(price) || !date) continue;
+        out.push({ dateStr, date, price });
+      }
+      return out;
+    }
+
+    async function loadJSON(path){
+      const res = await fetch(path, { cache: "no-store" });
+      if(!res.ok) throw new Error(`JSON: ${res.status} ${res.statusText}`);
+      const data = await res.json();
+      const out = [];
+      for (const r of data){
+        const dateStr = (r.data_zmiany || r.date || r.DATA || "").trim();
+        const price = Number(r.cena_pln_m3 ?? r.price ?? r.CLOSE ?? r.cena);
+        const date = parseDateDDMMYYYY(dateStr);
+        if(!dateStr || !Number.isFinite(price) || !date) continue;
+        out.push({ dateStr, date, price });
+      }
+      return out;
+    }
+
+    async function loadData(){
+      setAlert(null);
+      els.tbody.innerHTML = `<tr><td class="muted" colspan="6">Ladowanie danych...</td></tr>`;
+
+      const mode = els.sourceSelect.value;
+      const file = FUEL_FILES[currentFuel][mode];
+      const url = `${file}?v=${Date.now()}`;
+
+      let raw = [];
+      if(mode === "csv") raw = await loadCSV(url);
+      else raw = await loadJSON(url);
+
+      raw.sort((a,b) => a.date - b.date);
+      rows = raw;
+
+      recomputeAndRender();
+      setAlert(bestHighSinceMessage(rows));
+      chartReady = false;
+    }
+
+    // ===== FUEL TAB SWITCHING =====
+    els.fuelTabs.addEventListener("click", (e) => {
+      const tab = e.target.closest(".fuel-tab");
+      if(!tab || tab.dataset.fuel === currentFuel) return;
+      currentFuel = tab.dataset.fuel;
+      els.fuelTabs.querySelectorAll(".fuel-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      els.searchInput.value = "";
+      loadData();
+    });
+
+    // ===== PERIOD TAB SWITCHING =====
+    els.periodTabs.addEventListener("click", (e) => {
+      const tab = e.target.closest(".period-tab");
+      if(!tab || tab.dataset.period === currentPeriod) return;
+      currentPeriod = tab.dataset.period;
+      els.periodTabs.querySelectorAll(".period-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      recomputeAndRender();
+    });
+
+    // ===== SHARED: auto-scale Y on X range change =====
+    function attachYAutoScale(divId, dataSource, valueGetter){
+      function yRangeFor(xFrom, xTo){
+        const fromT = xFrom.getTime(), toT = xTo.getTime();
+        const visible = dataSource.filter(r => {
+          const t = r.date.getTime();
+          return t >= fromT && t <= toT;
+        });
+        if(!visible.length) return null;
+        const vals = visible.map(r => valueGetter(r)).filter(v => v != null);
+        if(!vals.length) return null;
+        const mn = Math.min(...vals);
+        const mx = Math.max(...vals);
+        const span = mx - mn;
+        const margin = span * 0.12 || (Math.max(Math.abs(mx), Math.abs(mn)) * 0.15) || 0.5;
+        return [mn - margin, mx + margin];
+      }
+
+      const div = document.getElementById(divId);
+      div.on("plotly_relayout", (ev) => {
+        const hasX = ev["xaxis.range[0]"] !== undefined
+                  || ev["xaxis.range"] !== undefined
+                  || ev["xaxis.autorange"] !== undefined;
+        if(!hasX) return;
+
+        let x0, x1;
+        if(ev["xaxis.range[0]"] !== undefined){
+          x0 = new Date(ev["xaxis.range[0]"]);
+          x1 = new Date(ev["xaxis.range[1]"]);
+        } else if(ev["xaxis.range"]){
+          x0 = new Date(ev["xaxis.range"][0]);
+          x1 = new Date(ev["xaxis.range"][1]);
+        }
+
+        if(x0 && x1){
+          const r = yRangeFor(x0, x1);
+          if(r) Plotly.relayout(divId, { "yaxis.range": r, "yaxis.autorange": false });
+        } else {
+          Plotly.relayout(divId, { "yaxis.autorange": true });
+        }
+      });
+    }
+
+    // ===== PRICE LINE CHART =====
+    function openModal(){ els.modal.style.display = "flex"; }
+    function closeModal(){ els.modal.style.display = "none"; }
+
+    function openChartAtDate(dateStr){
+      if(!rows.length) return;
+      const picked = rows.find(r => r.dateStr === dateStr) || rows[rows.length-1];
+      openModal();
+      drawChart(picked);
+    }
+
+    function drawChart(picked){
+      const x = rows.map(r => new Date(r.date.getTime()));
+      const y = rows.map(r => r.price / 1000);
+
+      const pickedIndex = rows.findIndex(r => r.dateStr === picked.dateStr);
+      const pickedX = x[Math.max(0, pickedIndex)];
+      const pickedY = y[Math.max(0, pickedIndex)];
+
+      const fuelLabel = FUEL_LABELS[currentFuel];
+      const chartTitleText = `${fuelLabel} \u2014 ${picked.dateStr} | ${fmtPriceThousands(picked.price)} tys. PLN/m3`;
+
+      const lineColor = currentFuel === "benzyna" ? "#ff4b4b" : "#ffcc66";
+      const markerColor = currentFuel === "benzyna" ? "#ff8888" : "#ffdd88";
+
+      const trace = {
+        x, y,
+        type: "scatter", mode: "lines",
+        line: { width: 2, color: lineColor },
+        hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.3f} tys. PLN/m3</b><extra></extra>"
+      };
+
+      const marker = {
+        x: [pickedX], y: [pickedY],
+        type: "scatter", mode: "markers",
+        marker: { size: 10, color: markerColor },
+        hovertemplate: "<b>Wybrana sesja</b><br>%{x|%d-%m-%Y}<br>%{y:.3f} tys. PLN/m3<extra></extra>"
+      };
+
+      const layout = {
+        title: {
+          text: chartTitleText,
+          font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
+          x: 0.01, xanchor: "left"
+        },
+        paper_bgcolor: "#070c12",
+        plot_bgcolor: "#0a0f16",
+        margin: { l: 70, r: 40, t: 45, b: 50 },
+        xaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          rangeslider: { visible: true, thickness: 0.08 },
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: "Data", font: { color: "rgba(255,255,255,.70)" } },
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
+        },
+        yaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: "Cena (tys. PLN/m3)", font: { color: "rgba(255,255,255,.70)" } },
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+          autorange: true, rangemode: "normal"
+        },
+        font: { color: "rgba(255,255,255,.80)" },
+        dragmode: "zoom",
+        hovermode: "closest",
+        showlegend: false,
+        annotations: [{
+          text: "Opracowanie w\u0142asne na podstawie danych Orlen",
+          showarrow: false,
+          xref: "paper", yref: "paper",
+          x: 1, y: -0.15,
+          xanchor: "right", yanchor: "top",
+          font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" }
+        }]
+      };
+
+      Plotly.newPlot("chart", [trace, marker], layout, {
+        responsive: true, scrollZoom: true, displayModeBar: true,
+        toImageButtonOptions: { format: "png", width: 1400, height: 700, filename: chartTitleText.replace(/[^a-zA-Z0-9_\-]/g, "_") }
+      }).then(() => {
+        chartReady = true;
+        attachYAutoScale("chart", rows, r => r.price / 1000);
+      });
+    }
+
+    // ===== BAR CHART =====
+    function openBarModal(){ els.barModal.style.display = "flex"; }
+    function closeBarModal(){ els.barModal.style.display = "none"; }
+
+    function drawBarChart(mode){
+      if(!displayRows.length) return;
+
+      const fuelLabel = FUEL_LABELS[currentFuel];
+      const periodCfg = PERIOD_CONFIG[currentPeriod];
+      const isZl = mode === "zl";
+      const valFn = isZl ? (r => r.changeAbs) : (r => r.changePct);
+      const label = isZl ? "zl (PLN/m3)" : "%";
+
+      const barTitleText = `${fuelLabel} \u2014 HISTORIA ${periodCfg.barTitle} (${label})`;
+
+      const dataRows = displayRows.filter(r => valFn(r) != null);
+      const x = dataRows.map(r => new Date(r.date.getTime()));
+      const y = dataRows.map(r => valFn(r));
+
+      const colors = y.map(v => v >= 0 ? "rgba(52,255,154,.75)" : "rgba(255,75,75,.75)");
+      const borders = y.map(v => v >= 0 ? "#34ff9a" : "#ff4b4b");
+
+      const trace = {
+        x, y,
+        type: "bar",
+        marker: { color: colors, line: { color: borders, width: 1 } },
+        hovertemplate: isZl
+          ? "%{x|%d-%m-%Y}<br><b>%{y:+d} zl</b><extra></extra>"
+          : "%{x|%d-%m-%Y}<br><b>%{y:+.2f}%</b><extra></extra>"
+      };
+
+      const layout = {
+        title: {
+          text: barTitleText,
+          font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
+          x: 0.01, xanchor: "left"
+        },
+        paper_bgcolor: "#070c12",
+        plot_bgcolor: "#0a0f16",
+        margin: { l: 70, r: 40, t: 45, b: 50 },
+        xaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.06)",
+          rangeslider: { visible: true, thickness: 0.08 },
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: "Data", font: { color: "rgba(255,255,255,.70)" } },
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
+        },
+        yaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: isZl ? "Zmiana (zl)" : "Zmiana (%)", font: { color: "rgba(255,255,255,.70)" } },
+          zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
+          autorange: true, rangemode: "normal",
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
+        },
+        font: { color: "rgba(255,255,255,.80)" },
+        dragmode: "zoom",
+        hovermode: "closest",
+        showlegend: false,
+        bargap: 0.15,
+        annotations: [{
+          text: "Opracowanie w\u0142asne na podstawie danych Orlen",
+          showarrow: false,
+          xref: "paper", yref: "paper",
+          x: 1, y: -0.15,
+          xanchor: "right", yanchor: "top",
+          font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" }
+        }]
+      };
+
+      openBarModal();
+      Plotly.newPlot("barChart", [trace], layout, {
+        responsive: true, scrollZoom: true, displayModeBar: true,
+        toImageButtonOptions: { format: "png", width: 1400, height: 700, filename: barTitleText.replace(/[^a-zA-Z0-9_\-]/g, "_") }
+      }).then(() => {
+        attachYAutoScale("barChart", dataRows, valFn);
+      });
+    }
+
+    // ===== EVENT LISTENERS =====
+    els.sourceSelect.addEventListener("change", loadData);
+    els.searchInput.addEventListener("input", applyFilter);
+
+    els.btnClose.addEventListener("click", closeModal);
+    els.modal.addEventListener("click", (e) => { if(e.target === els.modal) closeModal(); });
+    els.btnShowAll.addEventListener("click", () => {
+      if(!chartReady) return;
+      Plotly.relayout("chart", { "xaxis.autorange": true, "yaxis.autorange": true });
+    });
+
+    els.barBtnClose.addEventListener("click", closeBarModal);
+    els.barModal.addEventListener("click", (e) => { if(e.target === els.barModal) closeBarModal(); });
+    els.barBtnShowAll.addEventListener("click", () => {
+      Plotly.relayout("barChart", { "xaxis.autorange": true, "yaxis.autorange": true });
+    });
+
+    els.thChangeZl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      drawBarChart("zl");
+    });
+    els.thChangePct.addEventListener("click", (e) => {
+      e.stopPropagation();
+      drawBarChart("pct");
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if(e.key === "Escape"){ closeModal(); closeBarModal(); }
+    });
+
+    loadData().catch(err => {
+      console.error(err);
+      els.tbody.innerHTML = `<tr><td class="neg" colspan="6">Blad: ${err.message}<br><span class="muted">Uruchom serwer HTTP (np. python -m http.server 8000).</span></td></tr>`;
+    });
+  </script>
+</body>
+</html>
