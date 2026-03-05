@@ -1,0 +1,37 @@
+name: Aktualizuj ceny paliw
+
+on:
+  schedule:
+    # 5:00 UTC = 6:00 CET (zima) / 7:00 CEST (lato)
+    # Mozesz zmienic na "4 5 * * *" jesli chcesz 6:00 latem
+    - cron: '0 5 * * *'
+  workflow_dispatch: # mozliwosc recznego odpalenia z zakladki Actions
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright requests
+          playwright install chromium
+
+      - name: Run scraper
+        run: python orlen_scraper.py
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add *.json *.csv
+          git diff --staged --quiet || git commit -m "Aktualizacja cen paliw $(date -u +%d-%m-%Y)"
+          git push
