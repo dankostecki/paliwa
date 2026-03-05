@@ -119,6 +119,92 @@
     }
     .fuel-tab .dot.benzyna{ background: #ff4b4b; box-shadow: 0 0 8px rgba(255,75,75,.5); }
     .fuel-tab .dot.diesel{ background: #ffcc66; box-shadow: 0 0 8px rgba(255,204,102,.5); }
+    .fuel-tab .dot.analiza{ background: #7b61ff; box-shadow: 0 0 8px rgba(123,97,255,.5); }
+
+    /* ===== ANALYTICS PANEL ===== */
+    #analizaPanel{ display: none; }
+    #analizaPanel.visible{ display: block; }
+    #dataPanel{ }
+    #dataPanel.hidden{ display: none; }
+
+    .stats-grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .stat-card{
+      background: rgba(7,12,18,.85);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .stat-card .label{
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 6px;
+    }
+    .stat-card .value{
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .stat-card .sub{
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .ana-section{
+      margin: 20px 0;
+    }
+    .ana-section h3{
+      font-size: 13px;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 10px;
+      font-weight: 900;
+    }
+    .ana-chart{
+      background: rgba(7,12,18,.78);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .ana-fuel-select{
+      display: flex;
+      gap: 0;
+      background: rgba(7,12,18,.85);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      width: fit-content;
+      margin-bottom: 14px;
+    }
+    .ana-fuel-btn{
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-right: 1px solid rgba(255,255,255,.06);
+      font-family: inherit;
+      transition: all .15s ease;
+    }
+    .ana-fuel-btn:last-child{ border-right: none; }
+    .ana-fuel-btn:hover{ color: var(--text); background: rgba(255,255,255,.04); }
+    .ana-fuel-btn.active{ color: #fff; background: rgba(123,97,255,.18); }
     .fuel-tab.active .cursor-blink{
       display: inline-block;
       width: 2px; height: 14px;
@@ -396,8 +482,14 @@
         Olej Napedowy Ekodiesel
         <span class="cursor-blink"></span>
       </button>
+      <button class="fuel-tab" data-fuel="analiza" id="analizaTab">
+        <span class="dot analiza"></span>
+        Analiza
+        <span class="cursor-blink"></span>
+      </button>
     </div>
 
+    <div id="dataPanel">
     <div class="controls">
       <div class="controls-left">
         <!-- PERIOD SWITCHER -->
@@ -439,6 +531,38 @@
       * Cena jako <b>tys. PLN/m3</b>. D/D = zmiana dzienna, T/T = zmiana tyg. (7 dni), M/M = zmiana mies. (30 dni).
       <br>Kliknij naglowek kolumny ZMIANA aby otworzyc wykres slupkowy historii zmian.
     </div>
+    </div><!-- /dataPanel -->
+
+    <!-- ===== ANALYTICS PANEL ===== -->
+    <div id="analizaPanel">
+      <div class="ana-fuel-select" id="anaFuelSelect">
+        <button class="ana-fuel-btn active" data-anafuel="benzyna">PB95</button>
+        <button class="ana-fuel-btn" data-anafuel="diesel">Ekodiesel</button>
+        <button class="ana-fuel-btn" data-anafuel="oba">Oba paliwa</button>
+      </div>
+
+      <!-- STATS -->
+      <div class="ana-section">
+        <h3>Statystyki cenowe</h3>
+        <div class="stats-grid" id="statsGrid"></div>
+      </div>
+
+      <!-- CPI vs FUEL -->
+      <div class="ana-section">
+        <h3>Ceny paliw vs inflacja CPI r/r (%)</h3>
+        <div class="ana-chart" id="cpiChartBox" style="height:420px;"></div>
+      </div>
+
+      <!-- HISTOGRAM -->
+      <div class="ana-section">
+        <h3>Rozklad cen (histogram)</h3>
+        <div class="ana-chart" id="histChartBox" style="height:380px;"></div>
+      </div>
+
+      <div class="footnote">
+        Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m3, netto). Opracowanie wlasne.
+      </div>
+    </div><!-- /analizaPanel -->
   </div>
 
   <!-- MODAL: price line chart -->
@@ -760,15 +884,345 @@
       chartReady = false;
     }
 
+    // ===== VIEW MODE: data vs analiza =====
+    const dataPanel = document.getElementById("dataPanel");
+    const analizaPanel = document.getElementById("analizaPanel");
+    let viewMode = "data"; // "data" or "analiza"
+
+    function setViewMode(mode){
+      viewMode = mode;
+      if(mode === "analiza"){
+        dataPanel.classList.add("hidden");
+        analizaPanel.classList.add("visible");
+        loadAnalytics();
+      } else {
+        dataPanel.classList.remove("hidden");
+        analizaPanel.classList.remove("visible");
+      }
+    }
+
     // ===== FUEL TAB SWITCHING =====
     els.fuelTabs.addEventListener("click", (e) => {
       const tab = e.target.closest(".fuel-tab");
-      if(!tab || tab.dataset.fuel === currentFuel) return;
-      currentFuel = tab.dataset.fuel;
+      if(!tab) return;
+      const fuel = tab.dataset.fuel;
+
       els.fuelTabs.querySelectorAll(".fuel-tab").forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
-      els.searchInput.value = "";
-      loadData();
+
+      if(fuel === "analiza"){
+        setViewMode("analiza");
+        return;
+      }
+
+      if(viewMode === "analiza") setViewMode("data");
+      if(fuel !== currentFuel){
+        currentFuel = fuel;
+        els.searchInput.value = "";
+        loadData();
+      }
+    });
+
+    // ===== ANALYTICS =====
+    const CPI_FILE = "CPI_Inflacja_PL_2022-2026.json";
+    let cpiData = null;
+    let allFuelData = {};
+    let currentAnaFuel = "benzyna";
+
+    async function loadCPI(){
+      if(cpiData) return cpiData;
+      const res = await fetch(CPI_FILE + "?v=" + Date.now(), { cache: "no-store" });
+      const data = await res.json();
+      cpiData = data.map(r => {
+        const parts = r.data.split("-");
+        return {
+          date: new Date(Date.UTC(+parts[2], +parts[1]-1, +parts[0])),
+          cpi: r.cpi_rr_pct
+        };
+      });
+      return cpiData;
+    }
+
+    async function loadFuelForAnalysis(fuelKey){
+      if(allFuelData[fuelKey]) return allFuelData[fuelKey];
+      const file = FUEL_FILES[fuelKey];
+      const res = await fetch(file + "?v=" + Date.now(), { cache: "no-store" });
+      const data = await res.json();
+      const out = [];
+      for(const r of data){
+        const dateStr = (r.data_zmiany || "").trim();
+        const price = Number(r.cena_pln_m3);
+        const date = parseDateDDMMYYYY(dateStr);
+        if(dateStr && Number.isFinite(price) && date) out.push({ dateStr, date, price });
+      }
+      out.sort((a,b) => a.date - b.date);
+      allFuelData[fuelKey] = out;
+      return out;
+    }
+
+    function calcStats(prices){
+      const n = prices.length;
+      const sorted = [...prices].sort((a,b) => a - b);
+      const sum = prices.reduce((a,b) => a+b, 0);
+      const mean = sum / n;
+      const variance = prices.reduce((a,v) => a + (v - mean)**2, 0) / n;
+      const std = Math.sqrt(variance);
+      const median = n % 2 === 0
+        ? (sorted[n/2-1] + sorted[n/2]) / 2
+        : sorted[Math.floor(n/2)];
+      const p5 = sorted[Math.floor(n * 0.05)];
+      const p25 = sorted[Math.floor(n * 0.25)];
+      const p75 = sorted[Math.floor(n * 0.75)];
+      const p95 = sorted[Math.floor(n * 0.95)];
+      return {
+        n, mean, median, std, min: sorted[0], max: sorted[n-1],
+        p5, p25, p75, p95,
+        current: prices[prices.length - 1]
+      };
+    }
+
+    function renderStats(fuelKey, fuelRows){
+      const grid = document.getElementById("statsGrid");
+      const prices = fuelRows.map(r => r.price);
+      const s = calcStats(prices);
+      const label = FUEL_LABELS[fuelKey] || fuelKey;
+      const pctFromMean = ((s.current - s.mean) / s.mean * 100).toFixed(1);
+      const pctSign = pctFromMean >= 0 ? "+" : "";
+
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="label">Aktualna cena</div>
+          <div class="value">${(s.current/1000).toFixed(3)}</div>
+          <div class="sub">tys. PLN/m3 | ${pctSign}${pctFromMean}% vs srednia</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Srednia</div>
+          <div class="value">${(s.mean/1000).toFixed(3)}</div>
+          <div class="sub">z ${s.n} obserwacji</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Mediana</div>
+          <div class="value">${(s.median/1000).toFixed(3)}</div>
+          <div class="sub">wartosc srodkowa</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Odch. std.</div>
+          <div class="value">${(s.std/1000).toFixed(3)}</div>
+          <div class="sub">${((s.std/s.mean)*100).toFixed(1)}% wspolczynnik zmiennosci</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Minimum</div>
+          <div class="value" style="color:var(--green)">${(s.min/1000).toFixed(3)}</div>
+          <div class="sub">najnizsza cena w historii</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Maksimum</div>
+          <div class="value" style="color:var(--red)">${(s.max/1000).toFixed(3)}</div>
+          <div class="sub">najwyzsza cena w historii</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Percentyl 5%</div>
+          <div class="value">${(s.p5/1000).toFixed(3)}</div>
+          <div class="sub">tanio — 5% czasu ponizej</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Percentyl 95%</div>
+          <div class="value">${(s.p95/1000).toFixed(3)}</div>
+          <div class="sub">drogo — 5% czasu powyzej</div>
+        </div>
+      `;
+    }
+
+    function drawCpiChart(fuelKey, fuelRows, cpi){
+      const fLabel = FUEL_LABELS[fuelKey] || fuelKey;
+      const fColor = fuelKey === "benzyna" ? "#ff4b4b" : "#ffcc66";
+
+      const traces = [{
+        x: fuelRows.map(r => new Date(r.date)),
+        y: fuelRows.map(r => r.price / 1000),
+        type: "scatter", mode: "lines",
+        name: fLabel + " (tys. PLN/m3)",
+        line: { width: 2, color: fColor },
+        yaxis: "y",
+        hovertemplate: "%{x|%m/%Y}<br><b>%{y:.3f} tys.</b><extra>" + fLabel + "</extra>"
+      }, {
+        x: cpi.map(r => new Date(r.date)),
+        y: cpi.map(r => r.cpi),
+        type: "scatter", mode: "lines+markers",
+        name: "CPI r/r (%)",
+        line: { width: 2.5, color: "#7b61ff", dash: "dot" },
+        marker: { size: 5, color: "#7b61ff" },
+        yaxis: "y2",
+        hovertemplate: "%{x|%m/%Y}<br><b>%{y:.1f}%</b><extra>CPI</extra>"
+      }];
+
+      // If 'oba', add diesel too
+      if(fuelKey === "oba" && allFuelData.diesel){
+        traces.unshift({
+          x: allFuelData.diesel.map(r => new Date(r.date)),
+          y: allFuelData.diesel.map(r => r.price / 1000),
+          type: "scatter", mode: "lines",
+          name: "Ekodiesel (tys. PLN/m3)",
+          line: { width: 2, color: "#ffcc66" },
+          yaxis: "y",
+          hovertemplate: "%{x|%m/%Y}<br><b>%{y:.3f} tys.</b><extra>Ekodiesel</extra>"
+        });
+        traces[1].name = "PB95 (tys. PLN/m3)";
+      }
+
+      const layout = {
+        title: {
+          text: fLabel + " vs Inflacja CPI r/r",
+          font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
+          x: 0.01, xanchor: "left"
+        },
+        paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
+        margin: { l: 70, r: 70, t: 45, b: 50 },
+        xaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.06)",
+          tickfont: { color: "rgba(255,255,255,.6)" }
+        },
+        yaxis: {
+          title: { text: "Cena (tys. PLN/m3)", font: { color: fColor } },
+          showgrid: true, gridcolor: "rgba(255,255,255,.06)",
+          tickfont: { color: "rgba(255,255,255,.6)" },
+          side: "left"
+        },
+        yaxis2: {
+          title: { text: "CPI r/r (%)", font: { color: "#7b61ff" } },
+          tickfont: { color: "rgba(255,255,255,.6)" },
+          overlaying: "y", side: "right",
+          showgrid: false
+        },
+        font: { color: "rgba(255,255,255,.7)" },
+        legend: { x: 0.01, y: -0.18, orientation: "h", font: { size: 11 } },
+        hovermode: "x unified",
+        showlegend: true,
+        annotations: [{
+          text: "Opracowanie wlasne | dane: Orlen, GUS",
+          showarrow: false, xref: "paper", yref: "paper",
+          x: 1, y: -0.22, xanchor: "right", yanchor: "top",
+          font: { size: 10, color: "rgba(255,255,255,.3)", family: "monospace" }
+        }]
+      };
+
+      Plotly.newPlot("cpiChartBox", traces, layout, { responsive: true, displayModeBar: true,
+        toImageButtonOptions: { format: "png", width: 1400, height: 600, filename: "paliwa_vs_inflacja" }
+      });
+    }
+
+    function drawHistogram(fuelKey, fuelRows){
+      const fLabel = FUEL_LABELS[fuelKey] || fuelKey;
+      const fColor = fuelKey === "benzyna" ? "#ff4b4b" : fuelKey === "diesel" ? "#ffcc66" : "#ff4b4b";
+      const prices = fuelRows.map(r => r.price / 1000);
+
+      const traces = [{
+        x: prices,
+        type: "histogram",
+        nbinsx: 40,
+        marker: { color: fColor.replace(")", ",.6)").replace("rgb","rgba").replace("#",""), line: { color: fColor, width: 1 } },
+        name: fLabel,
+        opacity: 0.75,
+        hovertemplate: "Cena: %{x:.3f}<br>Liczba dni: %{y}<extra></extra>"
+      }];
+
+      // Fix color for histogram
+      traces[0].marker = {
+        color: fuelKey === "benzyna" ? "rgba(255,75,75,.55)" : "rgba(255,204,102,.55)",
+        line: { color: fColor, width: 1 }
+      };
+
+      if(fuelKey === "oba" && allFuelData.diesel){
+        const dPrices = allFuelData.diesel.map(r => r.price / 1000);
+        traces[0].name = "PB95";
+        traces[0].marker = { color: "rgba(255,75,75,.5)", line: { color: "#ff4b4b", width: 1 } };
+        traces.push({
+          x: dPrices,
+          type: "histogram",
+          nbinsx: 40,
+          marker: { color: "rgba(255,204,102,.5)", line: { color: "#ffcc66", width: 1 } },
+          name: "Ekodiesel",
+          opacity: 0.7
+        });
+      }
+
+      // Add current price vertical line
+      const current = prices[prices.length - 1];
+
+      const layout = {
+        title: {
+          text: "Rozklad cen — " + fLabel,
+          font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
+          x: 0.01, xanchor: "left"
+        },
+        paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
+        margin: { l: 60, r: 40, t: 45, b: 50 },
+        xaxis: {
+          title: { text: "Cena (tys. PLN/m3)", font: { color: "rgba(255,255,255,.6)" } },
+          showgrid: true, gridcolor: "rgba(255,255,255,.06)",
+          tickfont: { color: "rgba(255,255,255,.6)" }
+        },
+        yaxis: {
+          title: { text: "Liczba dni", font: { color: "rgba(255,255,255,.6)" } },
+          showgrid: true, gridcolor: "rgba(255,255,255,.06)",
+          tickfont: { color: "rgba(255,255,255,.6)" }
+        },
+        font: { color: "rgba(255,255,255,.7)" },
+        barmode: fuelKey === "oba" ? "overlay" : "stack",
+        showlegend: fuelKey === "oba",
+        legend: { x: 0.01, y: -0.18, orientation: "h", font: { size: 11 } },
+        shapes: [{
+          type: "line",
+          x0: current, x1: current, y0: 0, y1: 1,
+          xref: "x", yref: "paper",
+          line: { color: "#34ff9a", width: 2, dash: "dash" }
+        }],
+        annotations: [{
+          x: current, y: 1, xref: "x", yref: "paper",
+          text: "TERAZ: " + current.toFixed(3),
+          showarrow: true, arrowhead: 0, ax: 40, ay: -25,
+          font: { color: "#34ff9a", size: 11, family: "monospace" },
+          bgcolor: "rgba(0,0,0,.6)", borderpad: 4
+        }]
+      };
+
+      Plotly.newPlot("histChartBox", traces, layout, { responsive: true, displayModeBar: true,
+        toImageButtonOptions: { format: "png", width: 1200, height: 500, filename: "rozklad_cen_paliw" }
+      });
+    }
+
+    async function loadAnalytics(){
+      const [cpi, pb95, diesel] = await Promise.all([
+        loadCPI(),
+        loadFuelForAnalysis("benzyna"),
+        loadFuelForAnalysis("diesel"),
+      ]);
+
+      renderAnalytics();
+    }
+
+    function renderAnalytics(){
+      const fuel = currentAnaFuel;
+
+      if(fuel === "oba"){
+        renderStats("benzyna", allFuelData.benzyna);
+        drawCpiChart("oba", allFuelData.benzyna, cpiData);
+        drawHistogram("oba", allFuelData.benzyna);
+      } else {
+        renderStats(fuel, allFuelData[fuel]);
+        drawCpiChart(fuel, allFuelData[fuel], cpiData);
+        drawHistogram(fuel, allFuelData[fuel]);
+      }
+    }
+
+    // Analiza fuel sub-select
+    document.getElementById("anaFuelSelect").addEventListener("click", (e) => {
+      const btn = e.target.closest(".ana-fuel-btn");
+      if(!btn) return;
+      currentAnaFuel = btn.dataset.anafuel;
+      document.querySelectorAll(".ana-fuel-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderAnalytics();
     });
 
     // ===== PERIOD TAB SWITCHING =====
