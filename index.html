@@ -601,7 +601,7 @@
   <div class="topbar">
     Monitor Hurtowych Cen Paliw
     <span class="sub">
-      Zrodlo: Orlen | Wiersz = wykres ceny | Naglowek ZMIANA = wykres slupkowy | D/D T/T M/M = okres
+      Źródło: Orlen | Wiersz = wykres ceny | Nagłówek ZMIANA = wykres słupkowy | D/D T/T M/M = okres
     </span>
   </div>
 
@@ -670,7 +670,7 @@
 
     <div class="footnote">
       * Cena jako <b>tys. PLN/m3</b>. D/D = zmiana dzienna, T/T = zmiana tyg. (7 dni), M/M = zmiana mies. (30 dni).
-      <br>Kliknij naglowek kolumny ZMIANA aby otworzyc wykres slupkowy historii zmian.
+      <br>Kliknij nagłówek kolumny ZMIANA aby otworzyć wykres słupkowy historii zmian.
     </div>
     </div><!-- /dataPanel -->
 
@@ -692,11 +692,11 @@
       <div class="ana-section">
         <h3>Ceny paliw vs inflacja CPI r/r (%)</h3>
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
-          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesuniecie CPI:</span>
+          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesunięcie CPI:</span>
           <input type="range" id="cpiOffset" min="-12" max="12" value="0" step="1"
             style="width:200px; accent-color:#7b61ff;">
           <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:80px;">0 mies.</span>
-          <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdz najlepsze dopasowanie</button>
+          <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdź najlepsze dopasowanie</button>
         </div>
         <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
           <span id="corrDisplay" style="font-size:13px; font-weight:900; color:var(--text);"></span>
@@ -706,12 +706,12 @@
 
       <!-- HISTOGRAM -->
       <div class="ana-section">
-        <h3>Rozklad cen (histogram)</h3>
+        <h3>Rozkład cen (histogram)</h3>
         <div class="ana-chart" id="histChartBox" style="height:380px;"></div>
       </div>
 
       <div class="footnote">
-        Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m3, netto). Opracowanie wlasne.
+        Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m3, netto). Opracowanie własne.
       </div>
     </div><!-- /analizaPanel -->
 
@@ -722,12 +722,12 @@
       <div class="stopy-section">
         <h3>Krzywa stop procentowych</h3>
         <div class="stopy-compare-bar">
-          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Porownaj z:</span>
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Porównaj z:</span>
           <select id="stopyCompareSel">
-            <option value="">-- wybierz date --</option>
+            <option value="">-- wybierz datę --</option>
           </select>
           <button class="btn" id="stopyCompareAdd" style="font-size:11px;padding:6px 14px;border-color:rgba(0,212,170,.35);color:#00d4aa;">Dodaj</button>
-          <button class="btn" id="stopyCompareClear" style="font-size:11px;padding:6px 14px;border-color:rgba(255,255,255,.12);color:var(--muted);">Wyczysc</button>
+          <button class="btn" id="stopyCompareClear" style="font-size:11px;padding:6px 14px;border-color:rgba(255,255,255,.12);color:var(--muted);">Wyczyść</button>
         </div>
         <div class="stopy-curve-wrap chart-resizable" id="stopyCurveWrap" style="height:380px;">
           <div id="stopyCurveChart" style="width:100%;height:100%;"></div>
@@ -771,7 +771,7 @@
       <div class="head">
         <div></div>
         <div style="display:flex; gap:10px;">
-          <button class="btn" id="btnShowAll">Caly zakres</button>
+          <button class="btn" id="btnShowAll">Cały zakres</button>
           <button class="btn" id="btnClose">Zamknij (Esc)</button>
         </div>
       </div>
@@ -785,7 +785,7 @@
       <div class="head">
         <div class="title" id="stopyModalTitle"></div>
         <div style="display:flex; gap:10px;">
-          <button class="btn" id="stopyBtnShowAll">Caly zakres</button>
+          <button class="btn" id="stopyBtnShowAll">Cały zakres</button>
           <button class="btn" id="stopyBtnClose">Zamknij (Esc)</button>
         </div>
       </div>
@@ -799,7 +799,7 @@
       <div class="head">
         <div></div>
         <div style="display:flex; gap:10px;">
-          <button class="btn" id="barBtnShowAll">Caly zakres</button>
+          <button class="btn" id="barBtnShowAll">Cały zakres</button>
           <button class="btn" id="barBtnClose">Zamknij (Esc)</button>
         </div>
       </div>
@@ -822,7 +822,7 @@
     const PERIOD_CONFIG = {
       dd: { label: "D/D", days: 1,  zlCol: "ZMIANA D/D (zl)", pctCol: "ZMIANA D/D (%)", barTitle: "ZMIAN DZIENNYCH" },
       ww: { label: "T/T", days: 7,  zlCol: "ZMIANA T/T (zl)", pctCol: "ZMIANA T/T (%)", barTitle: "ZMIAN TYGODNIOWYCH" },
-      mm: { label: "M/M", days: 30, zlCol: "ZMIANA M/M (zl)", pctCol: "ZMIANA M/M (%)", barTitle: "ZMIAN MIESIECZNYCH" },
+      mm: { label: "M/M", days: 30, zlCol: "ZMIANA M/M (zl)", pctCol: "ZMIANA M/M (%)", barTitle: "ZMIAN MIESIĘCZNYCH" },
     };
 
     // ===== STATE =====
@@ -927,7 +927,7 @@
       for (const r of rowsAsc) maxSoFar = Math.max(maxSoFar, r.price);
 
       if (last.price >= maxSoFar){
-        return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYZSZA W HISTORII (od ${rowsAsc[0].dateStr}).`;
+        return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA W HISTORII (od ${rowsAsc[0].dateStr}).`;
       }
 
       let lastHigherDate = null;
@@ -937,7 +937,7 @@
           break;
         }
       }
-      return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYZSZA OD ${lastHigherDate}.`;
+      return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA OD ${lastHigherDate}.`;
     }
 
     function setAlert(msg){
@@ -1084,7 +1084,7 @@
 
     async function loadData(){
       setAlert(null);
-      els.tbody.innerHTML = `<tr><td class="muted" colspan="6">Ladowanie danych...</td></tr>`;
+      els.tbody.innerHTML = `<tr><td class="muted" colspan="6">Ładowanie danych...</td></tr>`;
 
       const file = FUEL_FILES[currentFuel];
       const url = `${file}?v=${Date.now()}`;
@@ -1215,32 +1215,32 @@
         <div class="stat-card">
           <div class="label">Mediana</div>
           <div class="value">${(s.median/1000).toFixed(3)}</div>
-          <div class="sub">wartosc srodkowa</div>
+          <div class="sub">wartość środkowa</div>
         </div>
         <div class="stat-card">
           <div class="label">Odch. std.</div>
           <div class="value">${(s.std/1000).toFixed(3)}</div>
-          <div class="sub">${((s.std/s.mean)*100).toFixed(1)}% wspolczynnik zmiennosci</div>
+          <div class="sub">${((s.std/s.mean)*100).toFixed(1)}% współczynnik zmienności</div>
         </div>
         <div class="stat-card">
           <div class="label">Minimum</div>
           <div class="value" style="color:var(--green)">${(s.min/1000).toFixed(3)}</div>
-          <div class="sub">najnizsza cena w historii</div>
+          <div class="sub">najniższa cena w historii</div>
         </div>
         <div class="stat-card">
           <div class="label">Maksimum</div>
           <div class="value" style="color:var(--red)">${(s.max/1000).toFixed(3)}</div>
-          <div class="sub">najwyzsza cena w historii</div>
+          <div class="sub">najwyższa cena w historii</div>
         </div>
         <div class="stat-card">
           <div class="label">Percentyl 5%</div>
           <div class="value">${(s.p5/1000).toFixed(3)}</div>
-          <div class="sub">tanio — 5% czasu ponizej</div>
+          <div class="sub">tanio — 5% czasu poniżej</div>
         </div>
         <div class="stat-card">
           <div class="label">Percentyl 95%</div>
           <div class="value">${(s.p95/1000).toFixed(3)}</div>
-          <div class="sub">drogo — 5% czasu powyzej</div>
+          <div class="sub">drogo — 5% czasu powyżej</div>
         </div>
       `;
     }
@@ -1325,7 +1325,7 @@
         hovermode: "x unified",
         showlegend: true,
         annotations: [{
-          text: "Opracowanie wlasne | dane: Orlen, GUS",
+          text: "Opracowanie własne | dane: Orlen, GUS",
           showarrow: false, xref: "paper", yref: "paper",
           x: 1, y: -0.22, xanchor: "right", yanchor: "top",
           font: { size: 10, color: "rgba(255,255,255,.3)", family: "monospace" }
@@ -1377,7 +1377,7 @@
 
       const layout = {
         title: {
-          text: "Rozklad cen — " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel),
+          text: "Rozkład cen — " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel),
           font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
           x: 0.01, xanchor: "left"
         },
@@ -1514,7 +1514,7 @@
       const strength = Math.abs(corr.r) > 0.8 ? "bardzo silna" :
                        Math.abs(corr.r) > 0.6 ? "silna" :
                        Math.abs(corr.r) > 0.4 ? "umiarkowana" :
-                       Math.abs(corr.r) > 0.2 ? "slaba" : "brak";
+                       Math.abs(corr.r) > 0.2 ? "słaba" : "brak";
 
       el.innerHTML = `Pearson r = <span style="color:${rColor}; font-size:15px;">${corr.r.toFixed(3)}</span>`
         + ` &nbsp; R\u00B2 = <span style="color:${rColor};">${corr.r2.toFixed(3)}</span>`
@@ -1821,7 +1821,7 @@
 
     loadData().catch(err => {
       console.error(err);
-      els.tbody.innerHTML = `<tr><td class="neg" colspan="6">Blad: ${err.message}<br><span class="muted">Uruchom serwer HTTP (np. python -m http.server 8000).</span></td></tr>`;
+      els.tbody.innerHTML = `<tr><td class="neg" colspan="6">Błąd: ${err.message}<br><span class="muted">Uruchom serwer HTTP (np. python -m http.server 8000).</span></td></tr>`;
     });
 
     // ===== STOPY PANEL =====
@@ -2029,13 +2029,17 @@
           tickvals: [0,3,4,6,9,12],
           ticktext: ["NBP ref\n(0M)","WIBOR 3M\n(3M)","FRA 1\xd74\n(4M)","FRA 3\xd76\n(6M)","FRA 6\xd79\n(9M)","FRA 9\xd712\n(12M)"],
           gridcolor: "#1a2433", color: "#8aa2be", showline: false, fixedrange: true,
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
         },
         yaxis: {
           gridcolor: "#1a2433", color: "#8aa2be", ticksuffix: "%",
           autorange: true, fixedrange: true,
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
         },
         legend: { bgcolor: "transparent", font: { size: 11 } },
-        hovermode: "x unified",
+        hovermode: "closest",
       };
 
       Plotly.react("stopyCurveChart", traces, layout, { responsive: true, displayModeBar: false });
@@ -2081,7 +2085,7 @@
 
     function populateCompareSelect(){
       const sel = document.getElementById("stopyCompareSel");
-      sel.innerHTML = `<option value="">-- wybierz date --</option>` +
+      sel.innerHTML = `<option value="">-- wybierz datę --</option>` +
         stopyFra.slice().reverse().map(e =>
           `<option value="${e.timestamp}">${e.date} \xb7 ${e.session === "morning" ? "rano" : "popol."}</option>`
         ).join("");
@@ -2100,9 +2104,9 @@
         renderStopyTable();
         populateCompareSelect();
       } catch(e){
-        console.error("Blad ladowania stopy:", e);
+        console.error("Błąd ładowania stopy:", e);
         document.getElementById("stopyTbody").innerHTML =
-          `<tr><td colspan="8" style="color:var(--red);padding:24px;text-align:center;">Blad: ${e.message}</td></tr>`;
+          `<tr><td colspan="8" style="color:var(--red);padding:24px;text-align:center;">Błąd: ${e.message}</td></tr>`;
       }
     }
 
