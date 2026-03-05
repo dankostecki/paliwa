@@ -1,0 +1,29 @@
+name: Update NBP rates
+
+on:
+  schedule:
+    - cron: '0 7 * * 1-5'   # Pon-Pt 07:00 UTC (08:00 CET / 09:00 CEST)
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch NBP rates
+        run: python fetch_nbp.py
+
+      - name: Commit & push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/nbp_history.json
+          git diff --cached --quiet || (git commit -m "NBP: aktualizacja stop $(date '+%Y-%m-%d')" && git push)
