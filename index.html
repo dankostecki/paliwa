@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Monitor Hurtowych Cen Paliw</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
   <style>
@@ -401,14 +400,6 @@
 
     <div class="controls">
       <div class="controls-left">
-        <div class="pill">
-          <label>Plik</label>
-          <select id="sourceSelect">
-            <option value="csv">CSV</option>
-            <option value="json">JSON</option>
-          </select>
-        </div>
-
         <!-- PERIOD SWITCHER -->
         <div class="period-tabs" id="periodTabs">
           <button class="period-tab active" data-period="dd">D/D</button>
@@ -481,14 +472,8 @@
   <script>
     // ===== CONFIG =====
     const FUEL_FILES = {
-      benzyna: {
-        csv: "Benzyna_Eurosuper95_2022-2026.csv",
-        json: "Benzyna_Eurosuper95_2022-2026.json",
-      },
-      diesel: {
-        csv: "Olej_Napedowy_Ekodiesel_2022-2026.csv",
-        json: "Olej_Napedowy_Ekodiesel_2022-2026.json",
-      }
+      benzyna: "Benzyna_Eurosuper95_2022-2026.json",
+      diesel:  "Olej_Napedowy_Ekodiesel_2022-2026.json",
     };
 
     const FUEL_LABELS = {
@@ -512,7 +497,6 @@
 
     // ===== DOM =====
     const els = {
-      sourceSelect: document.getElementById("sourceSelect"),
       tbody:        document.getElementById("tbody"),
       searchInput:  document.getElementById("searchInput"),
       hiAlert:      document.getElementById("hiAlert"),
@@ -745,23 +729,6 @@
     }
 
     // ===== LOAD DATA =====
-    async function loadCSV(path){
-      const res = await fetch(path, { cache: "no-store" });
-      if(!res.ok) throw new Error(`CSV: ${res.status} ${res.statusText}`);
-      const text = await res.text();
-      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-      const out = [];
-      for (const row of parsed.data){
-        const dateStr = (row.data_zmiany || row.Data_zmiany || row.DATA || "").trim();
-        const priceRaw = row.cena_pln_m3 ?? row.Cena_PLN_m3 ?? row["Cena [PLN/m3]"] ?? row.Cena ?? "";
-        const price = Number(String(priceRaw).replace(/\s+/g, ""));
-        const date = parseDateDDMMYYYY(dateStr);
-        if(!dateStr || !Number.isFinite(price) || !date) continue;
-        out.push({ dateStr, date, price });
-      }
-      return out;
-    }
-
     async function loadJSON(path){
       const res = await fetch(path, { cache: "no-store" });
       if(!res.ok) throw new Error(`JSON: ${res.status} ${res.statusText}`);
@@ -781,14 +748,10 @@
       setAlert(null);
       els.tbody.innerHTML = `<tr><td class="muted" colspan="6">Ladowanie danych...</td></tr>`;
 
-      const mode = els.sourceSelect.value;
-      const file = FUEL_FILES[currentFuel][mode];
+      const file = FUEL_FILES[currentFuel];
       const url = `${file}?v=${Date.now()}`;
 
-      let raw = [];
-      if(mode === "csv") raw = await loadCSV(url);
-      else raw = await loadJSON(url);
-
+      let raw = await loadJSON(url);
       raw.sort((a,b) => a.date - b.date);
       rows = raw;
 
@@ -1030,7 +993,6 @@
     }
 
     // ===== EVENT LISTENERS =====
-    els.sourceSelect.addEventListener("change", loadData);
     els.searchInput.addEventListener("input", applyFilter);
 
     els.btnClose.addEventListener("click", closeModal);
