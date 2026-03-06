@@ -587,48 +587,50 @@ tbody tr:active{ transform: translateY(1px); }
 }
 .hint{ color: rgba(255,255,255,.55); font-size: 12px; margin-left: 6px; }
 
+/* ===== CHART TITLE BAR (HTML, nie w Plotly — bez konfliktu z modebarem) ===== */
+.chart-title-bar{
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,.72);
+  padding: 0 2px 8px;
+  letter-spacing: .3px;
+  font-family: inherit;
+}
+
 /* ===== SHARE / EXPORT ===== */
-.chart-wrap{
-  position: relative;
-  display: block;
-}
-.chart-wrap-modal{
-  flex: 1;
-  min-height: 0;
-  position: relative;
-}
-.chart-wrap-modal > div{
-  width: 100%;
-  height: 100%;
+#chart{ flex:1; min-height:0; }
+#barChart{ flex:1; min-height:0; }
+#stopyChart{ flex:1; min-height:0; }
+
+.chart-actions{
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 0 2px;
 }
 .btn-share{
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 10;
-  background: rgba(7,12,18,.72);
-  border: 1px solid rgba(255,255,255,.13);
-  color: rgba(255,255,255,.35);
-  padding: 7px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.40);
+  padding: 7px 14px;
   border-radius: 10px;
   cursor: pointer;
-  transition: color .15s, background .15s, border-color .15s;
   display: flex;
   align-items: center;
-  justify-content: center;
-  line-height: 1;
-  backdrop-filter: blur(4px);
+  gap: 6px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  transition: all .15s;
+  white-space: nowrap;
 }
 .btn-share:hover{
   color: rgba(255,255,255,.85);
-  background: rgba(7,12,18,.92);
-  border-color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.09);
+  border-color: rgba(255,255,255,.25);
 }
-.btn-share svg{
-  width: 15px;
-  height: 15px;
-  display: block;
-}
+.btn-share svg{ width:14px; height:14px; flex-shrink:0; }
 
 /* ===== MOBILE ===== */
 @media (max-width: 640px) {
