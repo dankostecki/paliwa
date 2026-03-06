@@ -3,34 +3,83 @@
 fetch_ice.py — Pobiera ICE Low Sulphur Gasoil (LF.F) i USD/PLN ze stooq.pl.
 Przelicza cenę na PLN/1000l i dopisuje do archiwum.
 
+Pierwsza inicjalizacja: jednorazowy import z Google Sheets CSV.
+Codzienne aktualizacje: stooq.pl JSON API (/q/l/).
+
 Wzór: ICE [USD/tonę] × 0,845 [kg/l] × USD/PLN = ICE [PLN/1000l]
 Gęstość kontraktowa ICE Low Sulphur Gasoil: 0,845 kg/l (specyfikacja ICE).
 """
-import requests
+import csv
+import io
 import json
 import os
-from datetime import date, timedelta
+import re
+import sys
+import requests
+from datetime import date
+
+# Windows terminal moze nie obslugiwac UTF-8
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HISTORY_FILE = "data/ice_history.json"
 DENSITY = 0.845  # kg/l
 
+SHEETS_CSV_URL = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1FRfB6Xctk00eTAyR_8MM3tM1D1UBPYO4F4yZFlhlzMM"
+    "/export?format=csv"
+)
 
-def fetch_stooq(symbol, d1, d2):
-    url = f"https://stooq.pl/q/d/l/?s={symbol}&i=d&d1={d1}&d2={d2}"
-    resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+HEADERS = {"User-Agent": "Mozilla/5.0"}
+
+
+def fetch_stooq_json(symbol):
+    """Pobiera bieżące notowanie z API stooq. Zwraca (date_str, close) lub None."""
+    url = f"https://stooq.pl/q/l/?s={symbol}&f=sd2t2ohlcvn&h=&e=json"
+    resp = requests.get(url, timeout=15, headers=HEADERS)
     resp.raise_for_status()
-    lines = resp.text.strip().splitlines()
-    if len(lines) < 2:
-        raise RuntimeError(f"stooq {symbol}: brak danych w odpowiedzi")
-    result = {}
-    for line in lines[1:]:
-        parts = line.split(",")
-        if len(parts) >= 5:
-            try:
-                result[parts[0]] = float(parts[4])  # index 4 = Close (Date,Open,High,Low,Close)
-            except ValueError:
-                pass
-    return result
+    # stooq zwraca niepoprawny JSON: "volume":, — naprawia przed parsowaniem
+    fixed = re.sub(r'"volume":,', '"volume":null,', resp.text)
+    data = json.loads(fixed)
+    symbols = data.get("symbols", [])
+    if not symbols:
+        return None
+    s = symbols[0]
+    close = s.get("close")
+    date_str = s.get("date")
+    if not close or not date_str:
+        return None
+    return date_str, float(close)
+
+
+def import_from_sheets():
+    """Jednorazowy import historii z Google Sheets CSV. Zwraca posortowaną listę wpisów."""
+    resp = requests.get(SHEETS_CSV_URL, timeout=30, headers=HEADERS)
+    resp.raise_for_status()
+    reader = csv.reader(io.StringIO(resp.text))
+    rows = list(reader)
+    if not rows:
+        raise RuntimeError("Google Sheets: pusta odpowiedź")
+    entries = []
+    for row in rows[1:]:  # pomijaj nagłówek
+        if len(row) < 3:
+            continue
+        try:
+            date_str = row[0].strip()
+            ice_usd = float(row[1].strip().replace(",", "."))
+            usdpln = float(row[2].strip().replace(",", "."))
+        except (ValueError, IndexError):
+            continue
+        ice_pln = round(ice_usd * DENSITY * usdpln, 2)
+        entries.append({
+            "date": date_str,
+            "ice_usd_tonne": ice_usd,
+            "usdpln": usdpln,
+            "ice_pln_1000l": ice_pln,
+        })
+    entries.sort(key=lambda e: e["date"])
+    return entries
 
 
 def load_history():
@@ -47,54 +96,48 @@ def save_history(history):
 
 
 def main():
-    today = date.today()
     history = load_history()
 
-    if history:
-        last_date = date.fromisoformat(history[-1]["date"])
-        d1 = (last_date + timedelta(days=1)).strftime("%Y%m%d")
-    else:
-        # Pierwszy run: pobierz ostatnie 90 dni
-        d1 = (today - timedelta(days=90)).strftime("%Y%m%d")
+    # Jednorazowy import z Google Sheets gdy historia jest pusta
+    if not history:
+        print("ICE: pusta historia — importuję z Google Sheets...")
+        history = import_from_sheets()
+        if not history:
+            print("ICE: Google Sheets nie zwróciło danych")
+            return
+        save_history(history)
+        print(f"ICE: zaimportowano {len(history)} wpisów z Google Sheets "
+              f"(ostatni: {history[-1]['date']})")
 
-    d2 = today.strftime("%Y%m%d")
+    # Pobierz dzisiejsze notowania ze stooq JSON API
+    existing = {e["date"] for e in history}
 
-    if d1 > d2:
-        print("ICE: brak nowych danych do pobrania")
+    lf_result = fetch_stooq_json("lf.f")
+    if not lf_result:
+        print("ICE: stooq nie zwrócił danych dla lf.f, pomijam")
+        return
+    lf_date, lf_close = lf_result
+
+    if lf_date in existing:
+        print(f"ICE: dane dla {lf_date} już istnieją, pomijam")
         return
 
-    ice_data = fetch_stooq("lf.f", d1, d2)
-    usdpln_data = fetch_stooq("usdpln", d1, d2)
+    usdpln_result = fetch_stooq_json("usdpln")
+    if not usdpln_result:
+        print("ICE: stooq nie zwrócił danych dla usdpln, pomijam")
+        return
+    _, usdpln_close = usdpln_result
 
-    existing = {e["date"] for e in history}
-    added = 0
-
-    for record_date in sorted(ice_data.keys()):
-        if record_date in existing:
-            continue
-        if record_date not in usdpln_data:
-            print(f"ICE: brak USD/PLN dla {record_date}, pomijam")
-            continue
-
-        ice_usd = ice_data[record_date]
-        usdpln = usdpln_data[record_date]
-        ice_pln = round(ice_usd * DENSITY * usdpln, 2)
-
-        history.append({
-            "date": record_date,
-            "ice_usd_tonne": ice_usd,
-            "usdpln": usdpln,
-            "ice_pln_1000l": ice_pln,
-        })
-        existing.add(record_date)
-        added += 1
-
-    if added > 0:
-        history.sort(key=lambda e: e["date"])
-        save_history(history)
-        print(f"ICE: dodano {added} wpisów (ostatni: {history[-1]['date']})")
-    else:
-        print("ICE: brak nowych wpisów")
+    ice_pln = round(lf_close * DENSITY * usdpln_close, 2)
+    history.append({
+        "date": lf_date,
+        "ice_usd_tonne": lf_close,
+        "usdpln": usdpln_close,
+        "ice_pln_1000l": ice_pln,
+    })
+    history.sort(key=lambda e: e["date"])
+    save_history(history)
+    print(f"ICE: dodano {lf_date}: {lf_close} USD/t × {usdpln_close} = {ice_pln} PLN/1000l")
 
 
 if __name__ == "__main__":
