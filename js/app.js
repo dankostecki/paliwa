@@ -1218,7 +1218,7 @@ function renderCurve(){
   });
 
   const layout = {
-    paper_bgcolor: "transparent", plot_bgcolor: "transparent",
+    paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: 12 },
     margin: { l: 55, r: 20, t: 20, b: 50 },
     xaxis: {
