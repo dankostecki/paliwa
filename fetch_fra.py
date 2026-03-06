@@ -89,8 +89,8 @@ def main():
     }
 
     history.append(entry)
-    # Posortuj po timestamp dla pewności
-    history.sort(key=lambda x: x.get("timestamp", ""))
+    # Posortuj po timestamp — najnowsze na górze
+    history.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
     save_history(history)
     print(f"FRA: dodano wpis {today} sesja={session}")
 
