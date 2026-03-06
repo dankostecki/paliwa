@@ -1568,14 +1568,51 @@ document.getElementById("checkDualAxisBtn").addEventListener("click", () => {
   drawCheckCharts(currentCheckOffset);
 });
 
-// ===== SOCIAL MEDIA EXPORT (1080x1080) =====
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".btn-social");
+// ===== SHARE / EXPORT (1080x1080) =====
+function renderChartToCanvas(el) {
+  return Plotly.toImage(el, { format: "png", width: 1080, height: 1080 }).then(dataUrl => {
+    return new Promise(resolve => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1080; canvas.height = 1080;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#070c12";
+      ctx.fillRect(0, 0, 1080, 1080);
+      const img = new Image();
+      img.onload = () => { ctx.drawImage(img, 0, 0); resolve(canvas); };
+      img.src = dataUrl;
+    });
+  });
+}
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".btn-share");
   if(!btn) return;
   const chartId = btn.dataset.chart;
   const el = document.getElementById(chartId);
-  if(!el || !el.data) { return; }
+  if(!el || !el.data) return;
+
   const titleRaw = el.layout?.title?.text || chartId;
   const filename = titleRaw.replace(/<[^>]*>/g, "").replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 60) + "_1x1";
-  Plotly.downloadImage(el, { format: "png", width: 1080, height: 1080, filename });
+
+  const canvas = await renderChartToCanvas(el);
+
+  // Try Web Share API (native share sheet on mobile)
+  if (navigator.canShare) {
+    const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+    const file = new File([blob], filename + ".png", { type: "image/png" });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      } catch(err) {
+        if (err.name === "AbortError") return;
+      }
+    }
+  }
+
+  // Fallback: download
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png");
+  a.download = filename + ".png";
+  a.click();
 });
