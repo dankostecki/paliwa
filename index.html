@@ -1842,6 +1842,9 @@
       for(const e of stopyWibor){ if(e.date <= date) result = e; }
       return result;
     }
+    function wiborExact(date){
+      return stopyWibor.find(e => e.date === date) ?? null;
+    }
 
     // ===== STOPY MODAL =====
     const stopyModal = document.getElementById("stopyModal");
@@ -2055,13 +2058,13 @@
 
       const rowsHtml = [...stopyFra].reverse().map(fra => {
         const nbp = nbpForDate(fra.date);
-        const wib = wiborForDate(fra.date);
+        const wib = wiborExact(fra.date);
         const badge = fra.session === "morning"
           ? `<span class="session-badge morning">rano</span>`
           : `<span class="session-badge afternoon">popol.</span>`;
         const ts = fra.timestamp;
         const nbpDate = nbp?.date ?? "";
-        const wibDate = wib?.date ?? fra.date;
+        const wibDate = wib?.date ?? "";
         return `<tr>
           <td>${fra.date}</td>
           <td>${badge}</td>
