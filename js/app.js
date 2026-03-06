@@ -1217,10 +1217,15 @@ function renderCurve(){
     traces.push(buildCurveTrace(c.nbp, c.wibor, c.fra, c.label, COMPARE_COLORS[i % COMPARE_COLORS.length]));
   });
 
+  const latestDate = latestFra?.date ?? latestNbp?.date ?? "";
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: 12 },
-    margin: { l: 55, r: 20, t: 20, b: 50 },
+    margin: { l: 55, r: 20, t: 40, b: 50 },
+    title: {
+      text: "Krzywa stóp procentowych PLN" + (latestDate ? " — " + latestDate : ""),
+      font: { size: 13, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
+    },
     xaxis: {
       tickvals: [0,3,4,6,9,12],
       ticktext: ["NBP ref\n(0M)","WIBOR 3M\n(3M)","FRA 1\xd74\n(4M)","FRA 3\xd76\n(6M)","FRA 6\xd79\n(9M)","FRA 9\xd712\n(12M)"],
@@ -1236,6 +1241,12 @@ function renderCurve(){
     },
     legend: { bgcolor: "transparent", font: { size: 11 } },
     hovermode: "closest",
+    annotations: [{
+      text: "Opracowanie własne | dane: NBP, stooq.pl, patria.cz",
+      showarrow: false, xref: "paper", yref: "paper",
+      x: 1, y: -0.12, xanchor: "right", yanchor: "top",
+      font: { size: 11, color: "rgba(255,255,255,.40)", family: "ui-monospace, monospace" }
+    }],
   };
 
   Plotly.react("stopyCurveChart", traces, layout, { responsive: true, displayModeBar: false });
