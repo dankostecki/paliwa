@@ -121,10 +121,13 @@
     .fuel-tab .dot.diesel{ background: #ffcc66; box-shadow: 0 0 8px rgba(255,204,102,.5); }
     .fuel-tab .dot.analiza{ background: #7b61ff; box-shadow: 0 0 8px rgba(123,97,255,.5); }
     .fuel-tab .dot.stopy{ background: #00d4aa; box-shadow: 0 0 8px rgba(0,212,170,.5); }
+    .fuel-tab .dot.check{ background: #4dd0ff; box-shadow: 0 0 8px rgba(77,208,255,.5); }
     .fuel-tab[data-fuel="analiza"].active{ background: rgba(123,97,255,.18); }
     .fuel-tab[data-fuel="analiza"].active::after{ background: linear-gradient(90deg,#7b61ff,#9b81ff); }
     .fuel-tab[data-fuel="stopy"].active{ background: rgba(0,212,170,.15); }
     .fuel-tab[data-fuel="stopy"].active::after{ background: linear-gradient(90deg,#00d4aa,#00ffcc); }
+    .fuel-tab[data-fuel="check"].active{ background: rgba(77,208,255,.15); }
+    .fuel-tab[data-fuel="check"].active::after{ background: linear-gradient(90deg,#4dd0ff,#80e8ff); }
 
     /* ===== ANALYTICS PANEL ===== */
     #analizaPanel{ display: none; }
@@ -132,6 +135,8 @@
     #dataPanel.hidden{ display: none; }
     #stopyPanel{ display: none; }
     #stopyPanel.visible{ display: block; }
+    #checkPanel{ display: none; }
+    #checkPanel.visible{ display: block; }
 
     /* ===== STOPY PANEL ===== */
     .stopy-section{ margin: 22px 0; }
@@ -618,6 +623,11 @@
         Olej Napedowy Ekodiesel
         <span class="cursor-blink"></span>
       </button>
+      <button class="fuel-tab" data-fuel="check" id="checkTab">
+        <span class="dot check"></span>
+        Check
+        <span class="cursor-blink"></span>
+      </button>
       <button class="fuel-tab" data-fuel="analiza" id="analizaTab">
         <span class="dot analiza"></span>
         Analiza
@@ -673,6 +683,34 @@
       <br>Kliknij nagłówek kolumny ZMIANA aby otworzyć wykres słupkowy historii zmian.
     </div>
     </div><!-- /dataPanel -->
+
+    <!-- ===== CHECK PANEL ===== -->
+    <div id="checkPanel">
+      <div class="ana-section">
+        <h3>ICE Low Sulphur Gasoil vs Orlen Ekodiesel</h3>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesunięcie Orlen:</span>
+          <div class="ana-fuel-select" id="checkOffsetBtns" style="margin-bottom:0;">
+            <button class="ana-fuel-btn active" data-offset="0">0 dni</button>
+            <button class="ana-fuel-btn" data-offset="1">+1 dzień</button>
+            <button class="ana-fuel-btn" data-offset="2">+2 dni</button>
+            <button class="ana-fuel-btn" data-offset="3">+3 dni</button>
+            <button class="ana-fuel-btn" data-offset="4">+4 dni</button>
+            <button class="ana-fuel-btn" data-offset="5">+5 dni</button>
+          </div>
+        </div>
+        <div class="ana-chart" id="checkPriceChart" style="height:420px;"></div>
+      </div>
+      <div class="ana-section">
+        <h3>Spread: Orlen − ICE (PLN/1000l)</h3>
+        <div class="ana-chart" id="checkSpreadChart" style="height:260px;"></div>
+      </div>
+      <div class="footnote">
+        Metodologia: ICE Low Sulphur Gasoil (USD/tonę) × 0,845 kg/l × USD/PLN = PLN/1000l.
+        Przesunięcie przesuwa ceny Orlen w lewo o N dni (Orlen reaguje N dni po ICE).
+        Źródło: stooq.pl (ICE LF.F front month, USD/PLN), Orlen.
+      </div>
+    </div><!-- /checkPanel -->
 
     <!-- ===== ANALYTICS PANEL ===== -->
     <div id="analizaPanel">
@@ -1102,15 +1140,18 @@
     const dataPanel = document.getElementById("dataPanel");
     const analizaPanel = document.getElementById("analizaPanel");
     const stopyPanel = document.getElementById("stopyPanel");
-    let viewMode = "data"; // "data" | "analiza" | "stopy"
+    const checkPanel = document.getElementById("checkPanel");
+    let viewMode = "data"; // "data" | "analiza" | "stopy" | "check"
 
     function setViewMode(mode){
       viewMode = mode;
       dataPanel.classList.toggle("hidden", mode !== "data");
       analizaPanel.classList.toggle("visible", mode === "analiza");
       stopyPanel.classList.toggle("visible", mode === "stopy");
+      checkPanel.classList.toggle("visible", mode === "check");
       if(mode === "analiza") loadAnalytics();
       if(mode === "stopy") loadStopy();
+      if(mode === "check") loadCheck();
     }
 
     // ===== FUEL TAB SWITCHING =====
@@ -1122,7 +1163,7 @@
       els.fuelTabs.querySelectorAll(".fuel-tab").forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
 
-      if(fuel === "analiza" || fuel === "stopy"){
+      if(fuel === "analiza" || fuel === "stopy" || fuel === "check"){
         setViewMode(fuel);
         return;
       }
@@ -2144,6 +2185,156 @@
     document.getElementById("stopyCompareClear").addEventListener("click", () => {
       compareEntries = [];
       renderCurve();
+    });
+
+    // ===== CHECK PANEL =====
+    let checkLoaded = false;
+    let checkIce = [];
+    let checkDiesel = [];
+    let currentCheckOffset = 0;
+    const DAY_MS = 24 * 3600 * 1000;
+
+    async function loadCheck(){
+      if(checkLoaded) return;
+      try {
+        const v = Date.now();
+        const [iceData, dieselData] = await Promise.all([
+          fetch(`data/ice_history.json?v=${v}`, { cache: "no-store" }).then(r => r.json()),
+          loadFuelForAnalysis("diesel"),
+        ]);
+        checkIce = iceData;
+        checkDiesel = dieselData;
+        checkLoaded = true;
+        drawCheckCharts(currentCheckOffset);
+      } catch(e){
+        console.error("Błąd ładowania Check:", e);
+        document.getElementById("checkPriceChart").innerHTML =
+          `<div style="color:var(--red);padding:32px;text-align:center;font-family:monospace;">Błąd: ${e.message}</div>`;
+      }
+    }
+
+    function drawCheckCharts(offset){
+      if(!checkIce.length || !checkDiesel.length) return;
+
+      const offsetLabel = offset > 0 ? ` (Orlen −${offset}d)` : "";
+
+      // Orlen dates shifted by -offset days on x-axis
+      const orlenX = checkDiesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
+      const orlenY = checkDiesel.map(r => r.price); // PLN/m3 = PLN/1000l
+
+      const priceTraces = [
+        {
+          x: checkIce.map(e => new Date(e.date + "T12:00:00Z")),
+          y: checkIce.map(e => e.ice_pln_1000l),
+          type: "scatter", mode: "lines",
+          name: "ICE Low Sulphur (PLN/1000l)",
+          line: { color: "#4dd0ff", width: 2 },
+          hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.2f} PLN/1000l</b><extra>ICE Low Sulphur</extra>",
+        },
+        {
+          x: orlenX,
+          y: orlenY,
+          type: "scatter", mode: "lines",
+          name: `Orlen Ekodiesel${offsetLabel} (PLN/1000l)`,
+          line: { color: "#ffcc66", width: 2 },
+          hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.2f} PLN/1000l</b><extra>Orlen Ekodiesel</extra>",
+        },
+      ];
+
+      const commonLayout = {
+        paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
+        font: { color: "rgba(255,255,255,.80)", family: "monospace" },
+        dragmode: "zoom", hovermode: "x unified",
+      };
+
+      Plotly.newPlot("checkPriceChart", priceTraces, {
+        ...commonLayout,
+        title: {
+          text: "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel,
+          font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
+          x: 0.01, xanchor: "left",
+        },
+        margin: { l: 70, r: 40, t: 45, b: 50 },
+        xaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          rangeslider: { visible: true, thickness: 0.08 },
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+        },
+        yaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } },
+          autorange: true,
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+        },
+        legend: { x: 0.01, y: 1.02, orientation: "h", font: { size: 11 }, bgcolor: "transparent" },
+        showlegend: true,
+        annotations: [{
+          text: "Opracowanie własne | źródło: stooq.pl (ICE LF.F, USD/PLN), Orlen",
+          showarrow: false, xref: "paper", yref: "paper",
+          x: 1, y: -0.15, xanchor: "right", yanchor: "top",
+          font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" },
+        }],
+      }, { responsive: true, scrollZoom: true, displayModeBar: true,
+        toImageButtonOptions: { format: "png", width: 1400, height: 600, filename: "ice_vs_orlen" } });
+
+      // === SPREAD ===
+      // Dla każdej daty ICE szukamy Orlen w dacie ICE + offset
+      const orlenByDate = {};
+      checkDiesel.forEach(r => {
+        orlenByDate[r.date.toISOString().slice(0, 10)] = r.price;
+      });
+
+      const spreadX = [], spreadY = [];
+      checkIce.forEach(e => {
+        const orlenDate = new Date(e.date + "T12:00:00Z");
+        orlenDate.setUTCDate(orlenDate.getUTCDate() + offset);
+        const key = orlenDate.toISOString().slice(0, 10);
+        if(orlenByDate[key] != null){
+          spreadX.push(new Date(e.date + "T12:00:00Z"));
+          spreadY.push(+(orlenByDate[key] - e.ice_pln_1000l).toFixed(2));
+        }
+      });
+
+      const spreadColors = spreadY.map(v => v >= 0 ? "rgba(52,255,154,.75)" : "rgba(255,75,75,.75)");
+      const spreadBorders = spreadY.map(v => v >= 0 ? "#34ff9a" : "#ff4b4b");
+
+      Plotly.newPlot("checkSpreadChart", [{
+        x: spreadX, y: spreadY,
+        type: "bar",
+        marker: { color: spreadColors, line: { color: spreadBorders, width: 1 } },
+        hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:+.2f} PLN/1000l</b><extra>Spread Orlen−ICE</extra>",
+      }], {
+        ...commonLayout,
+        margin: { l: 70, r: 40, t: 20, b: 50 },
+        xaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.06)",
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          showspikes: true, spikemode: "across", spikesnap: "cursor",
+          spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+        },
+        yaxis: {
+          showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+          tickfont: { color: "rgba(255,255,255,.70)" },
+          title: { text: "Spread (PLN/1000l)", font: { color: "rgba(255,255,255,.70)" } },
+          zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
+          autorange: true,
+        },
+        showlegend: false,
+        bargap: 0.2,
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    document.getElementById("checkOffsetBtns").addEventListener("click", (e) => {
+      const btn = e.target.closest(".ana-fuel-btn");
+      if(!btn) return;
+      currentCheckOffset = parseInt(btn.dataset.offset) || 0;
+      document.querySelectorAll("#checkOffsetBtns .ana-fuel-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      drawCheckCharts(currentCheckOffset);
     });
   </script>
 </body>
