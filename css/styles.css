@@ -590,27 +590,37 @@ tbody tr:active{ transform: translateY(1px); }
 }
 .hint{ color: rgba(255,255,255,.55); font-size: 12px; margin-left: 6px; }
 
-/* ===== SOCIAL MEDIA EXPORT ===== */
-.btn-social{
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.14);
-  color: rgba(255,255,255,.55);
-  padding: 6px 11px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-family: inherit;
-  font-weight: 700;
-  letter-spacing: .4px;
-  cursor: pointer;
-  transition: all .15s ease;
-  text-transform: uppercase;
-  white-space: nowrap;
+/* ===== SHARE / EXPORT ===== */
+.chart-footer{
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 2px 0;
   flex-shrink: 0;
 }
-.btn-social:hover{
-  color: #fff;
-  border-color: rgba(255,255,255,.35);
-  background: rgba(255,255,255,.09);
+.btn-share{
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.25);
+  padding: 7px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color .15s, background .15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: inherit;
+  letter-spacing: .3px;
+  line-height: 1;
+}
+.btn-share:hover{
+  color: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.07);
+}
+.btn-share svg{
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 /* ===== MOBILE ===== */
@@ -726,8 +736,5 @@ tbody tr:active{ transform: translateY(1px); }
     padding: 8px 8px;
     font-size: 12px;
   }
-  .btn-social {
-    padding: 5px 8px;
-    font-size: 10px;
-  }
 }
+
