@@ -1550,7 +1550,17 @@ document.getElementById("checkDualAxisBtn").addEventListener("click", () => {
 });
 
 // ===== SHARE / EXPORT (1080x1080) =====
-function renderChartToCanvas(el) {
+const CHART_META = {
+  checkPriceChart: { titleId: "checkPriceTitle", source: "Źródło: stooq.pl (ICE LF.F front month, USD/PLN), Orlen. Opracowanie własne." },
+  cpiChartBox:     { titleId: "cpiChartTitle",   source: "Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m³, netto). Opracowanie własne." },
+  histChartBox:    { titleId: "histChartTitle",   source: "Dane paliw: Orlen (PLN/m³, netto). Opracowanie własne." },
+  chart:           { titleId: "priceModalTitle",  source: "Źródło: Orlen (PLN/m³, netto)." },
+  barChart:        { titleId: "barModalTitle",    source: "Źródło: Orlen (PLN/m³, netto)." },
+  stopyChart:      { titleId: "stopyModalTitle",  source: "Dane: NBP, stooq.pl (WIBOR 3M), patria.cz (FRA PLN)." },
+  stopyCurveChart: { titleId: null,               source: "Dane: NBP, stooq.pl (WIBOR 3M), patria.cz (FRA PLN). Opracowanie własne." },
+};
+
+function renderChartToCanvas(el, overlayTitle, overlaySource) {
   return Plotly.toImage(el, { format: "png", width: 1080, height: 1080 }).then(dataUrl => {
     return new Promise(resolve => {
       const canvas = document.createElement("canvas");
@@ -1559,7 +1569,29 @@ function renderChartToCanvas(el) {
       ctx.fillStyle = "#070c12";
       ctx.fillRect(0, 0, 1080, 1080);
       const img = new Image();
-      img.onload = () => { ctx.drawImage(img, 0, 0); resolve(canvas); };
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+
+        if (overlayTitle) {
+          ctx.fillStyle = "rgba(7,12,18,0.82)";
+          ctx.fillRect(0, 0, 1080, 54);
+          ctx.font = "bold 21px ui-monospace, monospace";
+          ctx.fillStyle = "rgba(255,255,255,0.88)";
+          ctx.textAlign = "left";
+          ctx.fillText(overlayTitle, 24, 35);
+        }
+
+        if (overlaySource) {
+          ctx.fillStyle = "rgba(7,12,18,0.82)";
+          ctx.fillRect(0, 1042, 1080, 38);
+          ctx.font = "13px ui-monospace, monospace";
+          ctx.fillStyle = "rgba(255,255,255,0.45)";
+          ctx.textAlign = "left";
+          ctx.fillText(overlaySource, 24, 1065);
+        }
+
+        resolve(canvas);
+      };
       img.src = dataUrl;
     });
   });
@@ -1572,10 +1604,16 @@ document.addEventListener("click", async (e) => {
   const el = document.getElementById(chartId);
   if(!el || !el.data) return;
 
-  const titleRaw = el.layout?.title?.text || chartId;
+  const meta = CHART_META[chartId] || {};
+  const overlayTitle = meta.titleId
+    ? (document.getElementById(meta.titleId)?.textContent?.trim() || "")
+    : (el.layout?.title?.text || "").replace(/<[^>]*>/g, "");
+  const overlaySource = meta.source || "";
+
+  const titleRaw = overlayTitle || (el.layout?.title?.text || chartId);
   const filename = titleRaw.replace(/<[^>]*>/g, "").replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 60) + "_1x1";
 
-  const canvas = await renderChartToCanvas(el);
+  const canvas = await renderChartToCanvas(el, overlayTitle, overlaySource);
 
   // Try Web Share API (native share sheet on mobile)
   if (navigator.canShare) {
