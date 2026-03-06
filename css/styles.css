@@ -591,19 +591,12 @@ tbody tr:active{ transform: translateY(1px); }
 .hint{ color: rgba(255,255,255,.55); font-size: 12px; margin-left: 6px; }
 
 /* ===== SOCIAL MEDIA EXPORT ===== */
-.chart-export-wrap{
-  position: relative;
-}
 .btn-social{
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  background: rgba(7,12,18,.88);
-  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
   color: rgba(255,255,255,.55);
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: 6px 11px;
+  border-radius: 10px;
   font-size: 11px;
   font-family: inherit;
   font-weight: 700;
@@ -611,11 +604,13 @@ tbody tr:active{ transform: translateY(1px); }
   cursor: pointer;
   transition: all .15s ease;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .btn-social:hover{
   color: #fff;
-  border-color: rgba(255,255,255,.45);
-  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.09);
 }
 
 /* ===== MOBILE ===== */
@@ -732,9 +727,7 @@ tbody tr:active{ transform: translateY(1px); }
     font-size: 12px;
   }
   .btn-social {
-    top: 6px;
-    right: 6px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     font-size: 10px;
   }
 }
