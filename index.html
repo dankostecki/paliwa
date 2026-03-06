@@ -103,9 +103,13 @@
             <button class="ana-fuel-btn" data-offset="5">+5 dni</button>
           </div>
           <button class="ana-fuel-btn" id="checkDualAxisBtn" style="margin-left:8px;">Osobna oś Orlen</button>
-          <button class="btn-social" data-chart="checkPriceChart" title="Pobierz PNG 1080x1080" style="margin-left:auto;">&#x2193; 1:1</button>
         </div>
         <div class="ana-chart" id="checkPriceChart" style="height:420px;"></div>
+        <div class="chart-footer">
+          <button class="btn-share" data-chart="checkPriceChart" title="Zapisz PNG 1080×1080">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+        </div>
       </div>
       <div class="ana-section">
         <div class="ana-chart" id="checkSpreadChart" style="height:260px;"></div>
@@ -141,21 +145,27 @@
             style="width:200px; accent-color:#7b61ff;">
           <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:80px;">0 mies.</span>
           <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdź najlepsze dopasowanie</button>
-          <button class="btn-social" data-chart="cpiChartBox" title="Pobierz PNG 1080x1080" style="margin-left:auto;">&#x2193; 1:1</button>
         </div>
         <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
           <span id="corrDisplay" style="font-size:13px; font-weight:900; color:var(--text);"></span>
         </div>
         <div class="ana-chart" id="cpiChartBox" style="height:420px;"></div>
+        <div class="chart-footer">
+          <button class="btn-share" data-chart="cpiChartBox" title="Zapisz PNG 1080×1080">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- HISTOGRAM -->
       <div class="ana-section">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-          <h3 style="margin:0;">Rozkład cen (histogram)</h3>
-          <button class="btn-social" data-chart="histChartBox" title="Pobierz PNG 1080x1080">&#x2193; 1:1</button>
-        </div>
+        <h3>Rozkład cen (histogram)</h3>
         <div class="ana-chart" id="histChartBox" style="height:380px;"></div>
+        <div class="chart-footer">
+          <button class="btn-share" data-chart="histChartBox" title="Zapisz PNG 1080×1080">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="footnote">
@@ -176,10 +186,14 @@
           </select>
           <button class="btn" id="stopyCompareAdd" style="font-size:11px;padding:6px 14px;border-color:rgba(0,212,170,.35);color:#00d4aa;">Dodaj</button>
           <button class="btn" id="stopyCompareClear" style="font-size:11px;padding:6px 14px;border-color:rgba(255,255,255,.12);color:var(--muted);">Wyczyść</button>
-          <button class="btn-social" data-chart="stopyCurveChart" title="Pobierz PNG 1080x1080" style="margin-left:auto;">&#x2193; 1:1</button>
         </div>
         <div class="stopy-curve-wrap chart-resizable" id="stopyCurveWrap" style="height:380px;">
           <div id="stopyCurveChart" style="width:100%;height:100%;"></div>
+        </div>
+        <div class="chart-footer">
+          <button class="btn-share" data-chart="stopyCurveChart" title="Zapisz PNG 1080×1080">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
         </div>
       </div>
 
@@ -220,12 +234,16 @@
       <div class="head">
         <div></div>
         <div style="display:flex; gap:10px; align-items:center;">
-          <button class="btn-social" data-chart="chart" title="Pobierz PNG 1080x1080">&#x2193; 1:1</button>
           <button class="btn" id="btnShowAll">Cały zakres</button>
           <button class="btn" id="btnClose">Zamknij (Esc)</button>
         </div>
       </div>
       <div id="chart"></div>
+      <div class="chart-footer">
+        <button class="btn-share" data-chart="chart" title="Zapisz PNG 1080×1080">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -235,12 +253,16 @@
       <div class="head">
         <div class="title" id="stopyModalTitle"></div>
         <div style="display:flex; gap:10px; align-items:center;">
-          <button class="btn-social" data-chart="stopyChart" title="Pobierz PNG 1080x1080">&#x2193; 1:1</button>
           <button class="btn" id="stopyBtnShowAll">Cały zakres</button>
           <button class="btn" id="stopyBtnClose">Zamknij (Esc)</button>
         </div>
       </div>
       <div id="stopyChart"></div>
+      <div class="chart-footer">
+        <button class="btn-share" data-chart="stopyChart" title="Zapisz PNG 1080×1080">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -250,12 +272,16 @@
       <div class="head">
         <div></div>
         <div style="display:flex; gap:10px; align-items:center;">
-          <button class="btn-social" data-chart="barChart" title="Pobierz PNG 1080x1080">&#x2193; 1:1</button>
           <button class="btn" id="barBtnShowAll">Cały zakres</button>
           <button class="btn" id="barBtnClose">Zamknij (Esc)</button>
         </div>
       </div>
       <div id="barChart"></div>
+      <div class="chart-footer">
+        <button class="btn-share" data-chart="barChart" title="Zapisz PNG 1080×1080">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
