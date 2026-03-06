@@ -50,12 +50,13 @@ def main():
 
     history = load_history()
 
-    if history and history[-1].get("date") == record_date:
+    if history and history[0].get("date") == record_date:
         print(f"WIBOR: brak zmian (data: {record_date}), pomijam")
         return
 
     entry = {"date": record_date, "wibor_3m": wibor_3m}
     history.append(entry)
+    history.sort(key=lambda e: e["date"], reverse=True)
     save_history(history)
     print(f"WIBOR: dodano wpis dla {record_date} ({wibor_3m}%)")
 
