@@ -850,12 +850,10 @@ function drawChart(picked){
   const layout = {
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 20, b: 70 },
+    margin: { l: 70, r: 40, t: 20, b: 45 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
-      rangeslider: { visible: true, thickness: 0.08 },
       tickfont: { color: "rgba(255,255,255,.70)" },
-      title: { text: "Data", font: { color: "rgba(255,255,255,.70)" } },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
     },
@@ -871,12 +869,6 @@ function drawChart(picked){
     dragmode: "zoom",
     hovermode: "closest",
     showlegend: false,
-    annotations: [{
-      text: "Opracowanie w\u0142asne na podstawie danych Orlen",
-      showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
-      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" }
-    }]
   };
 
   Plotly.newPlot("chart", [trace, marker], layout, {
@@ -923,12 +915,10 @@ function drawBarChart(mode){
   const layout = {
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 20, b: 70 },
+    margin: { l: 70, r: 40, t: 20, b: 45 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
-      rangeslider: { visible: true, thickness: 0.08 },
       tickfont: { color: "rgba(255,255,255,.70)" },
-      title: { text: "Data", font: { color: "rgba(255,255,255,.70)" } },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
     },
@@ -946,12 +936,6 @@ function drawBarChart(mode){
     hovermode: "closest",
     showlegend: false,
     bargap: 0.15,
-    annotations: [{
-      text: "Opracowanie w\u0142asne na podstawie danych Orlen",
-      showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
-      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" }
-    }]
   };
 
   openBarModal();
@@ -1124,12 +1108,10 @@ function drawStopyChart(seriesKey, highlightTs){
   const layout = {
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 20, b: 70 },
+    margin: { l: 70, r: 40, t: 20, b: 45 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
-      rangeslider: { visible: true, thickness: 0.08 },
       tickfont: { color: "rgba(255,255,255,.70)" },
-      title: { text: "Data", font: { color: "rgba(255,255,255,.70)" } },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
     },
@@ -1146,12 +1128,6 @@ function drawStopyChart(seriesKey, highlightTs){
     dragmode: "zoom",
     hovermode: "closest",
     showlegend: false,
-    annotations: [{
-      text: "Opracowanie w\u0142asne | dane: NBP, stooq.pl, patria.cz",
-      showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
-      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" },
-    }],
   };
 
   openStopyModal();
@@ -1406,10 +1382,9 @@ function drawCheckCharts(offset){
 
   const priceLayout = {
     ...commonLayout,
-    margin: { l: 70, r: checkDualAxis ? 80 : 40, t: 20, b: 80 },
+    margin: { l: 70, r: checkDualAxis ? 80 : 40, t: 20, b: 45 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
-      rangeslider: { visible: true, thickness: 0.08 },
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
@@ -1421,12 +1396,6 @@ function drawCheckCharts(offset){
     },
     legend: { x: 0.01, y: 0.99, xanchor: "left", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
     showlegend: true,
-    annotations: [{
-      text: "Opracowanie własne | \u017ar\xf3d\u0142o: stooq.pl (ICE LF.F, USD/PLN), Orlen",
-      showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
-      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" },
-    }],
   };
 
   if(checkDualAxis){
@@ -1561,34 +1530,67 @@ const CHART_META = {
 };
 
 function renderChartToCanvas(el, overlayTitle, overlaySource) {
-  return Plotly.toImage(el, { format: "png", width: 1080, height: 1080 }).then(dataUrl => {
+  // Render chart slightly smaller to make room for title bar (top) and source bar (bottom)
+  const W = 1080, H = 1080;
+  const TITLE_H = 88;   // px reserved at top
+  const SOURCE_H = 64;  // px reserved at bottom
+  const PAD_X = 40;     // horizontal padding for text
+  const CHART_H = H - TITLE_H - SOURCE_H;
+
+  return Plotly.toImage(el, { format: "png", width: W, height: CHART_H }).then(dataUrl => {
     return new Promise(resolve => {
       const canvas = document.createElement("canvas");
-      canvas.width = 1080; canvas.height = 1080;
+      canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext("2d");
+
+      // Background
       ctx.fillStyle = "#070c12";
-      ctx.fillRect(0, 0, 1080, 1080);
+      ctx.fillRect(0, 0, W, H);
+
       const img = new Image();
       img.onload = () => {
-        ctx.drawImage(img, 0, 0);
+        // Chart image starts below title bar
+        ctx.drawImage(img, 0, TITLE_H, W, CHART_H);
+
+        // ---- Title bar (top) ----
+        ctx.fillStyle = "#070c12";
+        ctx.fillRect(0, 0, W, TITLE_H);
+
+        // Subtle separator line
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(0, TITLE_H - 1, W, 1);
 
         if (overlayTitle) {
-          ctx.fillStyle = "rgba(7,12,18,0.82)";
-          ctx.fillRect(0, 0, 1080, 54);
-          ctx.font = "bold 21px ui-monospace, monospace";
-          ctx.fillStyle = "rgba(255,255,255,0.88)";
+          ctx.font = "bold 36px ui-monospace, monospace";
+          ctx.fillStyle = "rgba(255,255,255,0.90)";
           ctx.textAlign = "left";
-          ctx.fillText(overlayTitle, 24, 35);
+          ctx.textBaseline = "middle";
+          ctx.fillText(overlayTitle, PAD_X, TITLE_H / 2);
         }
 
+        // ---- Source bar (bottom) ----
+        const sourceY = H - SOURCE_H;
+        ctx.fillStyle = "#070c12";
+        ctx.fillRect(0, sourceY, W, SOURCE_H);
+
+        // Subtle separator line
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(0, sourceY, W, 1);
+
         if (overlaySource) {
-          ctx.fillStyle = "rgba(7,12,18,0.82)";
-          ctx.fillRect(0, 1042, 1080, 38);
-          ctx.font = "13px ui-monospace, monospace";
-          ctx.fillStyle = "rgba(255,255,255,0.45)";
+          ctx.font = "22px ui-monospace, monospace";
+          ctx.fillStyle = "rgba(255,255,255,0.40)";
           ctx.textAlign = "left";
-          ctx.fillText(overlaySource, 24, 1065);
+          ctx.textBaseline = "middle";
+          ctx.fillText(overlaySource, PAD_X, sourceY + SOURCE_H / 2);
         }
+
+        // Branding (right side of source bar)
+        ctx.font = "bold 22px ui-monospace, monospace";
+        ctx.fillStyle = "rgba(255,255,255,0.22)";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Monitor Hurtowych Cen Paliw", W - PAD_X, sourceY + SOURCE_H / 2);
 
         resolve(canvas);
       };

@@ -634,40 +634,44 @@ tbody tr:active{ transform: translateY(1px); }
 
 /* ===== MOBILE ===== */
 @media (max-width: 640px) {
+  /* Topbar */
   .topbar {
     padding: 10px 14px;
     font-size: 13px;
   }
   .topbar .sub {
-    font-size: 11px;
-    margin-top: 4px;
+    display: none;
   }
+
+  /* Layout */
   .wrap {
     padding: 0 10px;
     margin: 10px auto 28px;
   }
+
+  /* Tabs */
   .fuel-tabs {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .fuel-tabs::-webkit-scrollbar { display: none; }
   .fuel-tab {
     padding: 10px 14px;
     font-size: 11px;
     white-space: nowrap;
     flex-shrink: 0;
   }
+
+  /* Kontrolki glowne */
   .controls {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
-  .controls-left {
-    width: 100%;
-  }
-  .period-tabs {
-    width: 100%;
-  }
+  .controls-left { width: 100%; }
+  .period-tabs { width: 100%; }
   .period-tab {
     flex: 1;
     text-align: center;
@@ -684,6 +688,8 @@ tbody tr:active{ transform: translateY(1px); }
     max-width: none;
     flex: 1;
   }
+
+  /* Tabele */
   .tablebox {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -693,57 +699,93 @@ tbody tr:active{ transform: translateY(1px); }
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .modal {
-    padding: 8px;
+  .stopy-table th, .stopy-table td {
+    padding: 8px 8px;
+    font-size: 12px;
   }
+
+  /* Modal */
+  .modal { padding: 8px; }
   .modal .panel {
     height: 93vh;
     border-radius: 12px;
   }
   .modal .head {
     padding: 10px 12px;
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: wrap;
   }
-  .stat-card {
-    padding: 12px;
+  .modal .head .title {
+    font-size: 11px;
+    width: 100%;
   }
-  .stat-card .value {
-    font-size: 18px;
+  .modal .head > div {
+    width: 100%;
+    justify-content: flex-end;
   }
+
+  /* Stat cards */
+  .stat-card { padding: 12px; }
+  .stat-card .value { font-size: 18px; }
   .stats-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 8px;
   }
+
+  /* Stopy - krzywa */
   .stopy-compare-bar {
     gap: 8px;
+    flex-wrap: wrap;
   }
-  .stopy-compare-bar select {
-    width: 100%;
-  }
-  .stopy-curve-wrap {
-    height: 260px !important;
-  }
+  .stopy-compare-bar select { width: 100%; }
+  .stopy-compare-bar .btn { flex: 1; text-align: center; }
+  .stopy-curve-wrap { height: 260px !important; }
+
+  /* Analiza - przyciski paliwa */
   .ana-fuel-select {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     width: 100%;
   }
-  .ana-fuel-btn {
-    white-space: nowrap;
-    flex-shrink: 0;
+  .ana-fuel-select::-webkit-scrollbar { display: none; }
+  .ana-fuel-btn { white-space: nowrap; flex-shrink: 0; }
+
+  /* Check panel - kontrolki przesunięcia */
+  #checkPanel .ana-section > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
   #checkOffsetBtns {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     width: 100%;
+    margin-bottom: 0 !important;
   }
-  #checkPriceChart  { height: 300px !important; }
-  #checkSpreadChart { height: 200px !important; }
-  #cpiChartBox      { height: 300px !important; }
+  #checkOffsetBtns::-webkit-scrollbar { display: none; }
+  #checkDualAxisBtn {
+    margin-left: 0 !important;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* CPI offset slider - pelna szerokosc */
+  #analizaPanel input[type="range"] { width: 100% !important; }
+  #analizaPanel .ana-section > div { flex-wrap: wrap; }
+  #btnAutoOffset { width: 100%; text-align: center; }
+
+  /* Wysokości wykresow (bez rangesliderow) */
+  #checkPriceChart  { height: 320px !important; }
+  #checkSpreadChart { height: 180px !important; }
+  #cpiChartBox      { height: 320px !important; }
   #histChartBox     { height: 260px !important; }
-  .stopy-table th, .stopy-table td {
-    padding: 8px 8px;
-    font-size: 12px;
-  }
+
+  /* Share button */
+  .btn-share { font-size: 10px; padding: 6px 12px; }
+
+  /* Footnote */
+  .footnote { font-size: 11px; margin-top: 8px; }
 }
 
