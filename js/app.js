@@ -488,18 +488,14 @@ function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
   }
 
   const titleFuel = fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel;
+  document.getElementById("cpiChartTitle").textContent = titleFuel + " vs Inflacja CPI r/r" + offsetLabel;
 
   const layout = {
-    title: {
-      text: titleFuel + " vs Inflacja CPI r/r" + offsetLabel,
-      font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
-      x: 0.01, xanchor: "left"
-    },
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 70, t: 45, b: 50 },
+    margin: { l: 70, r: 70, t: 20, b: 55 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
-      tickfont: { color: "rgba(255,255,255,.6)" }
+      tickfont: { color: "rgba(255,255,255,.6)" }, automargin: true,
     },
     yaxis: {
       title: { text: "Cena (tys. PLN/m3)", font: { color: fuelKey === "oba" ? "#ff4b4b" : fColor } },
@@ -514,20 +510,18 @@ function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
       showgrid: false
     },
     font: { color: "rgba(255,255,255,.7)" },
-    legend: { x: 0.01, y: -0.18, orientation: "h", font: { size: 11 } },
+    legend: { x: 0.01, y: 0.99, xanchor: "left", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
     hovermode: "x unified",
     showlegend: true,
     annotations: [{
       text: "Opracowanie własne | dane: Orlen, GUS",
       showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.22, xanchor: "right", yanchor: "top",
+      x: 1, y: -0.12, xanchor: "right", yanchor: "top",
       font: { size: 10, color: "rgba(255,255,255,.3)", family: "monospace" }
     }]
   };
 
-  Plotly.newPlot("cpiChartBox", traces, layout, { responsive: true, displayModeBar: true,
-    toImageButtonOptions: { format: "png", width: 1400, height: 600, filename: "paliwa_vs_inflacja" }
-  });
+  Plotly.newPlot("cpiChartBox", traces, layout, { responsive: true, displayModeBar: "hover" });
 }
 
 function drawHistogram(fuelKey, fuelRows){
@@ -568,18 +562,15 @@ function drawHistogram(fuelKey, fuelRows){
   // Add current price vertical line
   const current = prices[prices.length - 1];
 
+  document.getElementById("histChartTitle").textContent = "Rozk\u0142ad cen \u2014 " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel);
+
   const layout = {
-    title: {
-      text: "Rozkład cen — " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel),
-      font: { color: "rgba(255,255,255,.85)", size: 14, family: "monospace" },
-      x: 0.01, xanchor: "left"
-    },
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
-    margin: { l: 60, r: 40, t: 45, b: 50 },
+    margin: { l: 60, r: 40, t: 20, b: 55 },
     xaxis: {
       title: { text: "Cena (tys. PLN/m3)", font: { color: "rgba(255,255,255,.6)" } },
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
-      tickfont: { color: "rgba(255,255,255,.6)" }
+      tickfont: { color: "rgba(255,255,255,.6)" }, automargin: true,
     },
     yaxis: {
       title: { text: "Liczba dni", font: { color: "rgba(255,255,255,.6)" } },
@@ -589,7 +580,7 @@ function drawHistogram(fuelKey, fuelRows){
     font: { color: "rgba(255,255,255,.7)" },
     barmode: fuelKey === "oba" ? "overlay" : "stack",
     showlegend: fuelKey === "oba",
-    legend: { x: 0.01, y: -0.18, orientation: "h", font: { size: 11 } },
+    legend: { x: 0.99, y: 0.99, xanchor: "right", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
     shapes: [{
       type: "line",
       x0: current, x1: current, y0: 0, y1: 1,
@@ -605,9 +596,7 @@ function drawHistogram(fuelKey, fuelRows){
     }]
   };
 
-  Plotly.newPlot("histChartBox", traces, layout, { responsive: true, displayModeBar: true,
-    toImageButtonOptions: { format: "png", width: 1200, height: 500, filename: "rozklad_cen_paliw" }
-  });
+  Plotly.newPlot("histChartBox", traces, layout, { responsive: true, displayModeBar: "hover" });
 }
 
 async function loadAnalytics(){
@@ -854,15 +843,12 @@ function drawChart(picked){
     hovertemplate: "<b>Wybrana sesja</b><br>%{x|%d-%m-%Y}<br>%{y:.3f} tys. PLN/m3<extra></extra>"
   };
 
+  document.getElementById("priceModalTitle").textContent = chartTitleText;
+
   const layout = {
-    title: {
-      text: chartTitleText,
-      font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
-      x: 0.01, xanchor: "left"
-    },
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 45, b: 50 },
+    margin: { l: 70, r: 40, t: 20, b: 70 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       rangeslider: { visible: true, thickness: 0.08 },
@@ -885,17 +871,14 @@ function drawChart(picked){
     showlegend: false,
     annotations: [{
       text: "Opracowanie w\u0142asne na podstawie danych Orlen",
-      showarrow: false,
-      xref: "paper", yref: "paper",
-      x: 1, y: -0.15,
-      xanchor: "right", yanchor: "top",
-      font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" }
+      showarrow: false, xref: "paper", yref: "paper",
+      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
+      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" }
     }]
   };
 
   Plotly.newPlot("chart", [trace, marker], layout, {
-    responsive: true, scrollZoom: true, displayModeBar: true,
-    toImageButtonOptions: { format: "png", width: 1400, height: 700, filename: chartTitleText.replace(/[^a-zA-Z0-9_\-]/g, "_") }
+    responsive: true, scrollZoom: true, displayModeBar: "hover",
   }).then(() => {
     chartReady = true;
     attachYAutoScale("chart", rows, r => r.price / 1000);
@@ -933,15 +916,12 @@ function drawBarChart(mode){
       : "%{x|%d-%m-%Y}<br><b>%{y:+.2f}%</b><extra></extra>"
   };
 
+  document.getElementById("barModalTitle").textContent = barTitleText;
+
   const layout = {
-    title: {
-      text: barTitleText,
-      font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
-      x: 0.01, xanchor: "left"
-    },
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 45, b: 50 },
+    margin: { l: 70, r: 40, t: 20, b: 70 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
       rangeslider: { visible: true, thickness: 0.08 },
@@ -966,18 +946,15 @@ function drawBarChart(mode){
     bargap: 0.15,
     annotations: [{
       text: "Opracowanie w\u0142asne na podstawie danych Orlen",
-      showarrow: false,
-      xref: "paper", yref: "paper",
-      x: 1, y: -0.15,
-      xanchor: "right", yanchor: "top",
-      font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" }
+      showarrow: false, xref: "paper", yref: "paper",
+      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
+      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" }
     }]
   };
 
   openBarModal();
   Plotly.newPlot("barChart", [trace], layout, {
-    responsive: true, scrollZoom: true, displayModeBar: true,
-    toImageButtonOptions: { format: "png", width: 1400, height: 700, filename: barTitleText.replace(/[^a-zA-Z0-9_\-]/g, "_") }
+    responsive: true, scrollZoom: true, displayModeBar: "hover",
   }).then(() => {
     attachYAutoScale("barChart", dataRows, valFn);
   });
@@ -1140,15 +1117,12 @@ function drawStopyChart(seriesKey, highlightTs){
   const lastVal = pts[pts.length - 1]?.y;
   const titleText = `${cfg.label} \u2014 ${lastVal != null ? lastVal.toFixed(d) + "%" : ""}`;
 
+  document.getElementById("stopyModalTitle").textContent = titleText;
+
   const layout = {
-    title: {
-      text: titleText,
-      font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
-      x: 0.01, xanchor: "left",
-    },
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 45, b: 50 },
+    margin: { l: 70, r: 40, t: 20, b: 70 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       rangeslider: { visible: true, thickness: 0.08 },
@@ -1172,20 +1146,16 @@ function drawStopyChart(seriesKey, highlightTs){
     showlegend: false,
     annotations: [{
       text: "Opracowanie w\u0142asne | dane: NBP, stooq.pl, patria.cz",
-      showarrow: false,
-      xref: "paper", yref: "paper",
-      x: 1, y: -0.15,
-      xanchor: "right", yanchor: "top",
-      font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" },
+      showarrow: false, xref: "paper", yref: "paper",
+      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
+      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" },
     }],
   };
 
-  document.getElementById("stopyModalTitle").textContent = cfg.label;
   openStopyModal();
 
   Plotly.newPlot("stopyChart", traces, layout, {
-    responsive: true, scrollZoom: true, displayModeBar: true,
-    toImageButtonOptions: { format: "png", width: 1400, height: 700, filename: cfg.label.replace(/[^a-zA-Z0-9_\-]/g, "_") },
+    responsive: true, scrollZoom: true, displayModeBar: "hover",
   }).then(() => {
     attachYAutoScale("stopyChart", pts, p => p.y);
   });
@@ -1221,14 +1191,16 @@ function renderCurve(){
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: 12 },
-    margin: { l: 55, r: 20, t: 40, b: 50 },
+    margin: { l: 55, r: 20, t: 40, b: 60 },
     title: {
-      text: "Krzywa stóp procentowych PLN" + (latestDate ? " — " + latestDate : ""),
+      text: "Krzywa st\xf3p procentowych PLN" + (latestDate ? " \u2014 " + latestDate : ""),
       font: { size: 13, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
     },
     xaxis: {
       tickvals: [0,3,4,6,9,12],
-      ticktext: ["NBP ref\n(0M)","WIBOR 3M\n(3M)","FRA 1\xd74\n(4M)","FRA 3\xd76\n(6M)","FRA 6\xd79\n(9M)","FRA 9\xd712\n(12M)"],
+      ticktext: ["NBP ref", "WIBOR 3M", "FRA 1\xd74", "FRA 3\xd76", "FRA 6\xd79", "FRA 9\xd712"],
+      tickangle: -30,
+      automargin: true,
       gridcolor: "#1a2433", color: "#8aa2be", showline: false, fixedrange: true,
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
@@ -1239,13 +1211,13 @@ function renderCurve(){
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
     },
-    legend: { bgcolor: "transparent", font: { size: 11 } },
+    legend: { bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
     hovermode: "closest",
     annotations: [{
-      text: "Opracowanie własne | dane: NBP, stooq.pl, patria.cz",
+      text: "Opracowanie w\u0142asne | dane: NBP, stooq.pl, patria.cz",
       showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.12, xanchor: "right", yanchor: "top",
-      font: { size: 11, color: "rgba(255,255,255,.40)", family: "ui-monospace, monospace" }
+      x: 1, y: -0.14, xanchor: "right", yanchor: "top",
+      font: { size: 10, color: "rgba(255,255,255,.35)", family: "ui-monospace, monospace" }
     }],
   };
 
@@ -1428,14 +1400,11 @@ function drawCheckCharts(offset){
     spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
   };
 
+  document.getElementById("checkPriceTitle").textContent = "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel;
+
   const priceLayout = {
     ...commonLayout,
-    title: {
-      text: "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel,
-      font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
-      x: 0.01, xanchor: "left",
-    },
-    margin: { l: 70, r: checkDualAxis ? 80 : 40, t: 45, b: 80 },
+    margin: { l: 70, r: checkDualAxis ? 80 : 40, t: 20, b: 80 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       rangeslider: { visible: true, thickness: 0.08 },
@@ -1448,13 +1417,13 @@ function drawCheckCharts(offset){
       title: { text: "ICE (PLN/1000l)", font: { color: "#4dd0ff" } },
       tickfont: { color: checkDualAxis ? "#4dd0ff" : "rgba(255,255,255,.70)" },
     },
-    legend: { x: 0.01, y: -0.18, orientation: "h", font: { size: 11 }, bgcolor: "transparent" },
+    legend: { x: 0.01, y: 0.99, xanchor: "left", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
     showlegend: true,
     annotations: [{
-      text: "Opracowanie własne | źródło: stooq.pl (ICE LF.F, USD/PLN), Orlen",
+      text: "Opracowanie własne | \u017ar\xf3d\u0142o: stooq.pl (ICE LF.F, USD/PLN), Orlen",
       showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.15, xanchor: "right", yanchor: "top",
-      font: { size: 11, color: "rgba(255,255,255,.40)", family: "monospace" },
+      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
+      font: { size: 10, color: "rgba(255,255,255,.35)", family: "monospace" },
     }],
   };
 
@@ -1472,8 +1441,7 @@ function drawCheckCharts(offset){
   }
 
   Plotly.newPlot("checkPriceChart", priceTraces, priceLayout,
-    { responsive: true, scrollZoom: true, displayModeBar: true,
-      toImageButtonOptions: { format: "png", width: 1400, height: 600, filename: "ice_vs_orlen" } });
+    { responsive: true, scrollZoom: true, displayModeBar: "hover" });
 
   // === SPREAD ===
   const orlenByDate = {};
