@@ -1,0 +1,25 @@
+name: Update ICE & USDPLN Data
+
+on:
+  schedule:
+    - cron: '0 18 * * 1-5'  # 18:00 UTC = 19:00 CET (po zamknięciu ICE Gasoil futures)
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - run: python fetch_ice.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "Update ICE data $(date -u +%Y-%m-%d)"
+          git push
