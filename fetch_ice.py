@@ -105,9 +105,10 @@ def main():
         if not history:
             print("ICE: Google Sheets nie zwróciło danych")
             return
+        history.sort(key=lambda e: e["date"], reverse=True)
         save_history(history)
         print(f"ICE: zaimportowano {len(history)} wpisów z Google Sheets "
-              f"(ostatni: {history[-1]['date']})")
+              f"(ostatni: {history[0]['date']})")
 
     # Pobierz dzisiejsze notowania ze stooq JSON API
     existing = {e["date"] for e in history}
@@ -135,7 +136,7 @@ def main():
         "usdpln": usdpln_close,
         "ice_pln_1000l": ice_pln,
     })
-    history.sort(key=lambda e: e["date"])
+    history.sort(key=lambda e: e["date"], reverse=True)
     save_history(history)
     print(f"ICE: dodano {lf_date}: {lf_close} USD/t × {usdpln_close} = {ice_pln} PLN/1000l")
 
