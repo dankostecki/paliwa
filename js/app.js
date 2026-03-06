@@ -41,6 +41,8 @@ const els = {
 };
 
 // ===== HELPERS =====
+function setTitle(id, text){ const el = document.getElementById(id); if(el) el.textContent = text; }
+
 function parseDateDDMMYYYY(s){
   const t = (s || "").trim();
   const m = t.match(/^(\d{2})-(\d{2})-(\d{4})$/);
@@ -488,7 +490,7 @@ function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
   }
 
   const titleFuel = fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel;
-  document.getElementById("cpiChartTitle").textContent = titleFuel + " vs Inflacja CPI r/r" + offsetLabel;
+  setTitle("cpiChartTitle", titleFuel + " vs Inflacja CPI r/r" + offsetLabel);
 
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
@@ -562,7 +564,7 @@ function drawHistogram(fuelKey, fuelRows){
   // Add current price vertical line
   const current = prices[prices.length - 1];
 
-  document.getElementById("histChartTitle").textContent = "Rozk\u0142ad cen \u2014 " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel);
+  setTitle("histChartTitle", "Rozk\u0142ad cen \u2014 " + (fuelKey === "oba" ? "Benzyna 95 + Ekodiesel" : fLabel));
 
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
@@ -843,7 +845,7 @@ function drawChart(picked){
     hovertemplate: "<b>Wybrana sesja</b><br>%{x|%d-%m-%Y}<br>%{y:.3f} tys. PLN/m3<extra></extra>"
   };
 
-  document.getElementById("priceModalTitle").textContent = chartTitleText;
+  setTitle("priceModalTitle", chartTitleText);
 
   const layout = {
     paper_bgcolor: "#070c12",
@@ -916,7 +918,7 @@ function drawBarChart(mode){
       : "%{x|%d-%m-%Y}<br><b>%{y:+.2f}%</b><extra></extra>"
   };
 
-  document.getElementById("barModalTitle").textContent = barTitleText;
+  setTitle("barModalTitle", barTitleText);
 
   const layout = {
     paper_bgcolor: "#070c12",
@@ -1117,7 +1119,7 @@ function drawStopyChart(seriesKey, highlightTs){
   const lastVal = pts[pts.length - 1]?.y;
   const titleText = `${cfg.label} \u2014 ${lastVal != null ? lastVal.toFixed(d) + "%" : ""}`;
 
-  document.getElementById("stopyModalTitle").textContent = titleText;
+  setTitle("stopyModalTitle", titleText);
 
   const layout = {
     paper_bgcolor: "#070c12",
@@ -1400,7 +1402,7 @@ function drawCheckCharts(offset){
     spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
   };
 
-  document.getElementById("checkPriceTitle").textContent = "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel;
+  setTitle("checkPriceTitle", "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel);
 
   const priceLayout = {
     ...commonLayout,
