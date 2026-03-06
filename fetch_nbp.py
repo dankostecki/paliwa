@@ -78,12 +78,13 @@ def main():
     history = load_history()
 
     # Dodaj tylko jeśli data obowiązywania jest nowa
-    if history and history[-1].get("date") == date:
+    if history and history[0].get("date") == date:
         print(f"NBP: brak zmian (data: {date}), pomijam")
         return
 
     entry = {"date": date, **rates}
     history.append(entry)
+    history.sort(key=lambda e: e["date"], reverse=True)
     save_history(history)
     print(f"NBP: dodano wpis dla {date} (ref={rates.get('ref')}%)")
 
