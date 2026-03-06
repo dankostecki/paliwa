@@ -720,7 +720,7 @@
 
       <!-- KRZYWA FRA -->
       <div class="stopy-section">
-        <h3>Krzywa stóp procentowych</h3>
+        <h3>Krzywa stop procentowych</h3>
         <div class="stopy-compare-bar">
           <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Porównaj z:</span>
           <select id="stopyCompareSel">
@@ -2094,10 +2094,11 @@
     async function loadStopy(){
       if(stopyLoaded) return;
       try {
+        const v = Date.now();
         [stopyNbp, stopyWibor, stopyFra] = await Promise.all([
-          fetch("data/nbp_history.json").then(r => r.json()),
-          fetch("data/wibor_history.json").then(r => r.json()),
-          fetch("data/fra_history.json").then(r => r.json()),
+          fetch(`data/nbp_history.json?v=${v}`, { cache: "no-store" }).then(r => r.json()),
+          fetch(`data/wibor_history.json?v=${v}`, { cache: "no-store" }).then(r => r.json()),
+          fetch(`data/fra_history.json?v=${v}`, { cache: "no-store" }).then(r => r.json()),
         ]);
         stopyLoaded = true;
         renderCurve();
