@@ -1727,14 +1727,19 @@ function renderNewsFeed() {
   }
 }
 
+const Q_PALIWA = '("ceny paliw" OR "benzyna" OR "Iran" OR "diesel" OR "ON" OR "LPG" OR "ropa Brent" OR "ropa WTI") AND ("Polska" OR "Orlen" OR "stacje paliw") AND ("prognoza" OR "prognozy" OR "e-petrol" OR "Reflex" OR "podwyżki" OR "obniżki")';
+const Q_RPP = '("stopy procentowe" OR "stopami procentowymi" OR "stóp procentowych" OR "inflacja" OR "polityka pieniężna" OR "RPP") AND ("Glapiński" OR "Ireneusz Dąbrowski" OR "Iwona Duda" OR "Janczyk" OR "Kotecki" OR "Litwiniuk" OR "Masłowska" OR "Tyrowicz" OR "Wronowski" OR "Zarzecki")';
+
 const RSS_FEEDS = {
-  "RPP": "https://www.google.pl/alerts/feeds/10817393600312151665/6430730879577189074",
-  "Paliwa": "https://www.google.pl/alerts/feeds/10817393600312151665/2686049431790703442"
+  "RPP": `https://news.google.com/rss/search?q=${encodeURIComponent(Q_RPP)}&hl=pl&gl=PL&ceid=PL:pl`,
+  "Paliwa": `https://news.google.com/rss/search?q=${encodeURIComponent(Q_PALIWA)}&hl=pl&gl=PL&ceid=PL:pl`
 };
 
 const FILTER_OUT_KEYWORDS = ["pogoda", "prognoza pogody", "weather", "temperatura", "opady", "zachmurzenie"];
+const MAX_NEWS_AGE_MS = 180 * 24 * 60 * 60 * 1000; // 180 dni
 
 function isRelevantArticle(article) {
+  if (Date.now() - article.timestamp > MAX_NEWS_AGE_MS) return false;
   const text = (article.title + " " + article.summary).toLowerCase();
   return !FILTER_OUT_KEYWORDS.some(kw => text.includes(kw));
 }
