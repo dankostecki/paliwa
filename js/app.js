@@ -1683,9 +1683,16 @@ document.addEventListener("click", async (e) => {
   a.click();
 });
 
-// ===== NEWS PANEL (SSE API) =====
-let newsEventSource = null;
+// ===== NEWS PANEL (CORS CLIENT-SIDE FETCH) =====
 let newsLoaded = false;
+let newsPollInterval = null;
+let fetchedNewsIds = new Set();
+let allNews = [];
+
+const RSS_FEEDS = {
+  "RPP": "https://www.google.com/alerts/feeds/10817393600312151665/6430730879577189074",
+  "Paliwa": "https://www.google.com/alerts/feeds/10817393600312151665/2686049431790703442"
+};
 
 function buildTweetHtml(article) {
   const isPaliwa = article.source === "Paliwa";
@@ -1694,7 +1701,7 @@ function buildTweetHtml(article) {
   const sourceHandle = isPaliwa ? "@GNews_Paliwa" : "@GNews_RPP";
   const sourceLabel = isPaliwa ? "News Paliwa" : "News RPP";
 
-  const timeDiffMs = Date.now() - (article.timestamp * 1000);
+  const timeDiffMs = Date.now() - article.timestamp;
   const hours = Math.max(1, Math.floor(timeDiffMs / (1000 * 60 * 60)));
   const relativeTime = hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
 
@@ -1731,59 +1738,101 @@ function buildTweetHtml(article) {
   `;
 }
 
-async function loadNews() {
-  if (newsLoaded) return;
+async function fetchAndParseRSS() {
   const feedDiv = document.getElementById("newsFeed");
   const emptyState = document.getElementById("newsEmptyState");
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/news/history");
-    if (res.ok) {
-      const history = await res.json();
+    const fetchPromises = Object.entries(RSS_FEEDS).map(async ([source, url]) => {
+      // Use public CORS proxy that returns JSON with stringified content to avoid browser blocking
+      const corsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const res = await fetch(corsUrl);
+      if (!res.ok) return [];
+
+      const data = await res.json();
+      const text = data.contents;
+      if (!text) return [];
+
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(text, "text/xml");
+
+      const entries = Array.from(xml.querySelectorAll("entry"));
+      return entries.map(entry => {
+        const id = entry.querySelector("id")?.textContent || "";
+        const title = entry.querySelector("title")?.textContent || "Brak tytułu";
+        const link = entry.querySelector("link")?.getAttribute("href") || "";
+        const published = entry.querySelector("published")?.textContent || entry.querySelector("updated")?.textContent || "";
+        const summaryNode = entry.querySelector("summary") || entry.querySelector("content");
+        const summary = summaryNode ? summaryNode.textContent : "";
+
+        let timestamp = Date.now();
+        if (published) {
+          const parsedDate = new Date(published);
+          if (!isNaN(parsedDate.getTime())) timestamp = parsedDate.getTime();
+        }
+
+        return { id, source, title, link, summary, timestamp };
+      });
+    });
+
+    const results = await Promise.all(fetchPromises);
+    const newArticles = [];
+
+    results.flat().forEach(art => {
+      const uniqueId = art.id || (art.title + art.timestamp);
+      if (!fetchedNewsIds.has(uniqueId)) {
+        fetchedNewsIds.add(uniqueId);
+        newArticles.push(art);
+        allNews.push(art);
+      }
+    });
+
+    if (newArticles.length > 0 || allNews.length > 0) {
       if (emptyState) emptyState.remove();
+
+      // Sort all globally by timestamp descending
+      allNews.sort((a, b) => b.timestamp - a.timestamp);
+
+      // Rebuild the feed entirely so new items appear smoothly at top based on strict time
       feedDiv.innerHTML = "";
-      history.forEach(art => {
+      allNews.forEach(art => {
         feedDiv.insertAdjacentHTML("beforeend", buildTweetHtml(art));
       });
-      newsLoaded = true;
-    }
 
-    if (!newsEventSource) {
-      newsEventSource = new EventSource("http://127.0.0.1:8000/api/news/stream");
-      newsEventSource.addEventListener("new_article", (e) => {
-        const article = JSON.parse(e.data);
-        if (emptyState) emptyState.remove();
+      // Add pulse highlight onto the very newest ones rendered
+      if (newsLoaded && newArticles.length > 0) {
+        // Highlighting logic relies on tracking the freshly added elements in the DOM. 
+        // For simplicity with full re-render, we just pulse the feed container slightly.
+        feedDiv.classList.add("bg-[rgba(255,255,255,0.02)]");
+        setTimeout(() => feedDiv.classList.remove("bg-[rgba(255,255,255,0.02)]"), 1500);
+      }
 
-        const tempContainer = document.createElement('div');
-        tempContainer.innerHTML = buildTweetHtml(article);
-        const articleEl = tempContainer.firstElementChild;
-        articleEl.classList.add("bg-[rgba(255,255,255,0.05)]");
-
-        feedDiv.prepend(articleEl);
-
-        setTimeout(() => {
-          articleEl.classList.remove("bg-[rgba(255,255,255,0.05)]");
-        }, 3000);
-      });
-
-      newsEventSource.onerror = (e) => {
-        const span = document.getElementById("newsStatusIndicator");
-        if (span) {
-          span.className = "ml-auto text-red-500 flex items-center gap-1.5";
-          span.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> SSE Odłączone`;
-        }
-      };
-
-      newsEventSource.onopen = (e) => {
-        const span = document.getElementById("newsStatusIndicator");
-        if (span) {
-          span.className = "ml-auto text-green-400 flex items-center gap-1.5";
-          span.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> SSE Aktywne`;
-        }
-      };
+      const indicator = document.getElementById("newsStatusIndicator");
+      if (indicator) {
+        indicator.className = "ml-auto text-green-400 flex items-center gap-1.5";
+        indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Na żywo (odświeżono przed chwilą)`;
+      }
     }
   } catch (err) {
-    if (emptyState) emptyState.innerText = "Błąd API: backend niedostępny.";
+    console.error("News fetch error:", err);
+    const indicator = document.getElementById("newsStatusIndicator");
+    if (indicator) {
+      indicator.className = "ml-auto text-red-500 flex items-center gap-1.5";
+      indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> Błąd sieciowy (spróbuj później)`;
+    }
+  }
+}
+
+function loadNews() {
+  if (newsLoaded) return;
+  newsLoaded = true;
+
+  // Initial fetch
+  fetchAndParseRSS();
+
+  // Schedule polling every 60 seconds (like real-time SSE without the backend)
+  if (!newsPollInterval) {
+    newsPollInterval = setInterval(fetchAndParseRSS, 60000);
   }
 }
 
