@@ -695,10 +695,6 @@ tbody tr:active{ transform: translateY(1px); }
     -webkit-overflow-scrolling: touch;
     border-radius: 12px;
   }
-  .stopy-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
   .stopy-table th, .stopy-table td {
     padding: 8px 8px;
     font-size: 12px;
