@@ -1738,18 +1738,28 @@ function buildTweetHtml(article) {
   `;
 }
 
+async function fetchRSSText(url) {
+  try {
+    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) return await res.text();
+  } catch {}
+  try {
+    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      const data = await res.json();
+      return data.contents || null;
+    }
+  } catch {}
+  return null;
+}
+
 async function fetchAndParseRSS() {
   const feedDiv = document.getElementById("newsFeed");
   const indicator = document.getElementById("newsStatusIndicator");
 
   try {
     const fetchPromises = Object.entries(RSS_FEEDS).map(async ([source, url]) => {
-      const corsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const res = await fetch(corsUrl);
-      if (!res.ok) return [];
-
-      const data = await res.json();
-      const text = data.contents;
+      const text = await fetchRSSText(url);
       if (!text) return [];
 
       const parser = new DOMParser();
