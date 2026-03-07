@@ -1347,7 +1347,7 @@ function drawCheckCharts(offset) {
   const iceStart = checkIce[0].date;
   const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
 
-  const offsetLabel = offset > 0 ? ` (Orlen −${offset}d)` : "";
+  const offsetLabel = offset === 0 ? "" : ` (Orlen ${offset > 0 ? "\u2212" : "+"}${Math.abs(offset)}d)`;
 
   const orlenX = diesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
   const orlenY = diesel.map(r => r.price); // PLN/m3 = PLN/1000l

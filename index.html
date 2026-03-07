@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pl">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -67,7 +68,12 @@
       <div class="tablebox" id="tableBox">
         <table>
           <colgroup>
-            <col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6">
+            <col class="c1">
+            <col class="c2">
+            <col class="c3">
+            <col class="c4">
+            <col class="c5">
+            <col class="c6">
           </colgroup>
           <thead>
             <tr>
@@ -93,26 +99,35 @@
     <div id="checkPanel">
       <div class="ana-section">
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
-          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesunięcie Orlen:</span>
+          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesunięcie
+            Orlen:</span>
           <div class="ana-fuel-select" id="checkOffsetBtns" style="margin-bottom:0;">
+            <button class="ana-fuel-btn" data-offset="-3">−3 dni</button>
+            <button class="ana-fuel-btn" data-offset="-2">−2 dni</button>
+            <button class="ana-fuel-btn" data-offset="-1">−1 dzień</button>
             <button class="ana-fuel-btn active" data-offset="0">0 dni</button>
             <button class="ana-fuel-btn" data-offset="1">+1 dzień</button>
             <button class="ana-fuel-btn" data-offset="2">+2 dni</button>
             <button class="ana-fuel-btn" data-offset="3">+3 dni</button>
-            <button class="ana-fuel-btn" data-offset="4">+4 dni</button>
-            <button class="ana-fuel-btn" data-offset="5">+5 dni</button>
           </div>
           <button class="ana-fuel-btn" id="checkDualAxisBtn" style="margin-left:8px;">Osobna oś Orlen</button>
         </div>
         <div id="checkPriceTitle" class="chart-title-bar"></div>
         <div class="ana-chart" id="checkPriceChart" style="height:420px;"></div>
         <div class="chart-actions">
-          <button class="btn-share" data-chart="checkPriceChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+          <button class="btn-share" data-chart="checkPriceChart"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg> Udostępnij</button>
         </div>
       </div>
       <div class="ana-section">
         <div class="ana-chart" id="checkSpreadChart" style="height:260px;"></div>
-        <div id="checkSpreadStats" style="margin-top:10px; font-size:12px; font-family:monospace; color:var(--muted); letter-spacing:.3px;"></div>
+        <div id="checkSpreadStats"
+          style="margin-top:10px; font-size:12px; font-family:monospace; color:var(--muted); letter-spacing:.3px;">
+        </div>
       </div>
       <div class="footnote">
         Metodologia: ICE Low Sulphur Gasoil (USD/tonę) × 0,845 kg/l × USD/PLN = PLN/1000l.
@@ -139,11 +154,15 @@
       <div class="ana-section">
         <h3>Ceny paliw vs inflacja CPI r/r (%)</h3>
         <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
-          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesunięcie CPI:</span>
+          <span style="color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px;">Przesunięcie
+            CPI:</span>
           <input type="range" id="cpiOffset" min="-12" max="12" value="0" step="1"
             style="width:200px; accent-color:#7b61ff;">
-          <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:80px;">0 mies.</span>
-          <button class="btn" id="btnAutoOffset" style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdź najlepsze dopasowanie</button>
+          <span id="cpiOffsetLabel" style="color:#7b61ff; font-weight:900; font-size:13px; min-width:80px;">0
+            mies.</span>
+          <button class="btn" id="btnAutoOffset"
+            style="font-size:11px; padding:6px 12px; border-color:rgba(123,97,255,.4); color:#7b61ff;">Znajdź najlepsze
+            dopasowanie</button>
         </div>
         <div style="display:flex; align-items:center; gap:16px; margin-bottom:10px; flex-wrap:wrap;">
           <span id="corrDisplay" style="font-size:13px; font-weight:900; color:var(--text);"></span>
@@ -151,7 +170,12 @@
         <div id="cpiChartTitle" class="chart-title-bar"></div>
         <div class="ana-chart" id="cpiChartBox" style="height:420px;"></div>
         <div class="chart-actions">
-          <button class="btn-share" data-chart="cpiChartBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+          <button class="btn-share" data-chart="cpiChartBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg> Udostępnij</button>
         </div>
       </div>
 
@@ -161,7 +185,12 @@
         <div id="histChartTitle" class="chart-title-bar"></div>
         <div class="ana-chart" id="histChartBox" style="height:380px;"></div>
         <div class="chart-actions">
-          <button class="btn-share" data-chart="histChartBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+          <button class="btn-share" data-chart="histChartBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg> Udostępnij</button>
         </div>
       </div>
 
@@ -177,18 +206,26 @@
       <div class="stopy-section">
         <h3>Krzywa stop procentowych</h3>
         <div class="stopy-compare-bar">
-          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Porównaj z:</span>
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Porównaj
+            z:</span>
           <select id="stopyCompareSel">
             <option value="">-- wybierz datę --</option>
           </select>
-          <button class="btn" id="stopyCompareAdd" style="font-size:11px;padding:6px 14px;border-color:rgba(0,212,170,.35);color:#00d4aa;">Dodaj</button>
-          <button class="btn" id="stopyCompareClear" style="font-size:11px;padding:6px 14px;border-color:rgba(255,255,255,.12);color:var(--muted);">Wyczyść</button>
+          <button class="btn" id="stopyCompareAdd"
+            style="font-size:11px;padding:6px 14px;border-color:rgba(0,212,170,.35);color:#00d4aa;">Dodaj</button>
+          <button class="btn" id="stopyCompareClear"
+            style="font-size:11px;padding:6px 14px;border-color:rgba(255,255,255,.12);color:var(--muted);">Wyczyść</button>
         </div>
         <div class="stopy-curve-wrap chart-resizable" id="stopyCurveWrap" style="height:380px;">
           <div id="stopyCurveChart" style="width:100%;height:100%;"></div>
         </div>
         <div class="chart-actions">
-          <button class="btn-share" data-chart="stopyCurveChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+          <button class="btn-share" data-chart="stopyCurveChart"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg> Udostępnij</button>
         </div>
       </div>
 
@@ -235,7 +272,12 @@
       </div>
       <div id="chart"></div>
       <div class="chart-actions" style="padding:6px 10px 8px; flex-shrink:0;">
-        <button class="btn-share" data-chart="chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+        <button class="btn-share" data-chart="chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg> Udostępnij</button>
       </div>
     </div>
   </div>
@@ -252,7 +294,12 @@
       </div>
       <div id="stopyChart"></div>
       <div class="chart-actions" style="padding:6px 10px 8px; flex-shrink:0;">
-        <button class="btn-share" data-chart="stopyChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+        <button class="btn-share" data-chart="stopyChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg> Udostępnij</button>
       </div>
     </div>
   </div>
@@ -269,11 +316,17 @@
       </div>
       <div id="barChart"></div>
       <div class="chart-actions" style="padding:6px 10px 8px; flex-shrink:0;">
-        <button class="btn-share" data-chart="barChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Udostępnij</button>
+        <button class="btn-share" data-chart="barChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg> Udostępnij</button>
       </div>
     </div>
   </div>
 
   <script src="js/app.js"></script>
 </body>
+
 </html>
