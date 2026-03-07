@@ -1570,7 +1570,11 @@ function renderChartToCanvas(el, overlayTitle, overlaySource) {
   const PAD_X = 40;     // horizontal padding for text
   const CHART_H = H - TITLE_H - SOURCE_H;
 
-  return Plotly.toImage(el, { format: "png", width: W, height: CHART_H }).then(dataUrl => {
+  const SCALE = 1.6; // multiplier for chart elements (fonts, lines)
+  const logicalW = Math.round(W / SCALE);
+  const logicalH = Math.round(CHART_H / SCALE);
+
+  return Plotly.toImage(el, { format: "png", width: logicalW, height: logicalH, scale: SCALE }).then(dataUrl => {
     return new Promise(resolve => {
       const canvas = document.createElement("canvas");
       canvas.width = W; canvas.height = H;
