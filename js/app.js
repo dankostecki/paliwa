@@ -300,6 +300,7 @@ let viewMode = "data"; // "data" | "analiza" | "stopy" | "check" | "news"
 
 function setViewMode(mode) {
   viewMode = mode;
+  document.body.classList.toggle("news-mode", mode === "news");
   dataPanel.classList.toggle("hidden", mode !== "data");
   analizaPanel.classList.toggle("visible", mode === "analiza");
   stopyPanel.classList.toggle("visible", mode === "stopy");
@@ -1728,7 +1729,7 @@ function renderNewsFeed() {
 }
 
 const Q_PALIWA = '("ceny paliw" OR "benzyna" OR "Iran" OR "diesel" OR "ON" OR "LPG" OR "ropa Brent" OR "ropa WTI") AND ("Polska" OR "Orlen" OR "stacje paliw") AND ("prognoza" OR "prognozy" OR "e-petrol" OR "Reflex" OR "podwyżki" OR "obniżki")';
-const Q_RPP = '("stopy procentowe" OR "stopami procentowymi" OR "stóp procentowych" OR "inflacja" OR "polityka pieniężna" OR "RPP") AND ("Glapiński" OR "Ireneusz Dąbrowski" OR "Iwona Duda" OR "Janczyk" OR "Kotecki" OR "Litwiniuk" OR "Masłowska" OR "Tyrowicz" OR "Wronowski" OR "Zarzecki")';
+const Q_RPP = '("stopy procentowe" OR "stopami procentowymi" OR "stóp procentowych" OR "inflacja" OR "polityka pieniężna" OR "RPP" OR "Iran") AND ("Glapiński" OR "Ireneusz Dąbrowski" OR "Iwona Duda" OR "Janczyk" OR "Kotecki" OR "Litwiniuk" OR "Masłowska" OR "Tyrowicz" OR "Wronowski" OR "Zarzecki")';
 
 const RSS_FEEDS = {
   "RPP": `https://news.google.com/rss/search?q=${encodeURIComponent(Q_RPP)}&hl=pl&gl=PL&ceid=PL:pl`,
@@ -1740,7 +1741,13 @@ const MAX_NEWS_AGE_MS = 180 * 24 * 60 * 60 * 1000; // 180 dni
 
 function isRelevantArticle(article) {
   if (Date.now() - article.timestamp > MAX_NEWS_AGE_MS) return false;
-  const text = (article.title + " " + article.summary).toLowerCase();
+  const title = article.title.toLowerCase();
+  // Odfiltruj artykuły pisane z perspektywy przeszłości (Google News czasem resurface'uje stare treści)
+  const currentYear = new Date().getFullYear();
+  for (let y = 2020; y < currentYear - 1; y++) {
+    if (title.includes(`do końca ${y}`) || title.includes(`koniec ${y} roku`) || title.includes(`przez ${y} rok`)) return false;
+  }
+  const text = (title + " " + article.summary.toLowerCase());
   return !FILTER_OUT_KEYWORDS.some(kw => text.includes(kw));
 }
 

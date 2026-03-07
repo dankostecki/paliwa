@@ -722,6 +722,10 @@ tbody tr:active{ transform: translateY(1px); }
   text-decoration: none !important;
 }
 
+/* ===== NEWS FEED HEIGHT ===== */
+body.news-mode { overflow: hidden; }
+#newsFeed { height: calc(100vh - 310px); }
+
 /* ===== MOBILE BOTTOM NAV ===== */
 #mobileBottomNav { display: none; }
 
@@ -792,6 +796,8 @@ tbody tr:active{ transform: translateY(1px); }
     margin: 10px auto 28px;
     padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
+
+  #newsFeed { height: calc(100vh - 280px); }
 
   /* Tabs */
   .fuel-tabs {
