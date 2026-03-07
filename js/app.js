@@ -1689,12 +1689,9 @@ let newsPollInterval = null;
 let fetchedNewsIds = new Set();
 let allNews = [];
 
-const KWERENDA_RPP = '("stopy procentowe" OR "inflacja" OR "polityka pieniężna" OR "RPP") AND ("Glapiński" OR "Ireneusz Dąbrowski" OR "Iwona Duda" OR "Janczyk" OR "Kotecki" OR "Litwiniuk" OR "Masłowska" OR "Tyrowicz" OR "Wnorowski" OR "Zarzecki")';
-const KWERENDA_PALIWA = '("ceny paliw" OR "paliwa" OR "ropa naftowa" OR "benzyna" OR "diesel" OR "olej napędowy" OR "LPG") AND ("Orlen" OR "e-petrol" OR "Reflex" OR "Aramco" OR "stacje" OR "ceny hurtowe" OR "detaliczne" OR "prognozy" OR "marże")';
-
 const RSS_FEEDS = {
-  "RPP": `https://news.google.com/rss/search?q=${encodeURIComponent(KWERENDA_RPP)}&hl=pl&gl=PL&ceid=PL:pl`,
-  "Paliwa": `https://news.google.com/rss/search?q=${encodeURIComponent(KWERENDA_PALIWA)}&hl=pl&gl=PL&ceid=PL:pl`
+  "RPP": "https://www.google.pl/alerts/feeds/10817393600312151665/2686049431790703442",
+  "Paliwa": "https://www.google.pl/alerts/feeds/10817393600312151665/6430730879577189074"
 };
 
 function buildTweetHtml(article) {
@@ -1743,11 +1740,10 @@ function buildTweetHtml(article) {
 
 async function fetchAndParseRSS() {
   const feedDiv = document.getElementById("newsFeed");
-  const emptyState = document.getElementById("newsEmptyState");
+  const indicator = document.getElementById("newsStatusIndicator");
 
   try {
     const fetchPromises = Object.entries(RSS_FEEDS).map(async ([source, url]) => {
-      // Use public CORS proxy that returns JSON with stringified content to avoid browser blocking
       const corsUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
       const res = await fetch(corsUrl);
       if (!res.ok) return [];
@@ -1797,35 +1793,31 @@ async function fetchAndParseRSS() {
       }
     });
 
-    if (newArticles.length > 0 || allNews.length > 0) {
-      if (emptyState) emptyState.remove();
+    // Always remove loading placeholder after first successful fetch
+    const emptyState = document.getElementById("newsEmptyState");
+    if (emptyState) emptyState.remove();
 
-      // Sort all globally by timestamp descending
+    if (allNews.length > 0) {
       allNews.sort((a, b) => b.timestamp - a.timestamp);
-
-      // Rebuild the feed entirely so new items appear smoothly at top based on strict time
       feedDiv.innerHTML = "";
       allNews.forEach(art => {
         feedDiv.insertAdjacentHTML("beforeend", buildTweetHtml(art));
       });
 
-      // Add pulse highlight onto the very newest ones rendered
       if (newsLoaded && newArticles.length > 0) {
-        // Highlighting logic relies on tracking the freshly added elements in the DOM. 
-        // For simplicity with full re-render, we just pulse the feed container slightly.
         feedDiv.classList.add("bg-[rgba(255,255,255,0.02)]");
         setTimeout(() => feedDiv.classList.remove("bg-[rgba(255,255,255,0.02)]"), 1500);
       }
+    } else if (feedDiv.children.length === 0) {
+      feedDiv.innerHTML = `<div class="p-6 text-center text-gray-500 text-sm font-bold uppercase tracking-widest">Brak artykułów</div>`;
+    }
 
-      const indicator = document.getElementById("newsStatusIndicator");
-      if (indicator) {
-        indicator.className = "ml-auto text-green-400 flex items-center gap-1.5";
-        indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Na żywo (odświeżono przed chwilą)`;
-      }
+    if (indicator) {
+      indicator.className = "ml-auto text-green-400 flex items-center gap-1.5";
+      indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Na żywo (odświeżono przed chwilą)`;
     }
   } catch (err) {
     console.error("News fetch error:", err);
-    const indicator = document.getElementById("newsStatusIndicator");
     if (indicator) {
       indicator.className = "ml-auto text-red-500 flex items-center gap-1.5";
       indicator.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> Błąd sieciowy (spróbuj później)`;
