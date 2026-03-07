@@ -1689,9 +1689,12 @@ let newsPollInterval = null;
 let fetchedNewsIds = new Set();
 let allNews = [];
 
+const KWERENDA_RPP = '("stopy procentowe" OR "inflacja" OR "polityka pieniężna" OR "RPP") AND ("Glapiński" OR "Ireneusz Dąbrowski" OR "Iwona Duda" OR "Janczyk" OR "Kotecki" OR "Litwiniuk" OR "Masłowska" OR "Tyrowicz" OR "Wnorowski" OR "Zarzecki")';
+const KWERENDA_PALIWA = '("ceny paliw" OR "paliwa" OR "ropa naftowa" OR "benzyna" OR "diesel" OR "olej napędowy" OR "LPG") AND ("Orlen" OR "e-petrol" OR "Reflex" OR "Aramco" OR "stacje" OR "ceny hurtowe" OR "detaliczne" OR "prognozy" OR "marże")';
+
 const RSS_FEEDS = {
-  "RPP": "https://www.google.com/alerts/feeds/10817393600312151665/6430730879577189074",
-  "Paliwa": "https://www.google.com/alerts/feeds/10817393600312151665/2686049431790703442"
+  "RPP": `https://news.google.com/rss/search?q=${encodeURIComponent(KWERENDA_RPP)}&hl=pl&gl=PL&ceid=PL:pl`,
+  "Paliwa": `https://news.google.com/rss/search?q=${encodeURIComponent(KWERENDA_PALIWA)}&hl=pl&gl=PL&ceid=PL:pl`
 };
 
 function buildTweetHtml(article) {
@@ -1756,13 +1759,20 @@ async function fetchAndParseRSS() {
       const parser = new DOMParser();
       const xml = parser.parseFromString(text, "text/xml");
 
-      const entries = Array.from(xml.querySelectorAll("entry"));
+      const entries = Array.from(xml.querySelectorAll("entry, item"));
       return entries.map(entry => {
-        const id = entry.querySelector("id")?.textContent || "";
+        const id = entry.querySelector("id")?.textContent || entry.querySelector("guid")?.textContent || "";
         const title = entry.querySelector("title")?.textContent || "Brak tytułu";
-        const link = entry.querySelector("link")?.getAttribute("href") || "";
-        const published = entry.querySelector("published")?.textContent || entry.querySelector("updated")?.textContent || "";
-        const summaryNode = entry.querySelector("summary") || entry.querySelector("content");
+
+        let link = "";
+        const linkNode = entry.querySelector("link");
+        if (linkNode) {
+          link = linkNode.getAttribute("href") || linkNode.textContent || "";
+        }
+
+        const published = entry.querySelector("published")?.textContent || entry.querySelector("updated")?.textContent || entry.querySelector("pubDate")?.textContent || "";
+
+        const summaryNode = entry.querySelector("summary") || entry.querySelector("content") || entry.querySelector("description");
         const summary = summaryNode ? summaryNode.textContent : "";
 
         let timestamp = Date.now();
