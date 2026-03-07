@@ -7,6 +7,13 @@
   <title>Monitor Hurtowych Cen Paliw</title>
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
   <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: { extend: {} },
+    }
+  </script>
 </head>
 
 <body>
@@ -43,6 +50,11 @@
       <button class="fuel-tab" data-fuel="stopy" id="stopyTab">
         <span class="dot stopy"></span>
         Stopy
+        <span class="cursor-blink"></span>
+      </button>
+      <button class="fuel-tab" data-fuel="news" id="newsTab">
+        <span class="dot stopy" style="background:#1da1f2;"></span>
+        News
         <span class="cursor-blink"></span>
       </button>
     </div>
@@ -267,6 +279,36 @@
         WIBOR raz dziennie. NBP tylko przy zmianie stop.
       </div>
     </div><!-- /stopyPanel -->
+
+    <!-- ===== NEWS PANEL (Tailwind UI) ===== -->
+    <div id="newsPanel" style="display:none;">
+      <div
+        class="max-w-3xl border border-[rgba(255,255,255,0.06)] bg-[rgba(7,12,18,0.78)] rounded-2xl shadow-lg mt-4 overflow-hidden">
+        <!-- Header -->
+        <div
+          class="px-5 py-4 border-b border-[rgba(255,255,255,0.1)] sticky top-0 bg-[rgba(7,12,18,0.95)] z-10 backdrop-blur-sm">
+          <h2 class="text-xl font-black tracking-wide uppercase text-white m-0">Live News Feed</h2>
+          <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider font-bold">Auto-updates via SSE (RSS: RPP,
+            Paliwa)</p>
+          <div class="mt-3 flex gap-3 text-xs font-bold uppercase tracking-wider">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#1da1f2]"></span> RPP (G.
+              News)</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#ff9900]"></span> PALIWA
+              (G. News)</span>
+            <span id="newsStatusIndicator" class="ml-auto text-green-400 flex items-center gap-1.5"><span
+                class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> SSE Uruchomione</span>
+          </div>
+        </div>
+
+        <!-- Feed container -->
+        <div id="newsFeed" class="divide-y divide-[rgba(255,255,255,0.06)] min-h-[400px] max-h-[800px] overflow-y-auto">
+          <!-- skeleton or empty state initially -->
+          <div class="p-6 text-center text-gray-500 text-sm font-bold uppercase tracking-widest" id="newsEmptyState">
+            Ładowanie historii...
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 

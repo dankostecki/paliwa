@@ -295,7 +295,8 @@ const dataPanel = document.getElementById("dataPanel");
 const analizaPanel = document.getElementById("analizaPanel");
 const stopyPanel = document.getElementById("stopyPanel");
 const checkPanel = document.getElementById("checkPanel");
-let viewMode = "data"; // "data" | "analiza" | "stopy" | "check"
+const newsPanel = document.getElementById("newsPanel");
+let viewMode = "data"; // "data" | "analiza" | "stopy" | "check" | "news"
 
 function setViewMode(mode) {
   viewMode = mode;
@@ -303,9 +304,11 @@ function setViewMode(mode) {
   analizaPanel.classList.toggle("visible", mode === "analiza");
   stopyPanel.classList.toggle("visible", mode === "stopy");
   checkPanel.classList.toggle("visible", mode === "check");
+  if (newsPanel) newsPanel.style.display = (mode === "news") ? "block" : "none";
   if (mode === "analiza") loadAnalytics();
   if (mode === "stopy") loadStopy();
   if (mode === "check") loadCheck();
+  if (mode === "news") loadNews();
 }
 
 // ===== FUEL TAB SWITCHING =====
@@ -317,7 +320,7 @@ els.fuelTabs.addEventListener("click", (e) => {
   els.fuelTabs.querySelectorAll(".fuel-tab").forEach(t => t.classList.remove("active"));
   tab.classList.add("active");
 
-  if (fuel === "analiza" || fuel === "stopy" || fuel === "check") {
+  if (fuel === "analiza" || fuel === "stopy" || fuel === "check" || fuel === "news") {
     setViewMode(fuel);
     return;
   }
@@ -1679,3 +1682,110 @@ document.addEventListener("click", async (e) => {
   a.download = filename + ".png";
   a.click();
 });
+
+// ===== NEWS PANEL (SSE API) =====
+let newsEventSource = null;
+let newsLoaded = false;
+
+function buildTweetHtml(article) {
+  const isPaliwa = article.source === "Paliwa";
+  const iconColor = isPaliwa ? "text-[#ff9900]" : "text-[#1da1f2]";
+  const stripColor = isPaliwa ? "bg-[#ff9900]" : "bg-[#1da1f2]";
+  const sourceHandle = isPaliwa ? "@GNews_Paliwa" : "@GNews_RPP";
+  const sourceLabel = isPaliwa ? "News Paliwa" : "News RPP";
+
+  const timeDiffMs = Date.now() - (article.timestamp * 1000);
+  const hours = Math.max(1, Math.floor(timeDiffMs / (1000 * 60 * 60)));
+  const relativeTime = hours < 24 ? `${hours}h` : `${Math.floor(hours / 24)}d`;
+
+  const summaryText = article.summary || "";
+
+  return `
+    <article class="p-5 flex gap-4 hover:bg-[rgba(255,255,255,0.02)] transition-colors relative group duration-200">
+      <div class="absolute left-0 top-0 bottom-0 w-[4px] opacity-0 group-hover:opacity-100 transition-opacity ${stripColor}"></div>
+      
+      <div class="flex-shrink-0 w-12 h-12 rounded-full border-2 border-[rgba(255,255,255,0.08)] bg-[#0a0f16] flex items-center justify-center ${iconColor}">
+        <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg>
+      </div>
+      
+      <div class="flex-1 min-w-0">
+        <div class="flex items-baseline gap-2 mb-1">
+          <span class="font-bold text-[15px] text-white tracking-wide">${sourceLabel}</span>
+          <span class="text-[14px] text-gray-500 font-medium">${sourceHandle}</span>
+          <span class="text-[14px] text-gray-500 font-medium ml-1">· ${relativeTime}</span>
+        </div>
+        <a href="${article.link}" target="_blank" rel="noopener noreferrer" class="block">
+          <p class="text-[15px] text-[#e7e9ea] font-bold leading-normal mb-2 group-hover:underline decoration-[rgba(255,255,255,0.3)] underline-offset-2 break-words">
+            ${article.title}
+          </p>
+        </a>
+        <p class="text-[14px] text-gray-400 leading-snug line-clamp-2">${summaryText.replace(/<[^>]*>?/gm, '')}</p>
+        <div class="mt-3 flex gap-6 text-gray-500">
+          <a href="${article.link}" target="_blank" class="flex gap-2 items-center text-[13px] font-bold tracking-wider hover:${iconColor} transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            Czytaj artykuł
+          </a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+async function loadNews() {
+  if (newsLoaded) return;
+  const feedDiv = document.getElementById("newsFeed");
+  const emptyState = document.getElementById("newsEmptyState");
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/news/history");
+    if (res.ok) {
+      const history = await res.json();
+      if (emptyState) emptyState.remove();
+      feedDiv.innerHTML = "";
+      history.forEach(art => {
+        feedDiv.insertAdjacentHTML("beforeend", buildTweetHtml(art));
+      });
+      newsLoaded = true;
+    }
+
+    if (!newsEventSource) {
+      newsEventSource = new EventSource("http://127.0.0.1:8000/api/news/stream");
+      newsEventSource.addEventListener("new_article", (e) => {
+        const article = JSON.parse(e.data);
+        if (emptyState) emptyState.remove();
+
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = buildTweetHtml(article);
+        const articleEl = tempContainer.firstElementChild;
+        articleEl.classList.add("bg-[rgba(255,255,255,0.05)]");
+
+        feedDiv.prepend(articleEl);
+
+        setTimeout(() => {
+          articleEl.classList.remove("bg-[rgba(255,255,255,0.05)]");
+        }, 3000);
+      });
+
+      newsEventSource.onerror = (e) => {
+        const span = document.getElementById("newsStatusIndicator");
+        if (span) {
+          span.className = "ml-auto text-red-500 flex items-center gap-1.5";
+          span.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> SSE Odłączone`;
+        }
+      };
+
+      newsEventSource.onopen = (e) => {
+        const span = document.getElementById("newsStatusIndicator");
+        if (span) {
+          span.className = "ml-auto text-green-400 flex items-center gap-1.5";
+          span.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> SSE Aktywne`;
+        }
+      };
+    }
+  } catch (err) {
+    if (emptyState) emptyState.innerText = "Błąd API: backend niedostępny.";
+  }
+}
+
+// ===== LAUNCH =====
+loadData();
