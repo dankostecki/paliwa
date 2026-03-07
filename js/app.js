@@ -1616,20 +1616,28 @@ function renderChartToCanvas(el, overlayTitle, overlaySource) {
         ctx.fillStyle = "rgba(255,255,255,0.08)";
         ctx.fillRect(0, sourceY, W, 1);
 
+        // Branding (right side of source bar)
+        ctx.font = "bold 22px ui-monospace, monospace";
+        const brandingText = "Monitor Hurtowych Cen Paliw";
+        const brandingWidth = ctx.measureText(brandingText).width;
+        ctx.fillStyle = "rgba(255,255,255,0.22)";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(brandingText, W - PAD_X, sourceY + SOURCE_H / 2);
+
         if (overlaySource) {
-          ctx.font = "22px ui-monospace, monospace";
+          let sourceFontSize = 22;
+          ctx.font = `${sourceFontSize}px ui-monospace, monospace`;
+          const maxSourceWidth = W - 2 * PAD_X - brandingWidth - 30; // 30px gap
+          while (ctx.measureText(overlaySource).width > maxSourceWidth && sourceFontSize > 10) {
+            sourceFontSize -= 1;
+            ctx.font = `${sourceFontSize}px ui-monospace, monospace`;
+          }
           ctx.fillStyle = "rgba(255,255,255,0.40)";
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
           ctx.fillText(overlaySource, PAD_X, sourceY + SOURCE_H / 2);
         }
-
-        // Branding (right side of source bar)
-        ctx.font = "bold 22px ui-monospace, monospace";
-        ctx.fillStyle = "rgba(255,255,255,0.22)";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillText("Monitor Hurtowych Cen Paliw", W - PAD_X, sourceY + SOURCE_H / 2);
 
         resolve(canvas);
       };
