@@ -312,6 +312,12 @@ function setViewMode(mode) {
 }
 
 // ===== FUEL TAB SWITCHING =====
+function syncMobileNav(fuel) {
+  document.querySelectorAll(".mob-nav-btn").forEach(b => {
+    b.classList.toggle("mob-active", b.dataset.fuel === fuel);
+  });
+}
+
 els.fuelTabs.addEventListener("click", (e) => {
   const tab = e.target.closest(".fuel-tab");
   if (!tab) return;
@@ -319,6 +325,7 @@ els.fuelTabs.addEventListener("click", (e) => {
 
   els.fuelTabs.querySelectorAll(".fuel-tab").forEach(t => t.classList.remove("active"));
   tab.classList.add("active");
+  syncMobileNav(fuel);
 
   if (fuel === "analiza" || fuel === "stopy" || fuel === "check" || fuel === "news") {
     setViewMode(fuel);
@@ -331,6 +338,13 @@ els.fuelTabs.addEventListener("click", (e) => {
     els.searchInput.value = "";
     loadData();
   }
+});
+
+document.querySelectorAll(".mob-nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const target = els.fuelTabs.querySelector(`.fuel-tab[data-fuel="${btn.dataset.fuel}"]`);
+    if (target) target.click();
+  });
 });
 
 // ===== ANALYTICS =====
