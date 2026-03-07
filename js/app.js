@@ -1695,18 +1695,8 @@ function toggleNewsFilter(source) {
 
   const btnRPP = document.getElementById("filterBtnRPP");
   const btnPaliwa = document.getElementById("filterBtnPaliwa");
-  if (btnRPP) {
-    const on = activeNewsFilter === "RPP";
-    btnRPP.classList.toggle("border-[#1da1f2]", on);
-    btnRPP.classList.toggle("text-[#1da1f2]", on);
-    btnRPP.classList.toggle("bg-[rgba(29,161,242,0.1)]", on);
-  }
-  if (btnPaliwa) {
-    const on = activeNewsFilter === "Paliwa";
-    btnPaliwa.classList.toggle("border-[#ff9900]", on);
-    btnPaliwa.classList.toggle("text-[#ff9900]", on);
-    btnPaliwa.classList.toggle("bg-[rgba(255,153,0,0.1)]", on);
-  }
+  if (btnRPP) btnRPP.classList.toggle("active-rpp", activeNewsFilter === "RPP");
+  if (btnPaliwa) btnPaliwa.classList.toggle("active-paliwa", activeNewsFilter === "Paliwa");
 
   renderNewsFeed();
 }
@@ -1768,9 +1758,9 @@ function buildTweetHtml(article) {
           </p>
         </a>
         <p class="text-[14px] text-gray-400 leading-snug line-clamp-2">${summaryText.replace(/<[^>]*>?/gm, '')}</p>
-        <div class="mt-3 flex gap-6 text-gray-300">
-          <a href="${article.link}" target="_blank" class="flex gap-2 items-center text-[13px] font-bold tracking-wider hover:${iconColor} transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        <div class="mt-3 flex gap-6">
+          <a href="${article.link}" target="_blank" class="news-read-link">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             Czytaj artykuł
           </a>
         </div>

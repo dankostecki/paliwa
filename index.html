@@ -290,11 +290,17 @@
           <h2 class="text-xl font-black tracking-wide uppercase text-white m-0">Live News Feed</h2>
           <p class="text-xs text-gray-400 mt-1 uppercase tracking-wider font-bold">Aktualizacje na żywo (Google Alert:
             RPP, Paliwa)</p>
-          <div class="mt-3 flex gap-3 text-xs font-bold uppercase tracking-wider items-center">
-            <button id="filterBtnRPP" onclick="toggleNewsFilter('RPP')" class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-transparent transition-all hover:border-[#1da1f2] hover:text-[#1da1f2]"><span class="w-2.5 h-2.5 rounded-full bg-[#1da1f2]"></span> RPP</button>
-            <button id="filterBtnPaliwa" onclick="toggleNewsFilter('Paliwa')" class="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-transparent transition-all hover:border-[#ff9900] hover:text-[#ff9900]"><span class="w-2.5 h-2.5 rounded-full bg-[#ff9900]"></span> Paliwa</button>
-            <span id="newsStatusIndicator" class="ml-auto text-green-400 flex items-center gap-1.5"><span
-                class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Na żywo (RSS)</span>
+          <div class="mt-3 flex gap-3 items-center">
+            <div class="news-filter-btns">
+              <button id="filterBtnRPP" onclick="toggleNewsFilter('RPP')" class="news-filter-btn">
+                <span class="dot" style="background:#1da1f2;box-shadow:0 0 6px rgba(29,161,242,.5);"></span>RPP
+              </button>
+              <button id="filterBtnPaliwa" onclick="toggleNewsFilter('Paliwa')" class="news-filter-btn">
+                <span class="dot" style="background:#ff9900;box-shadow:0 0 6px rgba(255,153,0,.5);"></span>Paliwa
+              </button>
+            </div>
+            <span id="newsStatusIndicator" class="ml-auto text-green-400 flex items-center gap-1.5" style="font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;"><span
+                style="width:7px;height:7px;border-radius:50%;background:#34ff9a;display:inline-block;animation:blink 1s step-end infinite;"></span>Na żywo</span>
           </div>
         </div>
 
