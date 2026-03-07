@@ -6,13 +6,13 @@ const FUEL_FILES = {
 
 const FUEL_LABELS = {
   benzyna: "Benzyna Eurosuper 95",
-  diesel: "Olej Napedowy Ekodiesel"
+  diesel: "Olej Napędowy Ekodiesel"
 };
 
 const PERIOD_CONFIG = {
-  dd: { label: "D/D", days: 1, zlCol: "ZMIANA D/D (zl)", pctCol: "ZMIANA D/D (%)", barTitle: "ZMIAN DZIENNYCH" },
-  ww: { label: "T/T", days: 7, zlCol: "ZMIANA T/T (zl)", pctCol: "ZMIANA T/T (%)", barTitle: "ZMIAN TYGODNIOWYCH" },
-  mm: { label: "M/M", days: 30, zlCol: "ZMIANA M/M (zl)", pctCol: "ZMIANA M/M (%)", barTitle: "ZMIAN MIESIĘCZNYCH" },
+  dd: { label: "D/D", days: 1, zlCol: "ZMIANA D/D (zł)", pctCol: "ZMIANA D/D (%)", barTitle: "ZMIAN DZIENNYCH" },
+  ww: { label: "T/T", days: 7, zlCol: "ZMIANA T/T (zł)", pctCol: "ZMIANA T/T (%)", barTitle: "ZMIAN TYGODNIOWYCH" },
+  mm: { label: "M/M", days: 30, zlCol: "ZMIANA M/M (zł)", pctCol: "ZMIANA M/M (%)", barTitle: "ZMIAN MIESIĘCZNYCH" },
 };
 
 // ===== STATE =====
@@ -146,7 +146,7 @@ function signClass(n) {
 function formatZl(n) {
   if (n == null) return "\u2014";
   const abs = Math.abs(n);
-  return `${n >= 0 ? "+" : "\u2212"}${abs.toFixed(0)} zl`;
+  return `${n >= 0 ? "+" : "\u2212"}${abs.toFixed(0)} zł`;
 }
 
 function formatPct(n) {
@@ -400,10 +400,10 @@ function renderStats(fuelKey, fuelRows) {
     <div class="stat-card">
       <div class="label">Aktualna cena</div>
       <div class="value">${(s.current / 1000).toFixed(3)}</div>
-      <div class="sub">tys. PLN/m3 | ${pctSign}${pctFromMean}% vs srednia</div>
+      <div class="sub">tys. PLN/m3 | ${pctSign}${pctFromMean}% vs średnia</div>
     </div>
     <div class="stat-card">
-      <div class="label">Srednia</div>
+      <div class="label">Średnia</div>
       <div class="value">${(s.mean / 1000).toFixed(3)}</div>
       <div class="sub">z ${s.n} obserwacji</div>
     </div>
@@ -895,7 +895,7 @@ function drawBarChart(mode) {
   const periodCfg = PERIOD_CONFIG[currentPeriod];
   const isZl = mode === "zl";
   const valFn = isZl ? (r => r.changeAbs) : (r => r.changePct);
-  const label = isZl ? "zl (PLN/m3)" : "%";
+  const label = isZl ? "zł (PLN/m3)" : "%";
 
   const barTitleText = `${fuelLabel} \u2014 HISTORIA ${periodCfg.barTitle} (${label})`;
 
@@ -911,7 +911,7 @@ function drawBarChart(mode) {
     type: "bar",
     marker: { color: colors, line: { color: borders, width: 1 } },
     hovertemplate: isZl
-      ? "%{x|%d-%m-%Y}<br><b>%{y:+d} zl</b><extra></extra>"
+      ? "%{x|%d-%m-%Y}<br><b>%{y:+d} zł</b><extra></extra>"
       : "%{x|%d-%m-%Y}<br><b>%{y:+.2f}%</b><extra></extra>"
   };
 
@@ -931,7 +931,7 @@ function drawBarChart(mode) {
     yaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       tickfont: { color: "rgba(255,255,255,.70)" },
-      title: { text: isZl ? "Zmiana (zl)" : "Zmiana (%)", font: { color: "rgba(255,255,255,.70)" } },
+      title: { text: isZl ? "Zmiana (zł)" : "Zmiana (%)", font: { color: "rgba(255,255,255,.70)" } },
       zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
       autorange: true, rangemode: "normal",
       showspikes: true, spikemode: "across", spikesnap: "cursor",
