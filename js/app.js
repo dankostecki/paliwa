@@ -1,7 +1,7 @@
 // ===== CONFIG =====
 const FUEL_FILES = {
   benzyna: "Benzyna_Eurosuper95_2022-2026.json",
-  diesel:  "Olej_Napedowy_Ekodiesel_2022-2026.json",
+  diesel: "Olej_Napedowy_Ekodiesel_2022-2026.json",
 };
 
 const FUEL_LABELS = {
@@ -10,8 +10,8 @@ const FUEL_LABELS = {
 };
 
 const PERIOD_CONFIG = {
-  dd: { label: "D/D", days: 1,  zlCol: "ZMIANA D/D (zl)", pctCol: "ZMIANA D/D (%)", barTitle: "ZMIAN DZIENNYCH" },
-  ww: { label: "T/T", days: 7,  zlCol: "ZMIANA T/T (zl)", pctCol: "ZMIANA T/T (%)", barTitle: "ZMIAN TYGODNIOWYCH" },
+  dd: { label: "D/D", days: 1, zlCol: "ZMIANA D/D (zl)", pctCol: "ZMIANA D/D (%)", barTitle: "ZMIAN DZIENNYCH" },
+  ww: { label: "T/T", days: 7, zlCol: "ZMIANA T/T (zl)", pctCol: "ZMIANA T/T (%)", barTitle: "ZMIAN TYGODNIOWYCH" },
   mm: { label: "M/M", days: 30, zlCol: "ZMIANA M/M (zl)", pctCol: "ZMIANA M/M (%)", barTitle: "ZMIAN MIESIĘCZNYCH" },
 };
 
@@ -25,33 +25,33 @@ let chartReady = false;
 
 // ===== DOM =====
 const els = {
-  tbody:        document.getElementById("tbody"),
-  searchInput:  document.getElementById("searchInput"),
-  hiAlert:      document.getElementById("hiAlert"),
-  modal:        document.getElementById("modal"),
-  btnClose:     document.getElementById("btnClose"),
-  btnShowAll:   document.getElementById("btnShowAll"),
-  barModal:     document.getElementById("barModal"),
-  barBtnClose:  document.getElementById("barBtnClose"),
-  barBtnShowAll:document.getElementById("barBtnShowAll"),
-  fuelTabs:     document.getElementById("fuelTabs"),
-  periodTabs:   document.getElementById("periodTabs"),
-  thChangeZl:   document.getElementById("thChangeZl"),
-  thChangePct:  document.getElementById("thChangePct"),
+  tbody: document.getElementById("tbody"),
+  searchInput: document.getElementById("searchInput"),
+  hiAlert: document.getElementById("hiAlert"),
+  modal: document.getElementById("modal"),
+  btnClose: document.getElementById("btnClose"),
+  btnShowAll: document.getElementById("btnShowAll"),
+  barModal: document.getElementById("barModal"),
+  barBtnClose: document.getElementById("barBtnClose"),
+  barBtnShowAll: document.getElementById("barBtnShowAll"),
+  fuelTabs: document.getElementById("fuelTabs"),
+  periodTabs: document.getElementById("periodTabs"),
+  thChangeZl: document.getElementById("thChangeZl"),
+  thChangePct: document.getElementById("thChangePct"),
 };
 
 // ===== HELPERS =====
-function setTitle(id, text){ const el = document.getElementById(id); if(el) el.textContent = text; }
+function setTitle(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 
-function parseDateDDMMYYYY(s){
+function parseDateDDMMYYYY(s) {
   const t = (s || "").trim();
   const m = t.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-  if(!m) return null;
+  if (!m) return null;
   const [_, dd, mm, yyyy] = m;
   return new Date(Date.UTC(+yyyy, +mm - 1, +dd));
 }
 
-function fmtPriceThousands(plnPerM3){
+function fmtPriceThousands(plnPerM3) {
   return (plnPerM3 / 1000).toFixed(3);
 }
 
@@ -61,14 +61,14 @@ function fmtPriceThousands(plnPerM3){
  * T/T (days=7): nearest entry to 7 calendar days ago.
  * M/M (days=30): nearest entry to 30 calendar days ago.
  */
-function computeChanges(rowsAsc, periodDays){
+function computeChanges(rowsAsc, periodDays) {
   const DAY_MS = 24 * 3600 * 1000;
-  for (let i = 0; i < rowsAsc.length; i++){
+  for (let i = 0; i < rowsAsc.length; i++) {
     const cur = rowsAsc[i];
 
-    if(periodDays === 1){
+    if (periodDays === 1) {
       const prev = rowsAsc[i - 1];
-      if(!prev){
+      if (!prev) {
         cur.changeAbs = null;
         cur.changePct = null;
         cur.changeRef = null;
@@ -83,19 +83,19 @@ function computeChanges(rowsAsc, periodDays){
       let best = null;
       let bestDist = Infinity;
 
-      for (let j = i - 1; j >= 0; j--){
+      for (let j = i - 1; j >= 0; j--) {
         const dist = Math.abs(rowsAsc[j].date.getTime() - targetTime);
-        if(dist < bestDist){
+        if (dist < bestDist) {
           bestDist = dist;
           best = rowsAsc[j];
         }
-        if(rowsAsc[j].date.getTime() < targetTime - 10 * DAY_MS) break;
+        if (rowsAsc[j].date.getTime() < targetTime - 10 * DAY_MS) break;
       }
 
       const minDays = Math.floor(periodDays * 0.5);
       const actualDays = best ? Math.round((cur.date - best.date) / DAY_MS) : 0;
 
-      if(!best || actualDays < minDays){
+      if (!best || actualDays < minDays) {
         cur.changeAbs = null;
         cur.changePct = null;
         cur.changeRef = null;
@@ -111,20 +111,20 @@ function computeChanges(rowsAsc, periodDays){
   return rowsAsc;
 }
 
-function bestHighSinceMessage(rowsAsc){
+function bestHighSinceMessage(rowsAsc) {
   const last = rowsAsc[rowsAsc.length - 1];
-  if(!last) return null;
+  if (!last) return null;
 
   let maxSoFar = -Infinity;
   for (const r of rowsAsc) maxSoFar = Math.max(maxSoFar, r.price);
 
-  if (last.price >= maxSoFar){
+  if (last.price >= maxSoFar) {
     return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA W HISTORII (od ${rowsAsc[0].dateStr}).`;
   }
 
   let lastHigherDate = null;
-  for (let i = rowsAsc.length - 1; i >= 0; i--){
-    if (rowsAsc[i].price > last.price){
+  for (let i = rowsAsc.length - 1; i >= 0; i--) {
+    if (rowsAsc[i].price > last.price) {
       lastHigherDate = rowsAsc[i].dateStr;
       break;
     }
@@ -132,45 +132,45 @@ function bestHighSinceMessage(rowsAsc){
   return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA OD ${lastHigherDate}.`;
 }
 
-function setAlert(msg){
-  if(!msg){ els.hiAlert.style.display = "none"; return; }
+function setAlert(msg) {
+  if (!msg) { els.hiAlert.style.display = "none"; return; }
   els.hiAlert.textContent = msg;
   els.hiAlert.style.display = "block";
 }
 
-function signClass(n){
-  if(n == null) return "muted";
+function signClass(n) {
+  if (n == null) return "muted";
   return n >= 0 ? "pos" : "neg";
 }
 
-function formatZl(n){
-  if(n == null) return "\u2014";
+function formatZl(n) {
+  if (n == null) return "\u2014";
   const abs = Math.abs(n);
-  return `${n>=0?"+":"\u2212"}${abs.toFixed(0)} zl`;
+  return `${n >= 0 ? "+" : "\u2212"}${abs.toFixed(0)} zl`;
 }
 
-function formatPct(n){
-  if(n == null) return "\u2014";
+function formatPct(n) {
+  if (n == null) return "\u2014";
   const v = Math.abs(n).toFixed(2);
-  return `${n>=0?"+":"\u2212"}${v}%`;
+  return `${n >= 0 ? "+" : "\u2212"}${v}%`;
 }
 
 // ===== UPDATE COLUMN HEADERS =====
-function updateHeaders(){
+function updateHeaders() {
   const cfg = PERIOD_CONFIG[currentPeriod];
-  els.thChangeZl.textContent  = cfg.zlCol;
+  els.thChangeZl.textContent = cfg.zlCol;
   els.thChangePct.textContent = cfg.pctCol;
 }
 
 // ===== RENDER TABLE =====
-function renderTable(dataDesc){
+function renderTable(dataDesc) {
   els.tbody.innerHTML = "";
   dataDesc.forEach((r, idx) => {
     const tr = document.createElement("tr");
     const refHint = r.changeRef ? ` title="vs ${r.changeRef}"` : "";
 
     let flag = "";
-    if(idx === 0){
+    if (idx === 0) {
       flag = currentPeriod === "dd"
         ? `<span class="tag">DZISIAJ</span>`
         : `<span class="tag">OSTATNI</span>`;
@@ -190,9 +190,9 @@ function renderTable(dataDesc){
   });
 }
 
-function applyFilter(){
+function applyFilter() {
   const q = els.searchInput.value.trim().toLowerCase();
-  if(!q){
+  if (!q) {
     filtered = rowsDesc.slice();
   } else {
     filtered = rowsDesc.filter(r => {
@@ -209,42 +209,42 @@ function applyFilter(){
  * M/M: one row per calendar month (last entry of each month).
  * D/D: all rows.
  */
-function sampleRows(rowsAsc, period){
-  if(period === "dd") return rowsAsc.slice();
+function sampleRows(rowsAsc, period) {
+  if (period === "dd") return rowsAsc.slice();
 
   const sampled = [];
   const keyFn = period === "ww"
     ? (d) => {
-        // ISO week: year + week number
-        const tmp = new Date(d.getTime());
-        tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
-        const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
-        const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
-        return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`;
-      }
+      // ISO week: year + week number
+      const tmp = new Date(d.getTime());
+      tmp.setUTCDate(tmp.getUTCDate() + 4 - (tmp.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+      return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+    }
     : (d) => {
-        // Month: year-month
-        return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}`;
-      };
+      // Month: year-month
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    };
 
   let lastKey = null;
   let lastRow = null;
 
-  for(const r of rowsAsc){
+  for (const r of rowsAsc) {
     const key = keyFn(r.date);
-    if(key !== lastKey){
-      if(lastRow) sampled.push(lastRow);
+    if (key !== lastKey) {
+      if (lastRow) sampled.push(lastRow);
       lastKey = key;
     }
     lastRow = r;
   }
-  if(lastRow) sampled.push(lastRow); // push final period's last entry
+  if (lastRow) sampled.push(lastRow); // push final period's last entry
   return sampled;
 }
 
 let displayRows = []; // sampled rows for table & bar chart
 
-function recomputeAndRender(){
+function recomputeAndRender() {
   const cfg = PERIOD_CONFIG[currentPeriod];
 
   // First compute changes on ALL daily rows
@@ -252,29 +252,29 @@ function recomputeAndRender(){
 
   // Then sample for display
   displayRows = sampleRows(rows, currentPeriod);
-  rowsDesc = displayRows.slice().sort((a,b) => b.date - a.date);
+  rowsDesc = displayRows.slice().sort((a, b) => b.date - a.date);
 
   updateHeaders();
   applyFilter();
 }
 
 // ===== LOAD DATA =====
-async function loadJSON(path){
+async function loadJSON(path) {
   const res = await fetch(path, { cache: "no-store" });
-  if(!res.ok) throw new Error(`JSON: ${res.status} ${res.statusText}`);
+  if (!res.ok) throw new Error(`JSON: ${res.status} ${res.statusText}`);
   const data = await res.json();
   const out = [];
-  for (const r of data){
+  for (const r of data) {
     const dateStr = (r.data_zmiany || r.date || r.DATA || "").trim();
     const price = Number(r.cena_pln_m3 ?? r.price ?? r.CLOSE ?? r.cena);
     const date = parseDateDDMMYYYY(dateStr);
-    if(!dateStr || !Number.isFinite(price) || !date) continue;
+    if (!dateStr || !Number.isFinite(price) || !date) continue;
     out.push({ dateStr, date, price });
   }
   return out;
 }
 
-async function loadData(){
+async function loadData() {
   setAlert(null);
   els.tbody.innerHTML = `<tr><td class="muted" colspan="6">Ładowanie danych...</td></tr>`;
 
@@ -282,7 +282,7 @@ async function loadData(){
   const url = `${file}?v=${Date.now()}`;
 
   let raw = await loadJSON(url);
-  raw.sort((a,b) => a.date - b.date);
+  raw.sort((a, b) => a.date - b.date);
   rows = raw;
 
   recomputeAndRender();
@@ -297,33 +297,33 @@ const stopyPanel = document.getElementById("stopyPanel");
 const checkPanel = document.getElementById("checkPanel");
 let viewMode = "data"; // "data" | "analiza" | "stopy" | "check"
 
-function setViewMode(mode){
+function setViewMode(mode) {
   viewMode = mode;
   dataPanel.classList.toggle("hidden", mode !== "data");
   analizaPanel.classList.toggle("visible", mode === "analiza");
   stopyPanel.classList.toggle("visible", mode === "stopy");
   checkPanel.classList.toggle("visible", mode === "check");
-  if(mode === "analiza") loadAnalytics();
-  if(mode === "stopy") loadStopy();
-  if(mode === "check") loadCheck();
+  if (mode === "analiza") loadAnalytics();
+  if (mode === "stopy") loadStopy();
+  if (mode === "check") loadCheck();
 }
 
 // ===== FUEL TAB SWITCHING =====
 els.fuelTabs.addEventListener("click", (e) => {
   const tab = e.target.closest(".fuel-tab");
-  if(!tab) return;
+  if (!tab) return;
   const fuel = tab.dataset.fuel;
 
   els.fuelTabs.querySelectorAll(".fuel-tab").forEach(t => t.classList.remove("active"));
   tab.classList.add("active");
 
-  if(fuel === "analiza" || fuel === "stopy" || fuel === "check"){
+  if (fuel === "analiza" || fuel === "stopy" || fuel === "check") {
     setViewMode(fuel);
     return;
   }
 
-  if(viewMode !== "data") setViewMode("data");
-  if(fuel !== currentFuel){
+  if (viewMode !== "data") setViewMode("data");
+  if (fuel !== currentFuel) {
     currentFuel = fuel;
     els.searchInput.value = "";
     loadData();
@@ -336,59 +336,59 @@ let cpiData = null;
 let allFuelData = {};
 let currentAnaFuel = "benzyna";
 
-async function loadCPI(){
-  if(cpiData) return cpiData;
+async function loadCPI() {
+  if (cpiData) return cpiData;
   const res = await fetch(CPI_FILE + "?v=" + Date.now(), { cache: "no-store" });
   const data = await res.json();
   cpiData = data.map(r => {
     const parts = r.data.split("-");
     return {
-      date: new Date(Date.UTC(+parts[2], +parts[1]-1, +parts[0])),
+      date: new Date(Date.UTC(+parts[2], +parts[1] - 1, +parts[0])),
       cpi: r.cpi_rr_pct
     };
   });
   return cpiData;
 }
 
-async function loadFuelForAnalysis(fuelKey){
-  if(allFuelData[fuelKey]) return allFuelData[fuelKey];
+async function loadFuelForAnalysis(fuelKey) {
+  if (allFuelData[fuelKey]) return allFuelData[fuelKey];
   const file = FUEL_FILES[fuelKey];
   const res = await fetch(file + "?v=" + Date.now(), { cache: "no-store" });
   const data = await res.json();
   const out = [];
-  for(const r of data){
+  for (const r of data) {
     const dateStr = (r.data_zmiany || "").trim();
     const price = Number(r.cena_pln_m3);
     const date = parseDateDDMMYYYY(dateStr);
-    if(dateStr && Number.isFinite(price) && date) out.push({ dateStr, date, price });
+    if (dateStr && Number.isFinite(price) && date) out.push({ dateStr, date, price });
   }
-  out.sort((a,b) => a.date - b.date);
+  out.sort((a, b) => a.date - b.date);
   allFuelData[fuelKey] = out;
   return out;
 }
 
-function calcStats(prices){
+function calcStats(prices) {
   const n = prices.length;
-  const sorted = [...prices].sort((a,b) => a - b);
-  const sum = prices.reduce((a,b) => a+b, 0);
+  const sorted = [...prices].sort((a, b) => a - b);
+  const sum = prices.reduce((a, b) => a + b, 0);
   const mean = sum / n;
-  const variance = prices.reduce((a,v) => a + (v - mean)**2, 0) / n;
+  const variance = prices.reduce((a, v) => a + (v - mean) ** 2, 0) / n;
   const std = Math.sqrt(variance);
   const median = n % 2 === 0
-    ? (sorted[n/2-1] + sorted[n/2]) / 2
-    : sorted[Math.floor(n/2)];
+    ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+    : sorted[Math.floor(n / 2)];
   const p5 = sorted[Math.floor(n * 0.05)];
   const p25 = sorted[Math.floor(n * 0.25)];
   const p75 = sorted[Math.floor(n * 0.75)];
   const p95 = sorted[Math.floor(n * 0.95)];
   return {
-    n, mean, median, std, min: sorted[0], max: sorted[n-1],
+    n, mean, median, std, min: sorted[0], max: sorted[n - 1],
     p5, p25, p75, p95,
     current: prices[prices.length - 1]
   };
 }
 
-function renderStats(fuelKey, fuelRows){
+function renderStats(fuelKey, fuelRows) {
   const grid = document.getElementById("statsGrid");
   const prices = fuelRows.map(r => r.price);
   const s = calcStats(prices);
@@ -399,48 +399,48 @@ function renderStats(fuelKey, fuelRows){
   grid.innerHTML = `
     <div class="stat-card">
       <div class="label">Aktualna cena</div>
-      <div class="value">${(s.current/1000).toFixed(3)}</div>
+      <div class="value">${(s.current / 1000).toFixed(3)}</div>
       <div class="sub">tys. PLN/m3 | ${pctSign}${pctFromMean}% vs srednia</div>
     </div>
     <div class="stat-card">
       <div class="label">Srednia</div>
-      <div class="value">${(s.mean/1000).toFixed(3)}</div>
+      <div class="value">${(s.mean / 1000).toFixed(3)}</div>
       <div class="sub">z ${s.n} obserwacji</div>
     </div>
     <div class="stat-card">
       <div class="label">Mediana</div>
-      <div class="value">${(s.median/1000).toFixed(3)}</div>
+      <div class="value">${(s.median / 1000).toFixed(3)}</div>
       <div class="sub">wartość środkowa</div>
     </div>
     <div class="stat-card">
       <div class="label">Odch. std.</div>
-      <div class="value">${(s.std/1000).toFixed(3)}</div>
-      <div class="sub">${((s.std/s.mean)*100).toFixed(1)}% współczynnik zmienności</div>
+      <div class="value">${(s.std / 1000).toFixed(3)}</div>
+      <div class="sub">${((s.std / s.mean) * 100).toFixed(1)}% współczynnik zmienności</div>
     </div>
     <div class="stat-card">
       <div class="label">Minimum</div>
-      <div class="value" style="color:var(--green)">${(s.min/1000).toFixed(3)}</div>
+      <div class="value" style="color:var(--green)">${(s.min / 1000).toFixed(3)}</div>
       <div class="sub">najniższa cena w historii</div>
     </div>
     <div class="stat-card">
       <div class="label">Maksimum</div>
-      <div class="value" style="color:var(--red)">${(s.max/1000).toFixed(3)}</div>
+      <div class="value" style="color:var(--red)">${(s.max / 1000).toFixed(3)}</div>
       <div class="sub">najwyższa cena w historii</div>
     </div>
     <div class="stat-card">
       <div class="label">Percentyl 5%</div>
-      <div class="value">${(s.p5/1000).toFixed(3)}</div>
+      <div class="value">${(s.p5 / 1000).toFixed(3)}</div>
       <div class="sub">tanio — 5% czasu poniżej</div>
     </div>
     <div class="stat-card">
       <div class="label">Percentyl 95%</div>
-      <div class="value">${(s.p95/1000).toFixed(3)}</div>
+      <div class="value">${(s.p95 / 1000).toFixed(3)}</div>
       <div class="sub">drogo — 5% czasu powyżej</div>
     </div>
   `;
 }
 
-function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
+function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths) {
   offsetMonths = offsetMonths || 0;
   const fLabel = FUEL_LABELS[fuelKey] || fuelKey;
   const fColor = fuelKey === "benzyna" ? "#ff4b4b" : "#ffcc66";
@@ -475,7 +475,7 @@ function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
   }];
 
   // If 'oba': PB95 (red) first, then Ekodiesel (yellow), then CPI
-  if(fuelKey === "oba" && allFuelData.diesel){
+  if (fuelKey === "oba" && allFuelData.diesel) {
     traces[0].name = "Benzyna 95 (tys. PLN/m3)";
     traces[0].line.color = "#ff4b4b";
     traces.splice(1, 0, {
@@ -494,31 +494,31 @@ function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
 
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 70, t: 20, b: 55 },
+    margin: { l: 25, r: 25, t: 25, b: 55 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
       tickfont: { color: "rgba(255,255,255,.6)" }, automargin: true,
     },
     yaxis: {
-      title: { text: "Cena (tys. PLN/m3)", font: { color: fuelKey === "oba" ? "#ff4b4b" : fColor } },
+      title: { text: "Cena", font: { color: fuelKey === "oba" ? "#ff4b4b" : fColor } },
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
       tickfont: { color: "rgba(255,255,255,.6)" },
-      side: "left"
+      side: "left", automargin: true,
     },
     yaxis2: {
       title: { text: "CPI r/r (%)", font: { color: "#7b61ff" } },
       tickfont: { color: "rgba(255,255,255,.6)" },
       overlaying: "y", side: "right",
-      showgrid: false
+      showgrid: false, automargin: true,
     },
     font: { color: "rgba(255,255,255,.7)" },
-    legend: { x: 0.01, y: 0.99, xanchor: "left", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
+    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
     hovermode: "x unified",
     showlegend: true,
     annotations: [{
       text: "Opracowanie własne | dane: Orlen, GUS",
       showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.12, xanchor: "right", yanchor: "top",
+      x: 1, y: -0.18, xanchor: "right", yanchor: "top",
       font: { size: 10, color: "rgba(255,255,255,.3)", family: "monospace" }
     }]
   };
@@ -526,7 +526,7 @@ function drawCpiChart(fuelKey, fuelRows, cpi, offsetMonths){
   Plotly.newPlot("cpiChartBox", traces, layout, { responsive: true, displayModeBar: "hover" });
 }
 
-function drawHistogram(fuelKey, fuelRows){
+function drawHistogram(fuelKey, fuelRows) {
   const fLabel = FUEL_LABELS[fuelKey] || fuelKey;
   const fColor = fuelKey === "benzyna" ? "#ff4b4b" : fuelKey === "diesel" ? "#ffcc66" : "#ff4b4b";
   const prices = fuelRows.map(r => r.price / 1000);
@@ -535,7 +535,7 @@ function drawHistogram(fuelKey, fuelRows){
     x: prices,
     type: "histogram",
     nbinsx: 40,
-    marker: { color: fColor.replace(")", ",.6)").replace("rgb","rgba").replace("#",""), line: { color: fColor, width: 1 } },
+    marker: { color: fColor.replace(")", ",.6)").replace("rgb", "rgba").replace("#", ""), line: { color: fColor, width: 1 } },
     name: fLabel,
     opacity: 0.75,
     hovertemplate: "Cena: %{x:.3f}<br>Liczba dni: %{y}<extra></extra>"
@@ -547,7 +547,7 @@ function drawHistogram(fuelKey, fuelRows){
     line: { color: fColor, width: 1 }
   };
 
-  if(fuelKey === "oba" && allFuelData.diesel){
+  if (fuelKey === "oba" && allFuelData.diesel) {
     const dPrices = allFuelData.diesel.map(r => r.price / 1000);
     traces[0].name = "Benzyna 95";
     traces[0].marker = { color: "rgba(255,75,75,.5)", line: { color: "#ff4b4b", width: 1 } };
@@ -568,7 +568,7 @@ function drawHistogram(fuelKey, fuelRows){
 
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
-    margin: { l: 60, r: 40, t: 20, b: 55 },
+    margin: { l: 25, r: 25, t: 45, b: 35 },
     xaxis: {
       title: { text: "Cena (tys. PLN/m3)", font: { color: "rgba(255,255,255,.6)" } },
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
@@ -577,12 +577,12 @@ function drawHistogram(fuelKey, fuelRows){
     yaxis: {
       title: { text: "Liczba dni", font: { color: "rgba(255,255,255,.6)" } },
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
-      tickfont: { color: "rgba(255,255,255,.6)" }
+      tickfont: { color: "rgba(255,255,255,.6)" }, automargin: true,
     },
     font: { color: "rgba(255,255,255,.7)" },
     barmode: fuelKey === "oba" ? "overlay" : "stack",
     showlegend: fuelKey === "oba",
-    legend: { x: 0.99, y: 0.99, xanchor: "right", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
+    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
     shapes: [{
       type: "line",
       x0: current, x1: current, y0: 0, y1: 1,
@@ -601,7 +601,7 @@ function drawHistogram(fuelKey, fuelRows){
   Plotly.newPlot("histChartBox", traces, layout, { responsive: true, displayModeBar: "hover" });
 }
 
-async function loadAnalytics(){
+async function loadAnalytics() {
   const [cpi, pb95, diesel] = await Promise.all([
     loadCPI(),
     loadFuelForAnalysis("benzyna"),
@@ -611,21 +611,21 @@ async function loadAnalytics(){
   renderAnalytics();
 }
 
-function getCpiOffset(){
+function getCpiOffset() {
   return parseInt(document.getElementById("cpiOffset").value) || 0;
 }
 
-function updateOffsetLabel(){
+function updateOffsetLabel() {
   const v = getCpiOffset();
   const label = v === 0 ? "0 mies." : (v > 0 ? `+${v} mies.` : `${v} mies.`);
   document.getElementById("cpiOffsetLabel").textContent = label;
 }
 
-function renderAnalytics(){
+function renderAnalytics() {
   const fuel = currentAnaFuel;
   const offset = getCpiOffset();
 
-  if(fuel === "oba"){
+  if (fuel === "oba") {
     renderStats("benzyna", allFuelData.benzyna);
     drawCpiChart("oba", allFuelData.benzyna, cpiData, offset);
     drawHistogram("oba", allFuelData.benzyna);
@@ -641,79 +641,79 @@ function renderAnalytics(){
  * Pearson correlation between fuel prices and CPI at a given month offset.
  * Resamples fuel data to monthly (avg per month) to match CPI granularity.
  */
-function calcCorrelation(fuelRows, cpi, offsetMonths){
+function calcCorrelation(fuelRows, cpi, offsetMonths) {
   // Resample fuel to monthly averages
   const monthMap = {};
-  for(const r of fuelRows){
-    const key = r.date.getUTCFullYear() + "-" + String(r.date.getUTCMonth()+1).padStart(2,"0");
-    if(!monthMap[key]) monthMap[key] = [];
+  for (const r of fuelRows) {
+    const key = r.date.getUTCFullYear() + "-" + String(r.date.getUTCMonth() + 1).padStart(2, "0");
+    if (!monthMap[key]) monthMap[key] = [];
     monthMap[key].push(r.price);
   }
   const fuelMonthly = {};
-  for(const [k,v] of Object.entries(monthMap)){
-    fuelMonthly[k] = v.reduce((a,b) => a+b, 0) / v.length;
+  for (const [k, v] of Object.entries(monthMap)) {
+    fuelMonthly[k] = v.reduce((a, b) => a + b, 0) / v.length;
   }
 
   // Build paired arrays: fuel month <-> CPI month+offset
   const pairs = [];
-  for(const c of cpi){
+  for (const c of cpi) {
     const shifted = new Date(c.date);
     shifted.setUTCMonth(shifted.getUTCMonth() + offsetMonths);
-    const key = shifted.getUTCFullYear() + "-" + String(shifted.getUTCMonth()+1).padStart(2,"0");
-    if(fuelMonthly[key] !== undefined){
+    const key = shifted.getUTCFullYear() + "-" + String(shifted.getUTCMonth() + 1).padStart(2, "0");
+    if (fuelMonthly[key] !== undefined) {
       pairs.push({ fuel: fuelMonthly[key] / 1000, cpi: c.cpi });
     }
   }
 
-  if(pairs.length < 4) return null;
+  if (pairs.length < 4) return null;
 
   const n = pairs.length;
-  const sumX = pairs.reduce((a,p) => a + p.fuel, 0);
-  const sumY = pairs.reduce((a,p) => a + p.cpi, 0);
-  const sumXY = pairs.reduce((a,p) => a + p.fuel * p.cpi, 0);
-  const sumX2 = pairs.reduce((a,p) => a + p.fuel * p.fuel, 0);
-  const sumY2 = pairs.reduce((a,p) => a + p.cpi * p.cpi, 0);
+  const sumX = pairs.reduce((a, p) => a + p.fuel, 0);
+  const sumY = pairs.reduce((a, p) => a + p.cpi, 0);
+  const sumXY = pairs.reduce((a, p) => a + p.fuel * p.cpi, 0);
+  const sumX2 = pairs.reduce((a, p) => a + p.fuel * p.fuel, 0);
+  const sumY2 = pairs.reduce((a, p) => a + p.cpi * p.cpi, 0);
 
   const num = n * sumXY - sumX * sumY;
-  const den = Math.sqrt((n * sumX2 - sumX*sumX) * (n * sumY2 - sumY*sumY));
+  const den = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
 
-  if(den === 0) return null;
+  if (den === 0) return null;
   const r = num / den;
-  return { r, r2: r*r, n: pairs.length };
+  return { r, r2: r * r, n: pairs.length };
 }
 
-function updateCorrDisplay(){
+function updateCorrDisplay() {
   const fuel = currentAnaFuel;
   const offset = getCpiOffset();
   const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
   const corr = calcCorrelation(fuelRows, cpiData, offset);
   const el = document.getElementById("corrDisplay");
 
-  if(!corr){
+  if (!corr) {
     el.textContent = "";
     return;
   }
 
   const rColor = corr.r > 0.6 ? "var(--green)" : corr.r > 0.3 ? "var(--amber)" : corr.r > 0 ? "var(--muted)" : "var(--red)";
   const strength = Math.abs(corr.r) > 0.8 ? "bardzo silna" :
-                   Math.abs(corr.r) > 0.6 ? "silna" :
-                   Math.abs(corr.r) > 0.4 ? "umiarkowana" :
-                   Math.abs(corr.r) > 0.2 ? "słaba" : "brak";
+    Math.abs(corr.r) > 0.6 ? "silna" :
+      Math.abs(corr.r) > 0.4 ? "umiarkowana" :
+        Math.abs(corr.r) > 0.2 ? "słaba" : "brak";
 
   el.innerHTML = `Pearson r = <span style="color:${rColor}; font-size:15px;">${corr.r.toFixed(3)}</span>`
     + ` &nbsp; R\u00B2 = <span style="color:${rColor};">${corr.r2.toFixed(3)}</span>`
     + ` &nbsp; <span style="color:var(--muted); font-weight:400;">(${strength} korelacja, n=${corr.n} miesiecy)</span>`;
 }
 
-function findBestOffset(){
+function findBestOffset() {
   const fuel = currentAnaFuel;
   const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
 
   let bestOffset = 0;
   let bestR2 = -1;
-  for(let off = -12; off <= 12; off++){
+  for (let off = -12; off <= 12; off++) {
     const corr = calcCorrelation(fuelRows, cpiData, off);
-    if(corr && corr.r2 > bestR2){
+    if (corr && corr.r2 > bestR2) {
       bestR2 = corr.r2;
       bestOffset = off;
     }
@@ -721,7 +721,7 @@ function findBestOffset(){
   return bestOffset;
 }
 
-function redrawCpiOnly(){
+function redrawCpiOnly() {
   const fuel = currentAnaFuel;
   const offset = getCpiOffset();
   const fuelRows = fuel === "oba" ? allFuelData.benzyna : allFuelData[fuel];
@@ -732,7 +732,7 @@ function redrawCpiOnly(){
 // Analiza fuel sub-select
 document.getElementById("anaFuelSelect").addEventListener("click", (e) => {
   const btn = e.target.closest(".ana-fuel-btn");
-  if(!btn) return;
+  if (!btn) return;
   currentAnaFuel = btn.dataset.anafuel;
   document.querySelectorAll(".ana-fuel-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
@@ -756,7 +756,7 @@ document.getElementById("btnAutoOffset").addEventListener("click", () => {
 // ===== PERIOD TAB SWITCHING =====
 els.periodTabs.addEventListener("click", (e) => {
   const tab = e.target.closest(".period-tab");
-  if(!tab || tab.dataset.period === currentPeriod) return;
+  if (!tab || tab.dataset.period === currentPeriod) return;
   currentPeriod = tab.dataset.period;
   els.periodTabs.querySelectorAll(".period-tab").forEach(t => t.classList.remove("active"));
   tab.classList.add("active");
@@ -764,16 +764,16 @@ els.periodTabs.addEventListener("click", (e) => {
 });
 
 // ===== SHARED: auto-scale Y on X range change =====
-function attachYAutoScale(divId, dataSource, valueGetter){
-  function yRangeFor(xFrom, xTo){
+function attachYAutoScale(divId, dataSource, valueGetter) {
+  function yRangeFor(xFrom, xTo) {
     const fromT = xFrom.getTime(), toT = xTo.getTime();
     const visible = dataSource.filter(r => {
       const t = r.date.getTime();
       return t >= fromT && t <= toT;
     });
-    if(!visible.length) return null;
+    if (!visible.length) return null;
     const vals = visible.map(r => valueGetter(r)).filter(v => v != null);
-    if(!vals.length) return null;
+    if (!vals.length) return null;
     const mn = Math.min(...vals);
     const mx = Math.max(...vals);
     const span = mx - mn;
@@ -782,24 +782,27 @@ function attachYAutoScale(divId, dataSource, valueGetter){
   }
 
   const div = document.getElementById(divId);
+  if (div.removeAllListeners) {
+    div.removeAllListeners("plotly_relayout");
+  }
   div.on("plotly_relayout", (ev) => {
     const hasX = ev["xaxis.range[0]"] !== undefined
-              || ev["xaxis.range"] !== undefined
-              || ev["xaxis.autorange"] !== undefined;
-    if(!hasX) return;
+      || ev["xaxis.range"] !== undefined
+      || ev["xaxis.autorange"] !== undefined;
+    if (!hasX) return;
 
     let x0, x1;
-    if(ev["xaxis.range[0]"] !== undefined){
+    if (ev["xaxis.range[0]"] !== undefined) {
       x0 = new Date(ev["xaxis.range[0]"]);
       x1 = new Date(ev["xaxis.range[1]"]);
-    } else if(ev["xaxis.range"]){
+    } else if (ev["xaxis.range"]) {
       x0 = new Date(ev["xaxis.range"][0]);
       x1 = new Date(ev["xaxis.range"][1]);
     }
 
-    if(x0 && x1){
+    if (x0 && x1) {
       const r = yRangeFor(x0, x1);
-      if(r) Plotly.relayout(divId, { "yaxis.range": r, "yaxis.autorange": false });
+      if (r) Plotly.relayout(divId, { "yaxis.range": r, "yaxis.autorange": false });
     } else {
       Plotly.relayout(divId, { "yaxis.autorange": true });
     }
@@ -807,17 +810,17 @@ function attachYAutoScale(divId, dataSource, valueGetter){
 }
 
 // ===== PRICE LINE CHART =====
-function openModal(){ els.modal.style.display = "flex"; }
-function closeModal(){ els.modal.style.display = "none"; }
+function openModal() { els.modal.style.display = "flex"; }
+function closeModal() { els.modal.style.display = "none"; }
 
-function openChartAtDate(dateStr){
-  if(!rows.length) return;
-  const picked = rows.find(r => r.dateStr === dateStr) || rows[rows.length-1];
+function openChartAtDate(dateStr) {
+  if (!rows.length) return;
+  const picked = rows.find(r => r.dateStr === dateStr) || rows[rows.length - 1];
   openModal();
   drawChart(picked);
 }
 
-function drawChart(picked){
+function drawChart(picked) {
   const x = rows.map(r => new Date(r.date.getTime()));
   const y = rows.map(r => r.price / 1000);
 
@@ -850,12 +853,13 @@ function drawChart(picked){
   const layout = {
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 20, b: 45 },
+    margin: { l: 25, r: 25, t: 30, b: 35 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
-      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
+      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
     yaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
@@ -863,7 +867,8 @@ function drawChart(picked){
       title: { text: "Cena (tys. PLN/m3)", font: { color: "rgba(255,255,255,.70)" } },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
-      autorange: true, rangemode: "normal"
+      autorange: true, rangemode: "normal",
+      automargin: true,
     },
     font: { color: "rgba(255,255,255,.80)" },
     dragmode: "zoom",
@@ -880,11 +885,11 @@ function drawChart(picked){
 }
 
 // ===== BAR CHART =====
-function openBarModal(){ els.barModal.style.display = "flex"; }
-function closeBarModal(){ els.barModal.style.display = "none"; }
+function openBarModal() { els.barModal.style.display = "flex"; }
+function closeBarModal() { els.barModal.style.display = "none"; }
 
-function drawBarChart(mode){
-  if(!displayRows.length) return;
+function drawBarChart(mode) {
+  if (!displayRows.length) return;
 
   const fuelLabel = FUEL_LABELS[currentFuel];
   const periodCfg = PERIOD_CONFIG[currentPeriod];
@@ -915,12 +920,13 @@ function drawBarChart(mode){
   const layout = {
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 20, b: 45 },
+    margin: { l: 25, r: 25, t: 30, b: 35 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
-      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
+      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
     yaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
@@ -929,7 +935,8 @@ function drawBarChart(mode){
       zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
       autorange: true, rangemode: "normal",
       showspikes: true, spikemode: "across", spikesnap: "cursor",
-      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1
+      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
     font: { color: "rgba(255,255,255,.80)" },
     dragmode: "zoom",
@@ -950,14 +957,14 @@ function drawBarChart(mode){
 els.searchInput.addEventListener("input", applyFilter);
 
 els.btnClose.addEventListener("click", closeModal);
-els.modal.addEventListener("click", (e) => { if(e.target === els.modal) closeModal(); });
+els.modal.addEventListener("click", (e) => { if (e.target === els.modal) closeModal(); });
 els.btnShowAll.addEventListener("click", () => {
-  if(!chartReady) return;
+  if (!chartReady) return;
   Plotly.relayout("chart", { "xaxis.autorange": true, "yaxis.autorange": true });
 });
 
 els.barBtnClose.addEventListener("click", closeBarModal);
-els.barModal.addEventListener("click", (e) => { if(e.target === els.barModal) closeBarModal(); });
+els.barModal.addEventListener("click", (e) => { if (e.target === els.barModal) closeBarModal(); });
 els.barBtnShowAll.addEventListener("click", () => {
   Plotly.relayout("barChart", { "xaxis.autorange": true, "yaxis.autorange": true });
 });
@@ -972,7 +979,7 @@ els.thChangePct.addEventListener("click", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if(e.key === "Escape"){ closeModal(); closeBarModal(); closeStopyModal(); }
+  if (e.key === "Escape") { closeModal(); closeBarModal(); closeStopyModal(); }
 });
 
 loadData().catch(err => {
@@ -983,32 +990,32 @@ loadData().catch(err => {
 // ===== STOPY PANEL =====
 let stopyLoaded = false;
 let stopyNbp = [], stopyWibor = [], stopyFra = [];
-const COMPARE_COLORS = ["#ffcc66","#7b61ff","#ff4b4b","#34ff9a","#ff7a7a"];
+const COMPARE_COLORS = ["#ffcc66", "#7b61ff", "#ff4b4b", "#34ff9a", "#ff7a7a"];
 let compareEntries = [];
 
-function fmt(v, d=2){ return v != null ? v.toFixed(d)+"%" : "—"; }
+function fmt(v, d = 2) { return v != null ? v.toFixed(d) + "%" : "—"; }
 
-function nbpForDate(date){
+function nbpForDate(date) {
   let result = null;
-  for(const e of stopyNbp){ if(e.date <= date) result = e; }
+  for (const e of stopyNbp) { if (e.date <= date) result = e; }
   return result;
 }
-function wiborForDate(date){
+function wiborForDate(date) {
   let result = null;
-  for(const e of stopyWibor){ if(e.date <= date) result = e; }
+  for (const e of stopyWibor) { if (e.date <= date) result = e; }
   return result;
 }
-function wiborExact(date){
+function wiborExact(date) {
   return stopyWibor.find(e => e.date === date) ?? null;
 }
 
 // ===== STOPY MODAL =====
 const stopyModal = document.getElementById("stopyModal");
-function openStopyModal(){ stopyModal.style.display = "flex"; }
-function closeStopyModal(){ stopyModal.style.display = "none"; }
+function openStopyModal() { stopyModal.style.display = "flex"; }
+function closeStopyModal() { stopyModal.style.display = "none"; }
 
 document.getElementById("stopyBtnClose").addEventListener("click", closeStopyModal);
-stopyModal.addEventListener("click", (e) => { if(e.target === stopyModal) closeStopyModal(); });
+stopyModal.addEventListener("click", (e) => { if (e.target === stopyModal) closeStopyModal(); });
 document.getElementById("stopyBtnShowAll").addEventListener("click", () => {
   Plotly.relayout("stopyChart", { "xaxis.autorange": true, "yaxis.autorange": true });
 });
@@ -1059,11 +1066,11 @@ const STOPY_SERIES = {
   },
 };
 
-function drawStopyChart(seriesKey, highlightTs){
+function drawStopyChart(seriesKey, highlightTs) {
   const cfg = STOPY_SERIES[seriesKey];
-  if(!cfg) return;
+  if (!cfg) return;
   const pts = cfg.getPoints();
-  if(!pts.length) return;
+  if (!pts.length) return;
 
   const d = cfg.decimals;
   const hoverFmt = d === 2
@@ -1087,9 +1094,9 @@ function drawStopyChart(seriesKey, highlightTs){
   const traces = [trace];
 
   // Marker dla klikniętego punktu
-  if(highlightTs){
+  if (highlightTs) {
     const hit = pts.find(p => p.ts === highlightTs);
-    if(hit){
+    if (hit) {
       traces.push({
         x: [hit.x], y: [hit.y],
         type: "scatter", mode: "markers",
@@ -1108,12 +1115,13 @@ function drawStopyChart(seriesKey, highlightTs){
   const layout = {
     paper_bgcolor: "#070c12",
     plot_bgcolor: "#0a0f16",
-    margin: { l: 70, r: 40, t: 20, b: 45 },
+    margin: { l: 25, r: 25, t: 30, b: 35 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
     yaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
@@ -1123,6 +1131,7 @@ function drawStopyChart(seriesKey, highlightTs){
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
       autorange: true, rangemode: "normal",
+      automargin: true,
     },
     font: { color: "rgba(255,255,255,.80)", family: "monospace" },
     dragmode: "zoom",
@@ -1140,11 +1149,11 @@ function drawStopyChart(seriesKey, highlightTs){
 }
 
 // ===== KRZYWA STOP =====
-function buildCurveTrace(nbp, wibor, fra, name, color){
+function buildCurveTrace(nbp, wibor, fra, name, color) {
   return {
     x: [0, 3, 4, 6, 9, 12],
     y: [nbp?.ref ?? null, wibor?.wibor_3m ?? null, fra?.fra_1x4 ?? null, fra?.fra_3x6 ?? null, fra?.fra_6x9 ?? null, fra?.fra_9x12 ?? null],
-    text: ["NBP ref (0M)","WIBOR 3M (3M)","FRA 1\xd74 (4M)","FRA 3\xd76 (6M)","FRA 6\xd79 (9M)","FRA 9\xd712 (12M)"],
+    text: ["NBP ref (0M)", "WIBOR 3M (3M)", "FRA 1\xd74 (4M)", "FRA 3\xd76 (6M)", "FRA 6\xd79 (9M)", "FRA 9\xd712 (12M)"],
     hovertemplate: "%{text}: <b>%{y:.3f}%</b><extra></extra>",
     mode: "lines+markers",
     name, line: { color, width: 2.5 }, marker: { size: 7, color },
@@ -1152,13 +1161,13 @@ function buildCurveTrace(nbp, wibor, fra, name, color){
   };
 }
 
-function renderCurve(){
+function renderCurve() {
   const latestFra = stopyFra.length ? stopyFra[stopyFra.length - 1] : null;
-  const latestNbp = latestFra ? nbpForDate(latestFra.date) : (stopyNbp.length ? stopyNbp[stopyNbp.length-1] : null);
-  const latestWib = latestFra ? wiborForDate(latestFra.date) : (stopyWibor.length ? stopyWibor[stopyWibor.length-1] : null);
+  const latestNbp = latestFra ? nbpForDate(latestFra.date) : (stopyNbp.length ? stopyNbp[stopyNbp.length - 1] : null);
+  const latestWib = latestFra ? wiborForDate(latestFra.date) : (stopyWibor.length ? stopyWibor[stopyWibor.length - 1] : null);
 
   const traces = [];
-  if(latestFra || latestNbp){
+  if (latestFra || latestNbp) {
     traces.push(buildCurveTrace(latestNbp, latestWib, latestFra, "Aktualna", "#00d4aa"));
   }
   compareEntries.forEach((c, i) => {
@@ -1169,15 +1178,15 @@ function renderCurve(){
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: 12 },
-    margin: { l: 55, r: 20, t: 40, b: 60 },
+    margin: { l: 25, r: 25, t: 30, b: 45 },
     title: {
       text: "Krzywa st\xf3p procentowych PLN" + (latestDate ? " \u2014 " + latestDate : ""),
       font: { size: 13, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
     },
     xaxis: {
-      tickvals: [0,3,4,6,9,12],
+      tickvals: [0, 3, 4, 6, 9, 12],
       ticktext: ["NBP ref", "WIBOR 3M", "FRA 1\xd74", "FRA 3\xd76", "FRA 6\xd79", "FRA 9\xd712"],
-      tickangle: -30,
+      tickangle: -40,
       automargin: true,
       gridcolor: "#1a2433", color: "#8aa2be", showline: false, fixedrange: true,
       showspikes: true, spikemode: "across", spikesnap: "cursor",
@@ -1188,13 +1197,14 @@ function renderCurve(){
       autorange: true, fixedrange: true,
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
-    legend: { bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
+    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
     hovermode: "closest",
     annotations: [{
       text: "Opracowanie w\u0142asne | dane: NBP, stooq.pl, patria.cz",
       showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.14, xanchor: "right", yanchor: "top",
+      x: 1, y: -0.22, xanchor: "right", yanchor: "top",
       font: { size: 10, color: "rgba(255,255,255,.35)", family: "ui-monospace, monospace" }
     }],
   };
@@ -1203,9 +1213,9 @@ function renderCurve(){
 }
 
 // ===== TABELA HISTORII =====
-function renderStopyTable(){
+function renderStopyTable() {
   const tbody = document.getElementById("stopyTbody");
-  if(!stopyFra.length){
+  if (!stopyFra.length) {
     tbody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;padding:24px;">Brak danych historycznych</td></tr>`;
     return;
   }
@@ -1235,12 +1245,12 @@ function renderStopyTable(){
   // Delegacja kliknięć na komórkach
   tbody.addEventListener("click", (e) => {
     const cell = e.target.closest(".clickable-cell");
-    if(!cell) return;
+    if (!cell) return;
     drawStopyChart(cell.dataset.series, cell.dataset.ts);
   }, { once: false });
 }
 
-function populateCompareSelect(){
+function populateCompareSelect() {
   const sel = document.getElementById("stopyCompareSel");
   sel.innerHTML = `<option value="">-- wybierz datę --</option>` +
     stopyFra.slice().reverse().map(e =>
@@ -1248,8 +1258,8 @@ function populateCompareSelect(){
     ).join("");
 }
 
-async function loadStopy(){
-  if(stopyLoaded) return;
+async function loadStopy() {
+  if (stopyLoaded) return;
   try {
     const v = Date.now();
     [stopyNbp, stopyWibor, stopyFra] = await Promise.all([
@@ -1264,7 +1274,7 @@ async function loadStopy(){
     renderCurve();
     renderStopyTable();
     populateCompareSelect();
-  } catch(e){
+  } catch (e) {
     console.error("Błąd ładowania stopy:", e);
     document.getElementById("stopyTbody").innerHTML =
       `<tr><td colspan="8" style="color:var(--red);padding:24px;text-align:center;">Błąd: ${e.message}</td></tr>`;
@@ -1274,25 +1284,25 @@ async function loadStopy(){
 // Resize wrappera krzywej → przerysuj Plotly
 new ResizeObserver(() => {
   const chartDiv = document.getElementById("stopyCurveChart");
-  if(chartDiv && chartDiv.data) Plotly.Plots.resize(chartDiv);
+  if (chartDiv && chartDiv.data) Plotly.Plots.resize(chartDiv);
 }).observe(document.getElementById("stopyCurveWrap"));
 
 // Klikalne nagłówki kolumn — otwierają pełne wykresy historii
-document.getElementById("thStopyNbp").addEventListener("click",    () => drawStopyChart("nbp"));
-document.getElementById("thStopyWibor").addEventListener("click",  () => drawStopyChart("wibor"));
+document.getElementById("thStopyNbp").addEventListener("click", () => drawStopyChart("nbp"));
+document.getElementById("thStopyWibor").addEventListener("click", () => drawStopyChart("wibor"));
 document.getElementById("thStopyFra1x4").addEventListener("click", () => drawStopyChart("fra1x4"));
 document.getElementById("thStopyFra3x6").addEventListener("click", () => drawStopyChart("fra3x6"));
 document.getElementById("thStopyFra6x9").addEventListener("click", () => drawStopyChart("fra6x9"));
-document.getElementById("thStopyFra9x12").addEventListener("click",() => drawStopyChart("fra9x12"));
+document.getElementById("thStopyFra9x12").addEventListener("click", () => drawStopyChart("fra9x12"));
 
 // Porownanie krzywych
 document.getElementById("stopyCompareAdd").addEventListener("click", () => {
   const sel = document.getElementById("stopyCompareSel");
-  const ts  = sel.value;
-  if(!ts) return;
-  if(compareEntries.find(c => c.ts === ts)) return;
+  const ts = sel.value;
+  if (!ts) return;
+  if (compareEntries.find(c => c.ts === ts)) return;
   const fra = stopyFra.find(e => e.timestamp === ts);
-  if(!fra) return;
+  if (!fra) return;
   const label = `${fra.date} \xb7 ${fra.session === "morning" ? "rano" : "popol."}`;
   compareEntries.push({ ts, label, nbp: nbpForDate(fra.date), wibor: wiborForDate(fra.date), fra });
   renderCurve();
@@ -1311,8 +1321,8 @@ let currentCheckOffset = 0;
 let checkDualAxis = false;
 const DAY_MS = 24 * 3600 * 1000;
 
-async function loadCheck(){
-  if(checkLoaded) return;
+async function loadCheck() {
+  if (checkLoaded) return;
   try {
     const v = Date.now();
     const [iceData, dieselData] = await Promise.all([
@@ -1323,15 +1333,15 @@ async function loadCheck(){
     checkDiesel = dieselData;
     checkLoaded = true;
     drawCheckCharts(currentCheckOffset);
-  } catch(e){
+  } catch (e) {
     console.error("Błąd ładowania Check:", e);
     document.getElementById("checkPriceChart").innerHTML =
       `<div style="color:var(--red);padding:32px;text-align:center;font-family:monospace;">Błąd: ${e.message}</div>`;
   }
 }
 
-function drawCheckCharts(offset){
-  if(!checkIce.length || !checkDiesel.length) return;
+function drawCheckCharts(offset) {
+  if (!checkIce.length || !checkDiesel.length) return;
 
   // Przytnij Orlen do zakresu dat ICE
   const iceStart = checkIce[0].date;
@@ -1382,29 +1392,32 @@ function drawCheckCharts(offset){
 
   const priceLayout = {
     ...commonLayout,
-    margin: { l: 70, r: checkDualAxis ? 80 : 40, t: 20, b: 45 },
+    margin: { l: 25, r: checkDualAxis ? 25 : 25, t: 25, b: 35 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
     yaxis: {
       ...yaxisBase,
-      title: { text: "ICE (PLN/1000l)", font: { color: "#4dd0ff" } },
+      title: { text: "ICE", font: { color: "#4dd0ff" } },
       tickfont: { color: checkDualAxis ? "#4dd0ff" : "rgba(255,255,255,.70)" },
+      automargin: true,
     },
-    legend: { x: 0.01, y: 0.99, xanchor: "left", yanchor: "top", bgcolor: "rgba(7,12,18,.75)", font: { size: 11 } },
+    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
     showlegend: true,
   };
 
-  if(checkDualAxis){
+  if (checkDualAxis) {
     priceLayout.yaxis2 = {
       ...yaxisBase,
-      title: { text: "Orlen (PLN/1000l)", font: { color: "#ffcc66" } },
+      title: { text: "Orlen", font: { color: "#ffcc66" } },
       tickfont: { color: "#ffcc66" },
       overlaying: "y", side: "right",
       showgrid: false,
+      automargin: true,
     };
   } else {
     priceLayout.yaxis.title = { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } };
@@ -1425,7 +1438,7 @@ function drawCheckCharts(offset){
     const orlenDate = new Date(e.date + "T12:00:00Z");
     orlenDate.setUTCDate(orlenDate.getUTCDate() + offset);
     const key = orlenDate.toISOString().slice(0, 10);
-    if(orlenByDate[key] != null){
+    if (orlenByDate[key] != null) {
       spreadX.push(new Date(e.date + "T12:00:00Z"));
       spreadY.push(+(orlenByDate[key] - e.ice_pln_1000l).toFixed(2));
     }
@@ -1444,30 +1457,33 @@ function drawCheckCharts(offset){
     hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:+.2f} PLN/1000l</b><extra>Spread Orlen−ICE</extra>",
   }], {
     ...commonLayout,
-    margin: { l: 70, r: 40, t: 45, b: 50 },
+    margin: { l: 25, r: 25, t: 40, b: 35 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.06)",
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+      automargin: true,
     },
     yaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       tickfont: { color: "rgba(255,255,255,.70)" },
-      title: { text: "Spread (PLN/1000l)", font: { color: "rgba(255,255,255,.70)" } },
+      title: { text: "Spread", font: { color: "rgba(255,255,255,.70)" } },
       zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
       range: [sMin - sPad, sMax + sPad],
+      automargin: true,
     },
     showlegend: false,
     title: {
       text: "Spread: Orlen − ICE (PLN/1000l)",
-      font: { color: "rgba(255,255,255,.90)", size: 14, family: "monospace" },
+      font: { color: "rgba(255,255,255,.90)", size: 13, family: "monospace" },
       x: 0.01, xanchor: "left",
+      y: 0.98
     },
   }, { responsive: true, displayModeBar: false });
 
   // === SPREAD STATS ===
-  if(spreadY.length > 0){
+  if (spreadY.length > 0) {
     const sAvg = spreadY.reduce((a, b) => a + b, 0) / spreadY.length;
     const fmtSpread = v => (v >= 0 ? "+" : "") + v.toFixed(2);
     const col = v => v >= 0 ? "var(--green)" : "var(--red)";
@@ -1481,30 +1497,47 @@ function drawCheckCharts(offset){
   // === SYNC OSI X ===
   const priceEl = document.getElementById("checkPriceChart");
   const spreadEl = document.getElementById("checkSpreadChart");
-  priceEl.removeAllListeners("plotly_relayout");
-  spreadEl.removeAllListeners("plotly_relayout");
-  let _syncBusy = false;
+  if (priceEl.removeAllListeners) priceEl.removeAllListeners("plotly_relayout");
+  if (spreadEl.removeAllListeners) spreadEl.removeAllListeners("plotly_relayout");
+
+  let syncSource = null;
+
   priceEl.on("plotly_relayout", ev => {
-    if(_syncBusy) return;
+    if (syncSource === priceEl) return;
     const upd = {};
-    if(ev["xaxis.range[0]"] !== undefined) upd["xaxis.range[0]"] = ev["xaxis.range[0]"];
-    if(ev["xaxis.range[1]"] !== undefined) upd["xaxis.range[1]"] = ev["xaxis.range[1]"];
-    if(ev["xaxis.autorange"])              upd["xaxis.autorange"] = true;
-    if(Object.keys(upd).length){ _syncBusy = true; Plotly.relayout(spreadEl, upd); _syncBusy = false; }
+    if (ev["xaxis.range[0]"] !== undefined) upd["xaxis.range[0]"] = ev["xaxis.range[0]"];
+    if (ev["xaxis.range[1]"] !== undefined) upd["xaxis.range[1]"] = ev["xaxis.range[1]"];
+    if (ev["xaxis.autorange"]) upd["xaxis.autorange"] = true;
+    if (Object.keys(upd).length) {
+      syncSource = spreadEl;
+      Plotly.relayout(spreadEl, upd).then(() => {
+        if (syncSource === spreadEl) syncSource = null;
+      }).catch(() => {
+        if (syncSource === spreadEl) syncSource = null;
+      });
+    }
   });
+
   spreadEl.on("plotly_relayout", ev => {
-    if(_syncBusy) return;
+    if (syncSource === spreadEl) return;
     const upd = {};
-    if(ev["xaxis.range[0]"] !== undefined) upd["xaxis.range[0]"] = ev["xaxis.range[0]"];
-    if(ev["xaxis.range[1]"] !== undefined) upd["xaxis.range[1]"] = ev["xaxis.range[1]"];
-    if(ev["xaxis.autorange"])              upd["xaxis.autorange"] = true;
-    if(Object.keys(upd).length){ _syncBusy = true; Plotly.relayout(priceEl, upd); _syncBusy = false; }
+    if (ev["xaxis.range[0]"] !== undefined) upd["xaxis.range[0]"] = ev["xaxis.range[0]"];
+    if (ev["xaxis.range[1]"] !== undefined) upd["xaxis.range[1]"] = ev["xaxis.range[1]"];
+    if (ev["xaxis.autorange"]) upd["xaxis.autorange"] = true;
+    if (Object.keys(upd).length) {
+      syncSource = priceEl;
+      Plotly.relayout(priceEl, upd).then(() => {
+        if (syncSource === priceEl) syncSource = null;
+      }).catch(() => {
+        if (syncSource === priceEl) syncSource = null;
+      });
+    }
   });
 }
 
 document.getElementById("checkOffsetBtns").addEventListener("click", (e) => {
   const btn = e.target.closest(".ana-fuel-btn");
-  if(!btn) return;
+  if (!btn) return;
   currentCheckOffset = parseInt(btn.dataset.offset) || 0;
   document.querySelectorAll("#checkOffsetBtns .ana-fuel-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
@@ -1521,12 +1554,12 @@ document.getElementById("checkDualAxisBtn").addEventListener("click", () => {
 // ===== SHARE / EXPORT (1080x1080) =====
 const CHART_META = {
   checkPriceChart: { titleId: "checkPriceTitle", source: "Źródło: stooq.pl (ICE LF.F front month, USD/PLN), Orlen. Opracowanie własne." },
-  cpiChartBox:     { titleId: "cpiChartTitle",   source: "Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m³, netto). Opracowanie własne." },
-  histChartBox:    { titleId: "histChartTitle",   source: "Dane paliw: Orlen (PLN/m³, netto). Opracowanie własne." },
-  chart:           { titleId: "priceModalTitle",  source: "Źródło: Orlen (PLN/m³, netto)." },
-  barChart:        { titleId: "barModalTitle",    source: "Źródło: Orlen (PLN/m³, netto)." },
-  stopyChart:      { titleId: "stopyModalTitle",  source: "Dane: NBP, stooq.pl (WIBOR 3M), patria.cz (FRA PLN)." },
-  stopyCurveChart: { titleId: null,               source: "Dane: NBP, stooq.pl (WIBOR 3M), patria.cz (FRA PLN). Opracowanie własne." },
+  cpiChartBox: { titleId: "cpiChartTitle", source: "Dane CPI: GUS (inflacja r/r, %). Dane paliw: Orlen (PLN/m³, netto). Opracowanie własne." },
+  histChartBox: { titleId: "histChartTitle", source: "Dane paliw: Orlen (PLN/m³, netto). Opracowanie własne." },
+  chart: { titleId: "priceModalTitle", source: "Źródło: Orlen (PLN/m³, netto)." },
+  barChart: { titleId: "barModalTitle", source: "Źródło: Orlen (PLN/m³, netto)." },
+  stopyChart: { titleId: "stopyModalTitle", source: "Dane: NBP, stooq.pl (WIBOR 3M), patria.cz (FRA PLN)." },
+  stopyCurveChart: { titleId: null, source: "Dane: NBP, stooq.pl (WIBOR 3M), patria.cz (FRA PLN). Opracowanie własne." },
 };
 
 function renderChartToCanvas(el, overlayTitle, overlaySource) {
@@ -1561,7 +1594,13 @@ function renderChartToCanvas(el, overlayTitle, overlaySource) {
         ctx.fillRect(0, TITLE_H - 1, W, 1);
 
         if (overlayTitle) {
-          ctx.font = "bold 36px ui-monospace, monospace";
+          let fontSize = 36;
+          ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
+          const maxTextWidth = W - 2 * PAD_X;
+          while (ctx.measureText(overlayTitle).width > maxTextWidth && fontSize > 14) {
+            fontSize -= 1;
+            ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
+          }
           ctx.fillStyle = "rgba(255,255,255,0.90)";
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
@@ -1601,10 +1640,10 @@ function renderChartToCanvas(el, overlayTitle, overlaySource) {
 
 document.addEventListener("click", async (e) => {
   const btn = e.target.closest(".btn-share");
-  if(!btn) return;
+  if (!btn) return;
   const chartId = btn.dataset.chart;
   const el = document.getElementById(chartId);
-  if(!el || !el.data) return;
+  if (!el || !el.data) return;
 
   const meta = CHART_META[chartId] || {};
   const overlayTitle = meta.titleId
@@ -1625,7 +1664,7 @@ document.addEventListener("click", async (e) => {
       try {
         await navigator.share({ files: [file], title: filename });
         return;
-      } catch(err) {
+      } catch (err) {
         if (err.name === "AbortError") return;
       }
     }
