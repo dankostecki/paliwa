@@ -283,6 +283,15 @@ async function loadData() {
 
   let raw = await loadJSON(url);
   raw.sort((a, b) => a.date - b.date);
+
+  // Orlen nie publikuje danych w niedzielę i poniedziałek — usuń powtórzone ceny z tych dni
+  raw = raw.filter((row, i) => {
+    if (i === 0) return true;
+    const dow = row.date.getUTCDay(); // 0 = niedziela, 1 = poniedziałek
+    if (dow !== 0 && dow !== 1) return true;
+    return row.price !== raw[i - 1].price;
+  });
+
   rows = raw;
 
   recomputeAndRender();
