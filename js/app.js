@@ -1279,17 +1279,17 @@ function renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legen
   }
   diffWrap.style.display = "";
 
-  const diffTraces = compareEntries.map((c, i) => {
+  const diffTraces = compareEntries.map((c) => {
     const compareY = curveYfromEntry(c.nbp, c.wibor, c.fra);
-    const diffY = compareY.map((v, j) => (v != null && aktualnaY[j] != null) ? +(v - aktualnaY[j]).toFixed(4) : null);
-    const color = COMPARE_COLORS[i % COMPARE_COLORS.length];
+    // aktualna − porównanie: ujemne = aktualna niżej niż historyczna
+    const diffY = compareY.map((v, j) => (v != null && aktualnaY[j] != null) ? +(aktualnaY[j] - v).toFixed(4) : null);
     return {
       x: CURVE_X, y: diffY,
       text: CURVE_XLABELS,
       name: c.label,
       type: "bar",
       marker: {
-        color: diffY.map(v => v == null ? "transparent" : v >= 0 ? color : "#ff4b4b"),
+        color: diffY.map(v => v == null ? "transparent" : v >= 0 ? "#00d4aa" : "#ff4b4b"),
         opacity: 0.85,
       },
       hovertemplate: "%{text}: <b>%{y:+.3f}pp</b><extra>" + c.label + "</extra>",
@@ -1775,7 +1775,17 @@ document.addEventListener("click", async (e) => {
   const titleRaw = overlayTitle || (el.layout?.title?.text || chartId);
   const filename = titleRaw.replace(/<[^>]*>/g, "").replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 60) + "_1x1";
 
+  // Jeśli wykres ma wewnętrzny tytuł Plotly — ukryj go przed eksportem żeby nie duplikować
+  const hadPlotlyTitle = !meta.titleId && el.layout?.title?.text;
+  if (hadPlotlyTitle) {
+    await Plotly.relayout(el, { "title.text": "", "annotations[0].visible": false });
+  }
+
   const canvas = await renderChartToCanvas(el, overlayTitle, overlaySource);
+
+  if (hadPlotlyTitle) {
+    await Plotly.relayout(el, { "title.text": hadPlotlyTitle, "annotations[0].visible": true });
+  }
 
   // Try Web Share API (native share sheet on mobile)
   if (navigator.canShare) {
