@@ -1188,10 +1188,31 @@ function buildCurveTrace(nbp, wibor, fra, name, color) {
   };
 }
 
+const CURVE_X = [0, 3, 4, 6, 9, 12];
+const CURVE_XLABELS = ["NBP ref", "WIBOR 3M", "FRA 1\xd74", "FRA 3\xd76", "FRA 6\xd79", "FRA 9\xd712"];
+
+function curveYfromEntry(nbp, wibor, fra) {
+  return [
+    nbp?.ref ?? null,
+    wibor?.wibor_3m ?? null,
+    fra?.fra_1x4 ?? null,
+    fra?.fra_3x6 ?? null,
+    fra?.fra_6x9 ?? null,
+    fra?.fra_9x12 ?? null,
+  ];
+}
+
 function renderCurve() {
+  const isMobile = window.innerWidth < 640;
+  const tickFontSize = isMobile ? 11 : 13;
+  const titleFontSize = isMobile ? 12 : 14;
+  const legendFontSize = isMobile ? 10 : 12;
+  const marginB = isMobile ? 55 : 50;
+
   const latestFra = stopyFra.length ? stopyFra[stopyFra.length - 1] : null;
   const latestNbp = latestFra ? nbpForDate(latestFra.date) : (stopyNbp.length ? stopyNbp[stopyNbp.length - 1] : null);
   const latestWib = latestFra ? wiborForDate(latestFra.date) : (stopyWibor.length ? stopyWibor[stopyWibor.length - 1] : null);
+  const aktualnaY = curveYfromEntry(latestNbp, latestWib, latestFra);
 
   const traces = [];
   if (latestFra || latestNbp) {
@@ -1202,41 +1223,109 @@ function renderCurve() {
   });
 
   const latestDate = latestFra?.date ?? latestNbp?.date ?? "";
+  const xAxisBase = {
+    tickvals: CURVE_X,
+    ticktext: CURVE_XLABELS,
+    tickangle: isMobile ? -45 : -30,
+    tickfont: { size: tickFontSize, color: "#8aa2be" },
+    automargin: true,
+    gridcolor: "#1a2433", color: "#8aa2be", showline: false, fixedrange: true,
+    showspikes: true, spikemode: "across", spikesnap: "cursor",
+    spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+  };
+
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
-    font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: 12 },
-    margin: { l: 25, r: 25, t: 30, b: 45 },
+    font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: tickFontSize },
+    margin: { l: 45, r: 20, t: 36, b: marginB },
     title: {
       text: "Krzywa st\xf3p procentowych PLN" + (latestDate ? " \u2014 " + latestDate : ""),
-      font: { size: 13, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
+      font: { size: titleFontSize, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
     },
-    xaxis: {
-      tickvals: [0, 3, 4, 6, 9, 12],
-      ticktext: ["NBP ref", "WIBOR 3M", "FRA 1\xd74", "FRA 3\xd76", "FRA 6\xd79", "FRA 9\xd712"],
-      tickangle: -40,
-      automargin: true,
-      gridcolor: "#1a2433", color: "#8aa2be", showline: false, fixedrange: true,
-      showspikes: true, spikemode: "across", spikesnap: "cursor",
-      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
-    },
+    xaxis: xAxisBase,
     yaxis: {
       gridcolor: "#1a2433", color: "#8aa2be", ticksuffix: "%",
+      tickfont: { size: tickFontSize, color: "#8aa2be" },
       autorange: true, fixedrange: true,
       showspikes: true, spikemode: "across", spikesnap: "cursor",
       spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
       automargin: true,
     },
-    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
+    legend: {
+      orientation: "h", y: 1.06, yanchor: "bottom", x: 0.5, xanchor: "center",
+      bgcolor: "transparent", font: { size: legendFontSize, color: "#cfe6ff" },
+    },
     hovermode: "closest",
     annotations: [{
       text: "Opracowanie w\u0142asne | dane: NBP, stooq.pl, patria.cz",
       showarrow: false, xref: "paper", yref: "paper",
-      x: 1, y: -0.22, xanchor: "right", yanchor: "top",
+      x: 1, y: -0.28, xanchor: "right", yanchor: "top",
       font: { size: 10, color: "rgba(255,255,255,.35)", family: "ui-monospace, monospace" }
     }],
   };
 
   Plotly.react("stopyCurveChart", traces, layout, { responsive: true, displayModeBar: false });
+
+  renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legendFontSize, marginB);
+}
+
+function renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legendFontSize, marginB) {
+  const diffWrap = document.getElementById("stopyCurveDiffWrap");
+  if (!diffWrap) return;
+
+  if (compareEntries.length === 0) {
+    diffWrap.style.display = "none";
+    return;
+  }
+  diffWrap.style.display = "";
+
+  const diffTraces = compareEntries.map((c, i) => {
+    const compareY = curveYfromEntry(c.nbp, c.wibor, c.fra);
+    const diffY = compareY.map((v, j) => (v != null && aktualnaY[j] != null) ? +(v - aktualnaY[j]).toFixed(4) : null);
+    const color = COMPARE_COLORS[i % COMPARE_COLORS.length];
+    return {
+      x: CURVE_X, y: diffY,
+      text: CURVE_XLABELS,
+      name: c.label,
+      type: "bar",
+      marker: {
+        color: diffY.map(v => v == null ? "transparent" : v >= 0 ? color : "#ff4b4b"),
+        opacity: 0.85,
+      },
+      hovertemplate: "%{text}: <b>%{y:+.3f}pp</b><extra>" + c.label + "</extra>",
+    };
+  });
+
+  const diffLayout = {
+    paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
+    font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: tickFontSize },
+    margin: { l: 45, r: 20, t: 36, b: marginB },
+    title: {
+      text: "R\xf3\u017cnica wzgl\u0119dem aktualnej krzywej (pp)",
+      font: { size: titleFontSize, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
+    },
+    xaxis: {
+      tickvals: CURVE_X, ticktext: CURVE_XLABELS,
+      tickangle: isMobile ? -45 : -30,
+      tickfont: { size: tickFontSize, color: "#8aa2be" },
+      automargin: true, gridcolor: "#1a2433", color: "#8aa2be",
+      fixedrange: true,
+    },
+    yaxis: {
+      gridcolor: "#1a2433", color: "#8aa2be", ticksuffix: "pp",
+      tickfont: { size: tickFontSize, color: "#8aa2be" },
+      zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 1,
+      fixedrange: true, automargin: true,
+    },
+    legend: {
+      orientation: "h", y: 1.06, yanchor: "bottom", x: 0.5, xanchor: "center",
+      bgcolor: "transparent", font: { size: legendFontSize, color: "#cfe6ff" },
+    },
+    barmode: "group",
+    hovermode: "closest",
+  };
+
+  Plotly.react("stopyCurveDiffChart", diffTraces, diffLayout, { responsive: true, displayModeBar: false });
 }
 
 // ===== TABELA HISTORII =====
@@ -1312,6 +1401,8 @@ async function loadStopy() {
 new ResizeObserver(() => {
   const chartDiv = document.getElementById("stopyCurveChart");
   if (chartDiv && chartDiv.data) Plotly.Plots.resize(chartDiv);
+  const diffDiv = document.getElementById("stopyCurveDiffChart");
+  if (diffDiv && diffDiv.data) Plotly.Plots.resize(diffDiv);
 }).observe(document.getElementById("stopyCurveWrap"));
 
 // Klikalne nagłówki kolumn — otwierają pełne wykresy historii

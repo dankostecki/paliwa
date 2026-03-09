@@ -901,6 +901,7 @@ body.news-mode { overflow: hidden; }
   .stopy-compare-bar select { width: 100%; }
   .stopy-compare-bar .btn { flex: 1; text-align: center; }
   .stopy-curve-wrap { height: 260px !important; }
+  #stopyCurveDiffWrap { height: 160px !important; }
 
   /* Analiza - przyciski paliwa */
   .ana-fuel-select {
