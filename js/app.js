@@ -1267,10 +1267,10 @@ function renderCurve() {
 
   Plotly.react("stopyCurveChart", traces, layout, { responsive: true, displayModeBar: false });
 
-  renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legendFontSize, marginB);
+  renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legendFontSize, marginB, marginT);
 }
 
-function renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legendFontSize, marginB) {
+function renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legendFontSize, marginB, marginT) {
   const diffWrap = document.getElementById("stopyCurveDiffWrap");
   if (!diffWrap) return;
 
