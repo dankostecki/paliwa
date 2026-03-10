@@ -122,14 +122,17 @@ function bestHighSinceMessage(rowsAsc) {
     return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA W HISTORII (od ${rowsAsc[0].dateStr}).`;
   }
 
-  let lastHigherDate = null;
+  let lastHigherIdx = null;
   for (let i = rowsAsc.length - 1; i >= 0; i--) {
     if (rowsAsc[i].price > last.price) {
-      lastHigherDate = rowsAsc[i].dateStr;
+      lastHigherIdx = i;
       break;
     }
   }
-  return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA OD ${lastHigherDate}.`;
+  if (lastHigherIdx === null) return null;
+  const daysSinceHigher = (last.date - rowsAsc[lastHigherIdx].date) / 864e5;
+  if (daysSinceHigher < 7) return null;
+  return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA OD ${rowsAsc[lastHigherIdx].dateStr}.`;
 }
 
 function setAlert(msg) {
