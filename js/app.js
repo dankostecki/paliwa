@@ -28,6 +28,7 @@ const els = {
   tbody: document.getElementById("tbody"),
   searchInput: document.getElementById("searchInput"),
   hiAlert: document.getElementById("hiAlert"),
+  loAlert: document.getElementById("loAlert"),
   modal: document.getElementById("modal"),
   btnClose: document.getElementById("btnClose"),
   btnShowAll: document.getElementById("btnShowAll"),
@@ -135,10 +136,40 @@ function bestHighSinceMessage(rowsAsc) {
   return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJWYŻSZA OD ${rowsAsc[lastHigherIdx].dateStr}.`;
 }
 
+function bestLowSinceMessage(rowsAsc) {
+  const last = rowsAsc[rowsAsc.length - 1];
+  if (!last) return null;
+
+  let minSoFar = Infinity;
+  for (const r of rowsAsc) minSoFar = Math.min(minSoFar, r.price);
+
+  if (last.price <= minSoFar) {
+    return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJNIŻSZA W HISTORII (od ${rowsAsc[0].dateStr}).`;
+  }
+
+  let lastLowerIdx = null;
+  for (let i = rowsAsc.length - 1; i >= 0; i--) {
+    if (rowsAsc[i].price < last.price) {
+      lastLowerIdx = i;
+      break;
+    }
+  }
+  if (lastLowerIdx === null) return null;
+  const daysSinceLower = (last.date - rowsAsc[lastLowerIdx].date) / 864e5;
+  if (daysSinceLower < 7) return null;
+  return `ALERT: [${FUEL_LABELS[currentFuel]}] CENA ${fmtPriceThousands(last.price)} tys. PLN/m3 — NAJNIŻSZA OD ${rowsAsc[lastLowerIdx].dateStr}.`;
+}
+
 function setAlert(msg) {
   if (!msg) { els.hiAlert.style.display = "none"; return; }
   els.hiAlert.textContent = msg;
   els.hiAlert.style.display = "block";
+}
+
+function setLoAlert(msg) {
+  if (!msg) { els.loAlert.style.display = "none"; return; }
+  els.loAlert.textContent = msg;
+  els.loAlert.style.display = "block";
 }
 
 function signClass(n) {
@@ -299,6 +330,7 @@ async function loadData() {
 
   recomputeAndRender();
   setAlert(bestHighSinceMessage(rows));
+  setLoAlert(bestLowSinceMessage(rows));
   chartReady = false;
 }
 
