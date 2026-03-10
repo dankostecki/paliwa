@@ -1680,7 +1680,7 @@ const CHART_META = {
   stopyCurveChart: { titleId: null, source: "Opracowanie własne, dane: NBP, stooq.pl, patria.cz" },
 };
 
-function renderChartToCanvas(el, overlayTitle, overlaySource) {
+async function renderChartToCanvas(el, overlayTitle, overlaySource) {
   // Render chart slightly smaller to make room for title bar (top) and source bar (bottom)
   const W = 1080, H = 1080;
   const TITLE_H = 88;   // px reserved at top
@@ -1692,70 +1692,107 @@ function renderChartToCanvas(el, overlayTitle, overlaySource) {
   const logicalW = Math.round(W / SCALE);
   const logicalH = Math.round(CHART_H / SCALE);
 
-  return Plotly.toImage(el, { format: "png", width: logicalW, height: logicalH, scale: SCALE }).then(dataUrl => {
-    return new Promise(resolve => {
-      const canvas = document.createElement("canvas");
-      canvas.width = W; canvas.height = H;
-      const ctx = canvas.getContext("2d");
+  // --- Export visibility overrides: brighter colors, larger fonts ---
+  const TICK_C  = "rgba(255,255,255,.88)";
+  const TITLE_C = "rgba(255,255,255,.96)";
+  const FONT_SZ   = 14;
+  const LEGEND_SZ = 13;
+  const TITLE_SZ  = 16;
 
-      // Background
+  const exportUpdate = {};
+  const origUpdate   = {};
+
+  function saveProp(dotKey, newVal) {
+    const parts = dotKey.split(".");
+    let cur = el.layout;
+    for (const p of parts) cur = cur?.[p];
+    origUpdate[dotKey] = cur !== undefined ? cur : null;
+    exportUpdate[dotKey] = newVal;
+  }
+
+  saveProp("font.size",  FONT_SZ);
+  saveProp("font.color", TICK_C);
+
+  if (el.layout.legend) {
+    saveProp("legend.font.size",  LEGEND_SZ);
+    saveProp("legend.font.color", TICK_C);
+  }
+  if (el.layout.title) {
+    saveProp("title.font.size",  TITLE_SZ);
+    saveProp("title.font.color", TITLE_C);
+  }
+  // All axes present in the layout
+  for (const axKey of Object.keys(el.layout).filter(k => /^[xy]axis\d*$/.test(k))) {
+    saveProp(`${axKey}.tickfont.size`,  FONT_SZ);
+    saveProp(`${axKey}.tickfont.color`, TICK_C);
+  }
+
+  await Plotly.relayout(el, exportUpdate);
+  const dataUrl = await Plotly.toImage(el, { format: "png", width: logicalW, height: logicalH, scale: SCALE });
+  Plotly.relayout(el, origUpdate); // restore — no need to await
+
+  return new Promise(resolve => {
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+
+    // Background
+    ctx.fillStyle = "#070c12";
+    ctx.fillRect(0, 0, W, H);
+
+    const img = new Image();
+    img.onload = () => {
+      // Chart image starts below title bar
+      ctx.drawImage(img, 0, TITLE_H, W, CHART_H);
+
+      // ---- Title bar (top) ----
       ctx.fillStyle = "#070c12";
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, W, TITLE_H);
 
-      const img = new Image();
-      img.onload = () => {
-        // Chart image starts below title bar
-        ctx.drawImage(img, 0, TITLE_H, W, CHART_H);
+      // Subtle separator line
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(0, TITLE_H - 1, W, 1);
 
-        // ---- Title bar (top) ----
-        ctx.fillStyle = "#070c12";
-        ctx.fillRect(0, 0, W, TITLE_H);
-
-        // Subtle separator line
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(0, TITLE_H - 1, W, 1);
-
-        if (overlayTitle) {
-          let fontSize = 36;
+      if (overlayTitle) {
+        let fontSize = 36;
+        ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
+        const maxTextWidth = W - 2 * PAD_X;
+        while (ctx.measureText(overlayTitle).width > maxTextWidth && fontSize > 14) {
+          fontSize -= 1;
           ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
-          const maxTextWidth = W - 2 * PAD_X;
-          while (ctx.measureText(overlayTitle).width > maxTextWidth && fontSize > 14) {
-            fontSize -= 1;
-            ctx.font = `bold ${fontSize}px ui-monospace, monospace`;
-          }
-          ctx.fillStyle = "rgba(255,255,255,0.90)";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
-          ctx.fillText(overlayTitle, PAD_X, TITLE_H / 2);
         }
+        ctx.fillStyle = "rgba(255,255,255,0.90)";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(overlayTitle, PAD_X, TITLE_H / 2);
+      }
 
-        // ---- Source bar (bottom) ----
-        const sourceY = H - SOURCE_H;
-        ctx.fillStyle = "#070c12";
-        ctx.fillRect(0, sourceY, W, SOURCE_H);
+      // ---- Source bar (bottom) ----
+      const sourceY = H - SOURCE_H;
+      ctx.fillStyle = "#070c12";
+      ctx.fillRect(0, sourceY, W, SOURCE_H);
 
-        // Subtle separator line
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(0, sourceY, W, 1);
+      // Subtle separator line
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(0, sourceY, W, 1);
 
-        if (overlaySource) {
-          let sourceFontSize = 22;
+      if (overlaySource) {
+        let sourceFontSize = 22;
+        ctx.font = `bold ${sourceFontSize}px ui-monospace, monospace`;
+        const maxSourceWidth = W - 2 * PAD_X;
+        while (ctx.measureText(overlaySource).width > maxSourceWidth && sourceFontSize > 10) {
+          sourceFontSize -= 1;
           ctx.font = `bold ${sourceFontSize}px ui-monospace, monospace`;
-          const maxSourceWidth = W - 2 * PAD_X;
-          while (ctx.measureText(overlaySource).width > maxSourceWidth && sourceFontSize > 10) {
-            sourceFontSize -= 1;
-            ctx.font = `bold ${sourceFontSize}px ui-monospace, monospace`;
-          }
-          ctx.fillStyle = "rgba(255,255,255,0.30)";
-          ctx.textAlign = "right";
-          ctx.textBaseline = "middle";
-          ctx.fillText(overlaySource, W - PAD_X, sourceY + SOURCE_H / 2);
         }
+        ctx.fillStyle = "rgba(255,255,255,0.30)";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(overlaySource, W - PAD_X, sourceY + SOURCE_H / 2);
+      }
 
-        resolve(canvas);
-      };
-      img.src = dataUrl;
-    });
+      resolve(canvas);
+    };
+    img.src = dataUrl;
   });
 }
 
