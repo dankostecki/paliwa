@@ -1208,6 +1208,7 @@ function renderCurve() {
   const titleFontSize = isMobile ? 12 : 14;
   const legendFontSize = isMobile ? 10 : 12;
   const marginB = isMobile ? 55 : 50;
+  const marginT = isMobile ? 72 : 36;
 
   const latestFra = stopyFra.length ? stopyFra[stopyFra.length - 1] : null;
   const latestNbp = latestFra ? nbpForDate(latestFra.date) : (stopyNbp.length ? stopyNbp[stopyNbp.length - 1] : null);
@@ -1237,7 +1238,7 @@ function renderCurve() {
   const layout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: tickFontSize },
-    margin: { l: 45, r: 20, t: 36, b: marginB },
+    margin: { l: 45, r: 20, t: marginT, b: marginB },
     title: {
       text: "Krzywa st\xf3p procentowych PLN" + (latestDate ? " \u2014 " + latestDate : ""),
       font: { size: titleFontSize, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
@@ -1299,7 +1300,7 @@ function renderDiffChart(aktualnaY, isMobile, tickFontSize, titleFontSize, legen
   const diffLayout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "#cfe6ff", family: "ui-monospace, monospace", size: tickFontSize },
-    margin: { l: 45, r: 20, t: 36, b: marginB },
+    margin: { l: 45, r: 20, t: marginT, b: marginB },
     title: {
       text: "R\xf3\u017cnica wzgl\u0119dem aktualnej krzywej (pp)",
       font: { size: titleFontSize, color: "#cfe6ff" }, x: 0.01, xanchor: "left",
