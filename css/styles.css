@@ -618,7 +618,8 @@ tbody tr:active{ transform: translateY(1px); }
 }
 #checkTable thead th.num{ text-align:right; }
 #checkTable thead th.clickable{ cursor:pointer; transition:color .15s,background .15s; user-select:none; }
-#checkTable thead th.clickable:hover{ color:#fff; background:rgba(77,208,255,.10); }
+#checkTable thead th.clickable:hover{ color:#fff; background:#0f212c; }
+#checkTable thead th.clickable:active{ color:#fff; background:#0f212c; }
 #checkTable tbody td{
   padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.05);
   color:rgba(255,255,255,.86); vertical-align:middle;
