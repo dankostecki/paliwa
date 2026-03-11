@@ -1690,8 +1690,8 @@ function buildCheckRows(offset) {
     return { date: ice.date, dateStr, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra: null };
   });
 
-  // Ekstra marża = premia - 2560 PLN/1000l
-  rows.forEach(r => { if (r.premia != null) r.ekstra = +(r.premia - 2560).toFixed(2); });
+  // Ekstra marża = premia - 2535 PLN/1000l
+  rows.forEach(r => { if (r.premia != null) r.ekstra = +(r.premia - 2535).toFixed(2); });
   return rows;
 }
 
