@@ -1594,7 +1594,7 @@ function renderCheckMainChart(col, offset) {
 function drawCheckCharts(offset) {
   if (!checkIce.length || !checkDiesel.length) return;
 
-  renderCheckMainChart(checkChartCol, offset);
+  renderCheckMainChart("pln", offset);
 
   // === SPREAD (premia = Orlen − ICE) ===
   const iceStart = checkIce[0].date;
