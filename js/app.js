@@ -1707,11 +1707,18 @@ function buildCheckRows(offset) {
     const orlenKey = orlenDate.toISOString().slice(0, 10);
     const orlenPrice = orlenByDate[orlenKey] ?? null;
     const premia = orlenPrice != null ? +(orlenPrice - ice.ice_pln_1000l).toFixed(2) : null;
-    const ekstra = premia != null ? +(premia - ice.ice_pln_1000l).toFixed(2) : null;
     const d = iceDate;
     const dateStr = `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}`;
-    return { date: ice.date, dateStr, usd: ice.ice_usd_tonne, usdpln: ice.usdpln, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra };
+    return { date: ice.date, dateStr, usd: ice.ice_usd_tonne, usdpln: ice.usdpln, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra: null };
   });
+
+  // Ekstra marża = premia - średnia(premia)
+  const premiaVals = rows.filter(r => r.premia != null).map(r => r.premia);
+  if (premiaVals.length > 0) {
+    const avgPrema = premiaVals.reduce((a, b) => a + b, 0) / premiaVals.length;
+    rows.forEach(r => { if (r.premia != null) r.ekstra = +(r.premia - avgPrema).toFixed(2); });
+  }
+  return rows;
 }
 
 function renderCheckTable(offset) {
@@ -1841,6 +1848,7 @@ document.getElementById("checkModal").addEventListener("click", e => {
 // ===== SHARE / EXPORT (1080x1080) =====
 const CHART_META = {
   checkPriceChart: { titleId: "checkPriceTitle", source: "Opracowanie własne, dane: stooq.pl, Orlen" },
+  checkModalChart: { titleId: "checkModalTitle", source: "Opracowanie własne, dane: stooq.pl, Orlen" },
   cpiChartBox: { titleId: "cpiChartTitle", source: "Opracowanie własne, dane: GUS, Orlen" },
   histChartBox: { titleId: "histChartTitle", source: "Opracowanie własne, dane: Orlen" },
   chart: { titleId: "priceModalTitle", source: "Opracowanie własne, dane: Orlen" },
