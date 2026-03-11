@@ -442,6 +442,12 @@ body{
   margin-bottom: 12px;
 }
 
+.alert-low{
+  background: rgba(0,212,170,.10);
+  border-color: rgba(0,212,170,.35);
+  color: #00d4aa;
+}
+
 .tablebox{
   background: rgba(7,12,18,.78);
   border: 1px solid rgba(255,255,255,.06);
