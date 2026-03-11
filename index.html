@@ -142,9 +142,33 @@
           style="margin-top:10px; font-size:12px; font-family:monospace; color:var(--muted); letter-spacing:.3px;">
         </div>
       </div>
+      <div class="ana-section" style="margin-top:16px;">
+        <div class="check-tablebox">
+          <table id="checkTable">
+            <colgroup>
+              <col class="ck1"><col class="ck2"><col class="ck3"><col class="ck4">
+              <col class="ck5"><col class="ck6"><col class="ck7"><col class="ck8">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>LP</th>
+                <th data-col="date" class="clickable">DATA</th>
+                <th data-col="usd" class="num clickable">ULS $/t</th>
+                <th data-col="usdpln" class="num clickable">$/PLN</th>
+                <th data-col="pln" class="num clickable">ULS PLN</th>
+                <th data-col="orlen" class="num clickable" id="checkThOrlen">ORLEN</th>
+                <th data-col="premia" class="num clickable">PREMIA</th>
+                <th data-col="ekstra" class="num clickable">EKSTRA</th>
+              </tr>
+            </thead>
+            <tbody id="checkTbody"></tbody>
+          </table>
+        </div>
+      </div>
       <div class="footnote">
         Metodologia: ICE Low Sulphur Gasoil (USD/tonę) × 0,845 kg/l × USD/PLN = PLN/1000l.
         Przesunięcie przesuwa ceny Orlen w lewo o N dni (Orlen reaguje N dni po ICE).
+        PREMIA = Orlen − ULS PLN. EKSTRA = PREMIA − średnia(PREMIA).
         Źródło: stooq.pl (ICE LF.F front month, USD/PLN), Orlen.
       </div>
     </div><!-- /checkPanel -->
@@ -378,6 +402,28 @@
       <div class="chart-actions" style="padding:6px 10px 8px; flex-shrink:0;">
         <button class="btn-share" data-chart="barChart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg> Udostępnij</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: check table row chart -->
+  <div class="modal" id="checkModal">
+    <div class="panel">
+      <div class="head">
+        <div class="title" id="checkModalTitle"></div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="btn" id="checkModalBtnShowAll">Cały zakres</button>
+          <button class="btn" id="checkModalBtnClose">Zamknij (Esc)</button>
+        </div>
+      </div>
+      <div id="checkModalChart"></div>
+      <div class="chart-actions" style="padding:6px 10px 8px; flex-shrink:0;">
+        <button class="btn-share" data-chart="checkModalChart"><svg viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 16v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
             <polyline points="16 6 12 2 8 6" />
             <line x1="12" y1="2" x2="12" y2="15" />

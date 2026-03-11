@@ -593,6 +593,47 @@ tbody tr:active{ transform: translateY(1px); }
 }
 .hint{ color: rgba(255,255,255,.55); font-size: 12px; margin-left: 6px; }
 
+/* ===== CHECK TABLE ===== */
+.check-tablebox{
+  background: rgba(7,12,18,.78);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px;
+  overflow: auto;
+  box-shadow: var(--shadow);
+  max-height: 65vh;
+}
+#checkTable{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:580px; }
+#checkTable col.ck1{ width:42px; }
+#checkTable col.ck2{ width:108px; }
+#checkTable col.ck3{ width:88px; }
+#checkTable col.ck4{ width:72px; }
+#checkTable col.ck5{ width:80px; }
+#checkTable col.ck6{ width:76px; }
+#checkTable col.ck7{ width:80px; }
+#checkTable col.ck8{ width:78px; }
+#checkTable thead th{
+  text-align:left; padding:14px 10px;
+  color:rgba(255,255,255,.78); font-weight:900; letter-spacing:.7px;
+  text-transform:uppercase; background:rgba(7,12,18,.97);
+  border-bottom:1px solid rgba(255,255,255,.10);
+  position:sticky; top:0; z-index:2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+#checkTable thead th.num{ text-align:right; }
+#checkTable thead th.clickable{ cursor:pointer; transition:color .15s,background .15s; user-select:none; }
+#checkTable thead th.clickable:hover{ color:#fff; background:rgba(77,208,255,.10); }
+#checkTable thead th.clickable::after{ content:" \25B6"; font-size:9px; opacity:.35; vertical-align:middle; }
+#checkTable thead th.sort-active::after{ content:" \25BC"; opacity:.85; }
+#checkTable thead th.sort-active.sort-asc::after{ content:" \25B2"; opacity:.85; }
+#checkTable tbody td{
+  padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.05);
+  color:rgba(255,255,255,.86); vertical-align:middle;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;
+}
+#checkTable tbody tr{ cursor:pointer; transition:background .12s; }
+#checkTable tbody tr:hover{ background:rgba(77,208,255,.06); }
+
 /* ===== CHART TITLE BAR (HTML, nie w Plotly — bez konfliktu z modebarem) ===== */
 .chart-title-bar{
   font-size: 12px;
