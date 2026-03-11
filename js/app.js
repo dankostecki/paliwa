@@ -1475,6 +1475,7 @@ let currentCheckOffset = 0;
 let checkDualAxis = false;
 let checkSortCol = "date";
 let checkSortAsc = false;
+let checkChartCol = "pln"; // aktywna kolumna: pln | orlen | premia | ekstra
 const DAY_MS = 24 * 3600 * 1000;
 
 async function loadCheck() {
@@ -1496,98 +1497,112 @@ async function loadCheck() {
   }
 }
 
-function drawCheckCharts(offset) {
+// ===== GŁÓWNY WYKRES CHECK (przełączalny wg aktywnej kolumny) =====
+function renderCheckMainChart(col, offset) {
   if (!checkIce.length || !checkDiesel.length) return;
-
-  // Przytnij Orlen do zakresu dat ICE
   const iceStart = checkIce[0].date;
   const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
-
   const offsetLabel = offset === 0 ? "" : ` (Orlen ${offset > 0 ? "\u2212" : "+"}${Math.abs(offset)}d)`;
 
-  const orlenX = diesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
-  const orlenY = diesel.map(r => r.price); // PLN/m3 = PLN/1000l
-
-  const orlenTrace = {
-    x: orlenX,
-    y: orlenY,
-    type: "scatter", mode: "lines",
-    name: `Orlen Ekodiesel${offsetLabel} (PLN/1000l)`,
-    line: { color: "#ffcc66", width: 2 },
-    yaxis: checkDualAxis ? "y2" : "y",
-    hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.2f} PLN/1000l</b><extra>Orlen Ekodiesel</extra>",
-  };
-
-  const priceTraces = [
-    {
-      x: checkIce.map(e => new Date(e.date + "T12:00:00Z")),
-      y: checkIce.map(e => e.ice_pln_1000l),
-      type: "scatter", mode: "lines",
-      name: "ICE Low Sulphur (PLN/1000l)",
-      line: { color: "#4dd0ff", width: 2 },
-      hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.2f} PLN/1000l</b><extra>ICE Low Sulphur</extra>",
-    },
-    orlenTrace,
-  ];
-
-  const commonLayout = {
+  const baseLayout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "rgba(255,255,255,.80)", family: "monospace" },
     dragmode: "zoom", hovermode: "x unified",
-  };
-
-  const yaxisBase = {
-    showgrid: true, gridcolor: "rgba(255,255,255,.08)",
-    tickfont: { color: "rgba(255,255,255,.70)" },
-    autorange: true,
-    showspikes: true, spikemode: "across", spikesnap: "cursor",
-    spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
-  };
-
-  setTitle("checkPriceTitle", "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel);
-
-  const priceLayout = {
-    ...commonLayout,
-    margin: { l: 25, r: checkDualAxis ? 25 : 25, t: 25, b: 35 },
+    margin: { l: 25, r: 25, t: 25, b: 35 },
     xaxis: {
       showgrid: true, gridcolor: "rgba(255,255,255,.08)",
       tickfont: { color: "rgba(255,255,255,.70)" },
       showspikes: true, spikemode: "across", spikesnap: "cursor",
-      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
-      automargin: true,
+      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1, automargin: true,
     },
-    yaxis: {
-      ...yaxisBase,
-      title: { text: "ICE", font: { color: "#4dd0ff" } },
-      tickfont: { color: checkDualAxis ? "#4dd0ff" : "rgba(255,255,255,.70)" },
-      automargin: true,
-    },
-    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
-    showlegend: true,
   };
 
-  if (checkDualAxis) {
-    priceLayout.yaxis2 = {
-      ...yaxisBase,
-      title: { text: "Orlen", font: { color: "#ffcc66" } },
-      tickfont: { color: "#ffcc66" },
-      overlaying: "y", side: "right",
-      showgrid: false,
-      automargin: true,
-    };
+  if (col === "premia" || col === "ekstra") {
+    const rows = buildCheckRows(offset).filter(r => r[col] != null);
+    const x = rows.map(r => new Date(r.date + "T12:00:00Z"));
+    const y = rows.map(r => r[col]);
+    const color    = col === "premia" ? "#ffcc66" : "#a78bfa";
+    const fillCol  = col === "premia" ? "rgba(255,204,102,.12)" : "rgba(167,139,250,.12)";
+    const serLabel = col === "premia" ? "Premia lądowa (PLN/1000l)" : "Ekstra marża (PLN/1000l)";
+    const titleStr = col === "premia" ? "Premia lądowa: Orlen − ICE" : "Ekstra marża: Premia − Średnia(Premia)";
+    setTitle("checkPriceTitle", titleStr + offsetLabel);
+    const yMin = y.length ? Math.min(...y) : 0, yMax = y.length ? Math.max(...y) : 0;
+    const pad = Math.max((yMax - yMin) * 0.1, 10);
+    Plotly.newPlot("checkPriceChart", [{
+      x, y, type: "scatter", mode: "lines",
+      name: serLabel, line: { color, width: 2 },
+      fill: "tozeroy", fillcolor: fillCol,
+      hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:+.0f} PLN/1000l</b><extra>" + serLabel + "</extra>",
+    }], {
+      ...baseLayout,
+      yaxis: {
+        showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+        tickfont: { color: "rgba(255,255,255,.70)" },
+        title: { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } },
+        zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
+        range: [yMin - pad, yMax + pad], automargin: true,
+      },
+      showlegend: false,
+    }, { responsive: true, scrollZoom: true, displayModeBar: "hover" });
+
   } else {
-    priceLayout.yaxis.title = { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } };
-    priceLayout.yaxis.tickfont = { color: "rgba(255,255,255,.70)" };
+    // Domyślny widok: ICE + Orlen
+    const orlenX = diesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
+    const orlenY = diesel.map(r => r.price);
+    const priceTraces = [
+      {
+        x: checkIce.map(e => new Date(e.date + "T12:00:00Z")),
+        y: checkIce.map(e => e.ice_pln_1000l),
+        type: "scatter", mode: "lines",
+        name: "ICE Low Sulphur (PLN/1000l)",
+        line: { color: "#4dd0ff", width: 2 },
+        hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.2f} PLN/1000l</b><extra>ICE Low Sulphur</extra>",
+      },
+      {
+        x: orlenX, y: orlenY,
+        type: "scatter", mode: "lines",
+        name: `Orlen Ekodiesel${offsetLabel} (PLN/1000l)`,
+        line: { color: "#ffcc66", width: 2 },
+        yaxis: checkDualAxis ? "y2" : "y",
+        hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.2f} PLN/1000l</b><extra>Orlen Ekodiesel</extra>",
+      },
+    ];
+    const yaxisBase = {
+      showgrid: true, gridcolor: "rgba(255,255,255,.08)",
+      autorange: true, automargin: true,
+      showspikes: true, spikemode: "across", spikesnap: "cursor",
+      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
+    };
+    const priceLayout = {
+      ...baseLayout,
+      yaxis: {
+        ...yaxisBase,
+        tickfont: { color: checkDualAxis ? "#4dd0ff" : "rgba(255,255,255,.70)" },
+        title: checkDualAxis
+          ? { text: "ICE", font: { color: "#4dd0ff" } }
+          : { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } },
+      },
+      legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
+      showlegend: true,
+    };
+    if (checkDualAxis) {
+      priceLayout.yaxis2 = { ...yaxisBase, title: { text: "Orlen", font: { color: "#ffcc66" } }, tickfont: { color: "#ffcc66" }, overlaying: "y", side: "right", showgrid: false };
+    }
+    setTitle("checkPriceTitle", "ICE Low Sulphur Gasoil vs Orlen Ekodiesel" + offsetLabel);
+    Plotly.newPlot("checkPriceChart", priceTraces, priceLayout, { responsive: true, scrollZoom: true, displayModeBar: "hover" });
   }
+}
 
-  Plotly.newPlot("checkPriceChart", priceTraces, priceLayout,
-    { responsive: true, scrollZoom: true, displayModeBar: "hover" });
+function drawCheckCharts(offset) {
+  if (!checkIce.length || !checkDiesel.length) return;
 
-  // === SPREAD ===
+  renderCheckMainChart(checkChartCol, offset);
+
+  // === SPREAD (premia = Orlen − ICE) ===
+  const iceStart = checkIce[0].date;
+  const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
   const orlenByDate = {};
-  diesel.forEach(r => {
-    orlenByDate[r.date.toISOString().slice(0, 10)] = r.price;
-  });
+  diesel.forEach(r => { orlenByDate[r.date.toISOString().slice(0, 10)] = r.price; });
 
   const spreadX = [], spreadY = [];
   checkIce.forEach(e => {
@@ -1603,50 +1618,32 @@ function drawCheckCharts(offset) {
   const sMin = spreadY.length ? Math.min(...spreadY) : 0;
   const sMax = spreadY.length ? Math.max(...spreadY) : 0;
   const sPad = Math.max((sMax - sMin) * 0.08, 20);
+  const commonLayout = { paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16", font: { color: "rgba(255,255,255,.80)", family: "monospace" }, dragmode: "zoom", hovermode: "x unified" };
 
   Plotly.newPlot("checkSpreadChart", [{
     x: spreadX, y: spreadY,
     type: "scatter", mode: "lines",
-    line: { color: "#4dd0ff", width: 1.5 },
-    fill: "tozeroy",
-    fillcolor: "rgba(77,208,255,.10)",
-    hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:+.2f} PLN/1000l</b><extra>Spread Orlen−ICE</extra>",
+    line: { color: "#ffcc66", width: 1.5 },
+    fill: "tozeroy", fillcolor: "rgba(255,204,102,.10)",
+    hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:+.2f} PLN/1000l</b><extra>Premia Orlen−ICE</extra>",
   }], {
     ...commonLayout,
     margin: { l: 25, r: 25, t: 40, b: 35 },
-    xaxis: {
-      showgrid: true, gridcolor: "rgba(255,255,255,.06)",
-      tickfont: { color: "rgba(255,255,255,.70)" },
-      showspikes: true, spikemode: "across", spikesnap: "cursor",
-      spikecolor: "rgba(255,255,255,.35)", spikethickness: 1,
-      automargin: true,
-    },
-    yaxis: {
-      showgrid: true, gridcolor: "rgba(255,255,255,.08)",
-      tickfont: { color: "rgba(255,255,255,.70)" },
-      title: { text: "Spread", font: { color: "rgba(255,255,255,.70)" } },
-      zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2,
-      range: [sMin - sPad, sMax + sPad],
-      automargin: true,
-    },
+    xaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.06)", tickfont: { color: "rgba(255,255,255,.70)" }, showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: "rgba(255,255,255,.35)", spikethickness: 1, automargin: true },
+    yaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, title: { text: "Premia", font: { color: "rgba(255,255,255,.70)" } }, zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2, range: [sMin - sPad, sMax + sPad], automargin: true },
     showlegend: false,
-    title: {
-      text: "Spread: Orlen − ICE (PLN/1000l)",
-      font: { color: "rgba(255,255,255,.90)", size: 13, family: "monospace" },
-      x: 0.01, xanchor: "left",
-      y: 0.98
-    },
+    title: { text: "Premia lądowa: Orlen − ICE (PLN/1000l)", font: { color: "rgba(255,255,255,.90)", size: 13, family: "monospace" }, x: 0.01, xanchor: "left", y: 0.98 },
   }, { responsive: true, displayModeBar: false });
 
   // === SPREAD STATS ===
   if (spreadY.length > 0) {
     const sAvg = spreadY.reduce((a, b) => a + b, 0) / spreadY.length;
-    const fmtSpread = v => (v >= 0 ? "+" : "") + v.toFixed(2);
-    const col = v => v >= 0 ? "var(--green)" : "var(--red)";
+    const fmt = v => (v >= 0 ? "+" : "") + v.toFixed(2);
+    const c = v => v >= 0 ? "var(--green)" : "var(--red)";
     document.getElementById("checkSpreadStats").innerHTML =
-      `MIN&nbsp;<b style="color:${col(sMin)}">${fmtSpread(sMin)}</b>&nbsp;&nbsp;` +
-      `ŚR&nbsp;<b style="color:${col(sAvg)}">${fmtSpread(sAvg)}</b>&nbsp;&nbsp;` +
-      `MAX&nbsp;<b style="color:${col(sMax)}">${fmtSpread(sMax)}</b>&nbsp;&nbsp;PLN/1000l` +
+      `MIN&nbsp;<b style="color:${c(sMin)}">${fmt(sMin)}</b>&nbsp;&nbsp;` +
+      `ŚR&nbsp;<b style="color:${c(sAvg)}">${fmt(sAvg)}</b>&nbsp;&nbsp;` +
+      `MAX&nbsp;<b style="color:${c(sMax)}">${fmt(sMax)}</b>&nbsp;&nbsp;PLN/1000l` +
       `&nbsp;&nbsp;<span style="color:var(--muted)">(n=${spreadY.length})</span>`;
   }
 
@@ -1655,39 +1652,22 @@ function drawCheckCharts(offset) {
   const spreadEl = document.getElementById("checkSpreadChart");
   if (priceEl.removeAllListeners) priceEl.removeAllListeners("plotly_relayout");
   if (spreadEl.removeAllListeners) spreadEl.removeAllListeners("plotly_relayout");
-
   let syncSource = null;
-
   priceEl.on("plotly_relayout", ev => {
     if (syncSource === priceEl) return;
     const upd = {};
     if (ev["xaxis.range[0]"] !== undefined) upd["xaxis.range[0]"] = ev["xaxis.range[0]"];
     if (ev["xaxis.range[1]"] !== undefined) upd["xaxis.range[1]"] = ev["xaxis.range[1]"];
     if (ev["xaxis.autorange"]) upd["xaxis.autorange"] = true;
-    if (Object.keys(upd).length) {
-      syncSource = spreadEl;
-      Plotly.relayout(spreadEl, upd).then(() => {
-        if (syncSource === spreadEl) syncSource = null;
-      }).catch(() => {
-        if (syncSource === spreadEl) syncSource = null;
-      });
-    }
+    if (Object.keys(upd).length) { syncSource = spreadEl; Plotly.relayout(spreadEl, upd).then(() => { if (syncSource === spreadEl) syncSource = null; }).catch(() => { if (syncSource === spreadEl) syncSource = null; }); }
   });
-
   spreadEl.on("plotly_relayout", ev => {
     if (syncSource === spreadEl) return;
     const upd = {};
     if (ev["xaxis.range[0]"] !== undefined) upd["xaxis.range[0]"] = ev["xaxis.range[0]"];
     if (ev["xaxis.range[1]"] !== undefined) upd["xaxis.range[1]"] = ev["xaxis.range[1]"];
     if (ev["xaxis.autorange"]) upd["xaxis.autorange"] = true;
-    if (Object.keys(upd).length) {
-      syncSource = priceEl;
-      Plotly.relayout(priceEl, upd).then(() => {
-        if (syncSource === priceEl) syncSource = null;
-      }).catch(() => {
-        if (syncSource === priceEl) syncSource = null;
-      });
-    }
+    if (Object.keys(upd).length) { syncSource = priceEl; Plotly.relayout(priceEl, upd).then(() => { if (syncSource === priceEl) syncSource = null; }).catch(() => { if (syncSource === priceEl) syncSource = null; }); }
   });
 
   renderCheckTable(offset);
@@ -1701,7 +1681,7 @@ function buildCheckRows(offset) {
   const orlenByDate = {};
   diesel.forEach(r => { orlenByDate[r.date.toISOString().slice(0, 10)] = r.price; });
 
-  return checkIce.map(ice => {
+  const rows = checkIce.map(ice => {
     const iceDate = new Date(ice.date + "T12:00:00Z");
     const orlenDate = new Date(iceDate.getTime() + offset * DAY_MS);
     const orlenKey = orlenDate.toISOString().slice(0, 10);
@@ -1709,7 +1689,7 @@ function buildCheckRows(offset) {
     const premia = orlenPrice != null ? +(orlenPrice - ice.ice_pln_1000l).toFixed(2) : null;
     const d = iceDate;
     const dateStr = `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}`;
-    return { date: ice.date, dateStr, usd: ice.ice_usd_tonne, usdpln: ice.usdpln, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra: null };
+    return { date: ice.date, dateStr, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra: null };
   });
 
   // Ekstra marża = premia - średnia(premia)
@@ -1725,85 +1705,118 @@ function renderCheckTable(offset) {
   const tbody = document.getElementById("checkTbody");
   if (!tbody || !checkIce.length) return;
 
-  // Update ORLEN column header with offset label
   const thOrlen = document.getElementById("checkThOrlen");
   if (thOrlen) {
     const lbl = offset === 0 ? "" : ` ${offset > 0 ? "+" : ""}${offset}d`;
-    thOrlen.textContent = `ORLEN${lbl}`;
+    thOrlen.textContent = `EKODIESEL${lbl}`;
   }
 
   let rows = buildCheckRows(offset);
 
-  const sortVal = { date: r => r.date, usd: r => r.usd ?? -Infinity, usdpln: r => r.usdpln ?? -Infinity, pln: r => r.pln ?? -Infinity, orlen: r => r.orlen ?? -Infinity, premia: r => r.premia ?? -Infinity, ekstra: r => r.ekstra ?? -Infinity };
+  const sortVal = { date: r => r.date, pln: r => r.pln ?? -Infinity, orlen: r => r.orlen ?? -Infinity, premia: r => r.premia ?? -Infinity, ekstra: r => r.ekstra ?? -Infinity };
   rows.sort((a, b) => {
-    const va = sortVal[checkSortCol](a), vb = sortVal[checkSortCol](b);
+    const va = sortVal[checkSortCol]?.(a) ?? a.date;
+    const vb = sortVal[checkSortCol]?.(b) ?? b.date;
     return checkSortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
   });
 
   tbody.innerHTML = "";
-  rows.forEach((r, idx) => {
-    const fN = (v, d) => v != null ? v.toFixed(d) : "—";
-    const fS = v => v != null ? (v >= 0 ? "+" : "") + v.toFixed(0) : "—";
-    const sc = v => v == null ? "muted" : v >= 0 ? "pos" : "neg";
+  const fS = v => v != null ? (v >= 0 ? "+" : "") + v.toFixed(0) : "—";
+  const sc = v => v == null ? "muted" : v >= 0 ? "pos" : "neg";
+  rows.forEach(r => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="num muted">${idx + 1}</td>
-      <td>${r.dateStr}</td>
-      <td class="num">${fN(r.usd, 2)}</td>
-      <td class="num">${fN(r.usdpln, 3)}</td>
-      <td class="num">${fN(r.pln, 0)}</td>
-      <td class="num">${r.orlen != null ? r.orlen.toFixed(0) : "—"}</td>
-      <td class="num ${sc(r.premia)}">${fS(r.premia)}</td>
-      <td class="num ${sc(r.ekstra)}">${fS(r.ekstra)}</td>`;
+    tr.innerHTML =
+      `<td>${r.dateStr}</td>` +
+      `<td class="num">${r.pln != null ? r.pln.toFixed(0) : "—"}</td>` +
+      `<td class="num">${r.orlen != null ? r.orlen.toFixed(0) : "—"}</td>` +
+      `<td class="num ${sc(r.premia)}">${fS(r.premia)}</td>` +
+      `<td class="num ${sc(r.ekstra)}">${fS(r.ekstra)}</td>`;
     tr.addEventListener("click", () => openCheckModal(r.dateStr));
     tbody.appendChild(tr);
   });
 
-  // Update sort indicators
   document.querySelectorAll("#checkTable th[data-col]").forEach(th => {
-    const isActive = th.dataset.col === checkSortCol;
-    th.classList.toggle("sort-active", isActive);
-    th.classList.toggle("sort-asc", isActive && checkSortAsc);
+    const col = th.dataset.col;
+    const isSort = col === checkSortCol;
+    const isChart = col === checkChartCol;
+    th.classList.toggle("sort-active", isSort);
+    th.classList.toggle("sort-asc", isSort && checkSortAsc);
+    th.classList.toggle("chart-active", isChart);
   });
 }
 
 function openCheckModal(dateStr) {
   document.getElementById("checkModal").style.display = "flex";
   const offset = currentCheckOffset;
-  const iceStart = checkIce[0].date;
-  const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
-
-  const iceX = checkIce.map(e => new Date(e.date + "T12:00:00Z"));
-  const iceY = checkIce.map(e => e.ice_pln_1000l);
-  const orlenX = diesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
-  const orlenY = diesel.map(r => r.price);
-
-  const pickedIce = checkIce.find(e => {
-    const d = new Date(e.date + "T12:00:00Z");
-    return `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}` === dateStr;
-  });
-
+  const col = checkChartCol;
   const offsetLabel = offset === 0 ? "" : ` (Orlen ${offset > 0 ? "\u2212" : "+"}${Math.abs(offset)}d)`;
-  setTitle("checkModalTitle", `ICE vs Orlen \u2014 ${dateStr}${offsetLabel}`);
 
-  const traces = [
-    { x: iceX, y: iceY, type: "scatter", mode: "lines", name: "ICE Low Sulphur (PLN/1000l)", line: { color: "#4dd0ff", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>ICE</extra>" },
-    { x: orlenX, y: orlenY, type: "scatter", mode: "lines", name: `Orlen Ekodiesel${offsetLabel}`, line: { color: "#ffcc66", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>Orlen</extra>" },
-  ];
-  if (pickedIce) {
-    const px = new Date(pickedIce.date + "T12:00:00Z");
-    traces.push({ x: [px], y: [pickedIce.ice_pln_1000l], type: "scatter", mode: "markers", marker: { size: 10, color: "#4dd0ff" }, showlegend: false, hovertemplate: `<b>${dateStr}</b><br><b>${pickedIce.ice_pln_1000l.toFixed(0)} PLN/1000l</b><extra>ICE (wybrana)</extra>` });
-  }
-
-  Plotly.newPlot("checkModalChart", traces, {
+  const baseLayout = {
     paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
     font: { color: "rgba(255,255,255,.80)", family: "monospace" },
     margin: { l: 25, r: 25, t: 30, b: 35 },
     xaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: "rgba(255,255,255,.35)", spikethickness: 1, automargin: true },
-    yaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, title: { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } }, autorange: true, automargin: true },
-    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
-    showlegend: true, hovermode: "x unified",
-  }, { responsive: true, scrollZoom: true, displayModeBar: "hover" });
+    hovermode: "x unified",
+  };
+
+  if (col === "premia" || col === "ekstra") {
+    const allRows = buildCheckRows(offset);
+    const rows = allRows.filter(r => r[col] != null);
+    const x = rows.map(r => new Date(r.date + "T12:00:00Z"));
+    const y = rows.map(r => r[col]);
+    const picked = rows.find(r => r.dateStr === dateStr);
+    const color   = col === "premia" ? "#ffcc66" : "#a78bfa";
+    const fillCol = col === "premia" ? "rgba(255,204,102,.12)" : "rgba(167,139,250,.12)";
+    const serLabel = col === "premia" ? "Premia lądowa (PLN/1000l)" : "Ekstra marża (PLN/1000l)";
+    const titleStr = col === "premia" ? `Premia lądowa — ${dateStr}` : `Ekstra marża — ${dateStr}`;
+    setTitle("checkModalTitle", titleStr + offsetLabel);
+    const yMin = y.length ? Math.min(...y) : 0, yMax = y.length ? Math.max(...y) : 0;
+    const pad = Math.max((yMax - yMin) * 0.1, 10);
+    const traces = [{
+      x, y, type: "scatter", mode: "lines",
+      name: serLabel, line: { color, width: 2 },
+      fill: "tozeroy", fillcolor: fillCol,
+      hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:+.0f} PLN/1000l</b><extra>" + serLabel + "</extra>",
+    }];
+    if (picked) {
+      const px = new Date(picked.date + "T12:00:00Z");
+      const val = picked[col];
+      traces.push({ x: [px], y: [val], type: "scatter", mode: "markers", marker: { size: 10, color }, showlegend: false, hovertemplate: `<b>${dateStr}</b><br><b>${(val >= 0 ? "+" : "") + val.toFixed(0)} PLN/1000l</b><extra></extra>` });
+    }
+    Plotly.newPlot("checkModalChart", traces, {
+      ...baseLayout,
+      yaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, title: { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } }, zeroline: true, zerolinecolor: "rgba(255,255,255,.25)", zerolinewidth: 2, range: [yMin - pad, yMax + pad], automargin: true },
+      showlegend: false,
+    }, { responsive: true, scrollZoom: true, displayModeBar: "hover" });
+
+  } else {
+    // Domyślny widok: ICE + Orlen
+    const iceStart = checkIce[0].date;
+    const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
+    const iceX = checkIce.map(e => new Date(e.date + "T12:00:00Z"));
+    const iceY = checkIce.map(e => e.ice_pln_1000l);
+    const orlenX = diesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
+    const orlenY = diesel.map(r => r.price);
+    const pickedIce = checkIce.find(e => {
+      const d = new Date(e.date + "T12:00:00Z");
+      return `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}` === dateStr;
+    });
+    setTitle("checkModalTitle", `ICE vs Orlen \u2014 ${dateStr}${offsetLabel}`);
+    const traces = [
+      { x: iceX, y: iceY, type: "scatter", mode: "lines", name: "ICE Low Sulphur (PLN/1000l)", line: { color: "#4dd0ff", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>ICE</extra>" },
+      { x: orlenX, y: orlenY, type: "scatter", mode: "lines", name: `Orlen Ekodiesel${offsetLabel}`, line: { color: "#ffcc66", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>Orlen</extra>" },
+    ];
+    if (pickedIce) {
+      const px = new Date(pickedIce.date + "T12:00:00Z");
+      traces.push({ x: [px], y: [pickedIce.ice_pln_1000l], type: "scatter", mode: "markers", marker: { size: 10, color: "#4dd0ff" }, showlegend: false, hovertemplate: `<b>${dateStr}</b><br><b>${pickedIce.ice_pln_1000l.toFixed(0)} PLN/1000l</b><extra>ICE (wybrana)</extra>` });
+    }
+    Plotly.newPlot("checkModalChart", traces, {
+      ...baseLayout,
+      yaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, title: { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } }, autorange: true, automargin: true },
+      legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
+      showlegend: true,
+    }, { responsive: true, scrollZoom: true, displayModeBar: "hover" });
+  }
 }
 
 document.getElementById("checkOffsetBtns").addEventListener("click", (e) => {
@@ -1832,6 +1845,9 @@ document.getElementById("checkTable").querySelector("thead").addEventListener("c
     checkSortCol = col;
     checkSortAsc = false;
   }
+  // Kliknięcie kolumny przełącza też główny wykres
+  checkChartCol = col;
+  renderCheckMainChart(col, currentCheckOffset);
   renderCheckTable(currentCheckOffset);
 });
 

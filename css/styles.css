@@ -602,15 +602,12 @@ tbody tr:active{ transform: translateY(1px); }
   box-shadow: var(--shadow);
   max-height: 65vh;
 }
-#checkTable{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:580px; }
-#checkTable col.ck1{ width:42px; }
-#checkTable col.ck2{ width:108px; }
-#checkTable col.ck3{ width:88px; }
-#checkTable col.ck4{ width:72px; }
-#checkTable col.ck5{ width:80px; }
-#checkTable col.ck6{ width:76px; }
-#checkTable col.ck7{ width:80px; }
-#checkTable col.ck8{ width:78px; }
+#checkTable{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:560px; }
+#checkTable col.ck1{ width:120px; }
+#checkTable col.ck2{ width:110px; }
+#checkTable col.ck3{ width:120px; }
+#checkTable col.ck4{ width:105px; }
+#checkTable col.ck5{ width:125px; }
 #checkTable thead th{
   text-align:left; padding:14px 10px;
   color:rgba(255,255,255,.78); font-weight:900; letter-spacing:.7px;
@@ -625,6 +622,7 @@ tbody tr:active{ transform: translateY(1px); }
 #checkTable thead th.clickable::after{ content:" \25B6"; font-size:9px; opacity:.35; vertical-align:middle; }
 #checkTable thead th.sort-active::after{ content:" \25BC"; opacity:.85; }
 #checkTable thead th.sort-active.sort-asc::after{ content:" \25B2"; opacity:.85; }
+#checkTable thead th.chart-active{ color:#4dd0ff; background:rgba(77,208,255,.08); }
 #checkTable tbody td{
   padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.05);
   color:rgba(255,255,255,.86); vertical-align:middle;
@@ -648,6 +646,7 @@ tbody tr:active{ transform: translateY(1px); }
 #chart{ flex:1; min-height:0; }
 #barChart{ flex:1; min-height:0; }
 #stopyChart{ flex:1; min-height:0; }
+#checkModalChart{ flex:1; min-height:0; }
 
 .chart-actions{
   display: flex;
