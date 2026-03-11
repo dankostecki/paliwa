@@ -871,9 +871,25 @@ function attachYAutoScale(divId, dataSource, valueGetter) {
   });
 }
 
+// ===== SCROLL LOCK (fix mobile modal top cut-off) =====
+function lockBodyScroll() {
+  const y = window.scrollY;
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${y}px`;
+  document.body.style.width = "100%";
+}
+function unlockBodyScroll() {
+  if (!document.body.style.position) return;
+  const y = Math.abs(parseInt(document.body.style.top || "0", 10));
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.width = "";
+  window.scrollTo(0, y);
+}
+
 // ===== PRICE LINE CHART =====
-function openModal() { els.modal.style.display = "flex"; }
-function closeModal() { els.modal.style.display = "none"; }
+function openModal() { lockBodyScroll(); els.modal.style.display = "flex"; }
+function closeModal() { els.modal.style.display = "none"; unlockBodyScroll(); }
 
 function openChartAtDate(dateStr) {
   if (!rows.length) return;
@@ -947,8 +963,8 @@ function drawChart(picked) {
 }
 
 // ===== BAR CHART =====
-function openBarModal() { els.barModal.style.display = "flex"; }
-function closeBarModal() { els.barModal.style.display = "none"; }
+function openBarModal() { lockBodyScroll(); els.barModal.style.display = "flex"; }
+function closeBarModal() { els.barModal.style.display = "none"; unlockBodyScroll(); }
 
 function drawBarChart(mode) {
   if (!displayRows.length) return;
@@ -1041,7 +1057,7 @@ els.thChangePct.addEventListener("click", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { closeModal(); closeBarModal(); closeStopyModal(); document.getElementById("checkModal").style.display = "none"; }
+  if (e.key === "Escape") { closeModal(); closeBarModal(); closeStopyModal(); closeCheckModal(); }
 });
 
 loadData().catch(err => {
@@ -1073,8 +1089,8 @@ function wiborExact(date) {
 
 // ===== STOPY MODAL =====
 const stopyModal = document.getElementById("stopyModal");
-function openStopyModal() { stopyModal.style.display = "flex"; }
-function closeStopyModal() { stopyModal.style.display = "none"; }
+function openStopyModal() { lockBodyScroll(); stopyModal.style.display = "flex"; }
+function closeStopyModal() { stopyModal.style.display = "none"; unlockBodyScroll(); }
 
 document.getElementById("stopyBtnClose").addEventListener("click", closeStopyModal);
 stopyModal.addEventListener("click", (e) => { if (e.target === stopyModal) closeStopyModal(); });
@@ -1724,7 +1740,13 @@ function renderCheckTable(offset) {
   });
 }
 
+function closeCheckModal() {
+  document.getElementById("checkModal").style.display = "none";
+  unlockBodyScroll();
+}
+
 function openCheckModal(dateStr) {
+  lockBodyScroll();
   document.getElementById("checkModal").style.display = "flex";
   const offset = currentCheckOffset;
   const col = checkChartCol;
@@ -1823,14 +1845,12 @@ document.getElementById("checkTable").querySelector("thead").addEventListener("c
   openCheckModal(null);
 });
 
-document.getElementById("checkModalBtnClose").addEventListener("click", () => {
-  document.getElementById("checkModal").style.display = "none";
-});
+document.getElementById("checkModalBtnClose").addEventListener("click", closeCheckModal);
 document.getElementById("checkModalBtnShowAll").addEventListener("click", () => {
   Plotly.relayout("checkModalChart", { "xaxis.autorange": true });
 });
 document.getElementById("checkModal").addEventListener("click", e => {
-  if (e.target === e.currentTarget) e.currentTarget.style.display = "none";
+  if (e.target === e.currentTarget) closeCheckModal();
 });
 
 // ===== SHARE / EXPORT (1080x1080) =====
