@@ -1041,7 +1041,7 @@ els.thChangePct.addEventListener("click", (e) => {
 });
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") { closeModal(); closeBarModal(); closeStopyModal(); }
+  if (e.key === "Escape") { closeModal(); closeBarModal(); closeStopyModal(); document.getElementById("checkModal").style.display = "none"; }
 });
 
 loadData().catch(err => {
@@ -1473,6 +1473,8 @@ let checkIce = [];
 let checkDiesel = [];
 let currentCheckOffset = 0;
 let checkDualAxis = false;
+let checkSortCol = "date";
+let checkSortAsc = false;
 const DAY_MS = 24 * 3600 * 1000;
 
 async function loadCheck() {
@@ -1687,6 +1689,114 @@ function drawCheckCharts(offset) {
       });
     }
   });
+
+  renderCheckTable(offset);
+}
+
+// ===== CHECK TABLE =====
+
+function buildCheckRows(offset) {
+  const iceStart = checkIce[0].date;
+  const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
+  const orlenByDate = {};
+  diesel.forEach(r => { orlenByDate[r.date.toISOString().slice(0, 10)] = r.price; });
+
+  return checkIce.map(ice => {
+    const iceDate = new Date(ice.date + "T12:00:00Z");
+    const orlenDate = new Date(iceDate.getTime() + offset * DAY_MS);
+    const orlenKey = orlenDate.toISOString().slice(0, 10);
+    const orlenPrice = orlenByDate[orlenKey] ?? null;
+    const premia = orlenPrice != null ? +(orlenPrice - ice.ice_pln_1000l).toFixed(2) : null;
+    const ekstra = premia != null ? +(premia - ice.ice_pln_1000l).toFixed(2) : null;
+    const d = iceDate;
+    const dateStr = `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}`;
+    return { date: ice.date, dateStr, usd: ice.ice_usd_tonne, usdpln: ice.usdpln, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra };
+  });
+}
+
+function renderCheckTable(offset) {
+  const tbody = document.getElementById("checkTbody");
+  if (!tbody || !checkIce.length) return;
+
+  // Update ORLEN column header with offset label
+  const thOrlen = document.getElementById("checkThOrlen");
+  if (thOrlen) {
+    const lbl = offset === 0 ? "" : ` ${offset > 0 ? "+" : ""}${offset}d`;
+    thOrlen.textContent = `ORLEN${lbl}`;
+  }
+
+  let rows = buildCheckRows(offset);
+
+  const sortVal = { date: r => r.date, usd: r => r.usd ?? -Infinity, usdpln: r => r.usdpln ?? -Infinity, pln: r => r.pln ?? -Infinity, orlen: r => r.orlen ?? -Infinity, premia: r => r.premia ?? -Infinity, ekstra: r => r.ekstra ?? -Infinity };
+  rows.sort((a, b) => {
+    const va = sortVal[checkSortCol](a), vb = sortVal[checkSortCol](b);
+    return checkSortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+
+  tbody.innerHTML = "";
+  rows.forEach((r, idx) => {
+    const fN = (v, d) => v != null ? v.toFixed(d) : "—";
+    const fS = v => v != null ? (v >= 0 ? "+" : "") + v.toFixed(0) : "—";
+    const sc = v => v == null ? "muted" : v >= 0 ? "pos" : "neg";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="num muted">${idx + 1}</td>
+      <td>${r.dateStr}</td>
+      <td class="num">${fN(r.usd, 2)}</td>
+      <td class="num">${fN(r.usdpln, 3)}</td>
+      <td class="num">${fN(r.pln, 0)}</td>
+      <td class="num">${r.orlen != null ? r.orlen.toFixed(0) : "—"}</td>
+      <td class="num ${sc(r.premia)}">${fS(r.premia)}</td>
+      <td class="num ${sc(r.ekstra)}">${fS(r.ekstra)}</td>`;
+    tr.addEventListener("click", () => openCheckModal(r.dateStr));
+    tbody.appendChild(tr);
+  });
+
+  // Update sort indicators
+  document.querySelectorAll("#checkTable th[data-col]").forEach(th => {
+    const isActive = th.dataset.col === checkSortCol;
+    th.classList.toggle("sort-active", isActive);
+    th.classList.toggle("sort-asc", isActive && checkSortAsc);
+  });
+}
+
+function openCheckModal(dateStr) {
+  document.getElementById("checkModal").style.display = "flex";
+  const offset = currentCheckOffset;
+  const iceStart = checkIce[0].date;
+  const diesel = checkDiesel.filter(r => r.date.toISOString().slice(0, 10) >= iceStart);
+
+  const iceX = checkIce.map(e => new Date(e.date + "T12:00:00Z"));
+  const iceY = checkIce.map(e => e.ice_pln_1000l);
+  const orlenX = diesel.map(r => new Date(r.date.getTime() - offset * DAY_MS));
+  const orlenY = diesel.map(r => r.price);
+
+  const pickedIce = checkIce.find(e => {
+    const d = new Date(e.date + "T12:00:00Z");
+    return `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}` === dateStr;
+  });
+
+  const offsetLabel = offset === 0 ? "" : ` (Orlen ${offset > 0 ? "\u2212" : "+"}${Math.abs(offset)}d)`;
+  setTitle("checkModalTitle", `ICE vs Orlen \u2014 ${dateStr}${offsetLabel}`);
+
+  const traces = [
+    { x: iceX, y: iceY, type: "scatter", mode: "lines", name: "ICE Low Sulphur (PLN/1000l)", line: { color: "#4dd0ff", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>ICE</extra>" },
+    { x: orlenX, y: orlenY, type: "scatter", mode: "lines", name: `Orlen Ekodiesel${offsetLabel}`, line: { color: "#ffcc66", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>Orlen</extra>" },
+  ];
+  if (pickedIce) {
+    const px = new Date(pickedIce.date + "T12:00:00Z");
+    traces.push({ x: [px], y: [pickedIce.ice_pln_1000l], type: "scatter", mode: "markers", marker: { size: 10, color: "#4dd0ff" }, showlegend: false, hovertemplate: `<b>${dateStr}</b><br><b>${pickedIce.ice_pln_1000l.toFixed(0)} PLN/1000l</b><extra>ICE (wybrana)</extra>` });
+  }
+
+  Plotly.newPlot("checkModalChart", traces, {
+    paper_bgcolor: "#070c12", plot_bgcolor: "#0a0f16",
+    font: { color: "rgba(255,255,255,.80)", family: "monospace" },
+    margin: { l: 25, r: 25, t: 30, b: 35 },
+    xaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: "rgba(255,255,255,.35)", spikethickness: 1, automargin: true },
+    yaxis: { showgrid: true, gridcolor: "rgba(255,255,255,.08)", tickfont: { color: "rgba(255,255,255,.70)" }, title: { text: "PLN / 1000l", font: { color: "rgba(255,255,255,.70)" } }, autorange: true, automargin: true },
+    legend: { orientation: "h", y: 1.05, yanchor: "bottom", x: 0.5, xanchor: "center", bgcolor: "transparent", font: { size: 10 } },
+    showlegend: true, hovermode: "x unified",
+  }, { responsive: true, scrollZoom: true, displayModeBar: "hover" });
 }
 
 document.getElementById("checkOffsetBtns").addEventListener("click", (e) => {
@@ -1703,6 +1813,29 @@ document.getElementById("checkDualAxisBtn").addEventListener("click", () => {
   const btn = document.getElementById("checkDualAxisBtn");
   btn.classList.toggle("active", checkDualAxis);
   drawCheckCharts(currentCheckOffset);
+});
+
+document.getElementById("checkTable").querySelector("thead").addEventListener("click", e => {
+  const th = e.target.closest("th[data-col]");
+  if (!th) return;
+  const col = th.dataset.col;
+  if (checkSortCol === col) {
+    checkSortAsc = !checkSortAsc;
+  } else {
+    checkSortCol = col;
+    checkSortAsc = false;
+  }
+  renderCheckTable(currentCheckOffset);
+});
+
+document.getElementById("checkModalBtnClose").addEventListener("click", () => {
+  document.getElementById("checkModal").style.display = "none";
+});
+document.getElementById("checkModalBtnShowAll").addEventListener("click", () => {
+  Plotly.relayout("checkModalChart", { "xaxis.autorange": true });
+});
+document.getElementById("checkModal").addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.style.display = "none";
 });
 
 // ===== SHARE / EXPORT (1080x1080) =====
