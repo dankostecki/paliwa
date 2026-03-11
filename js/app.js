@@ -1522,7 +1522,7 @@ function renderCheckMainChart(col, offset) {
     const color    = col === "premia" ? "#ffcc66" : "#a78bfa";
     const fillCol  = col === "premia" ? "rgba(255,204,102,.12)" : "rgba(167,139,250,.12)";
     const serLabel = col === "premia" ? "Premia lądowa (PLN/1000l)" : "Ekstra marża (PLN/1000l)";
-    const titleStr = col === "premia" ? "Premia lądowa: Orlen − ICE" : "Ekstra marża: Premia − Średnia(Premia)";
+    const titleStr = col === "premia" ? "Premia lądowa: Orlen − ICE" : "Ekstra marża: Premia − 2560";
     setTitle("checkPriceTitle", titleStr + offsetLabel);
     const yMin = y.length ? Math.min(...y) : 0, yMax = y.length ? Math.max(...y) : 0;
     const pad = Math.max((yMax - yMin) * 0.1, 10);
@@ -1690,12 +1690,8 @@ function buildCheckRows(offset) {
     return { date: ice.date, dateStr, pln: ice.ice_pln_1000l, orlen: orlenPrice, premia, ekstra: null };
   });
 
-  // Ekstra marża = premia - średnia(premia)
-  const premiaVals = rows.filter(r => r.premia != null).map(r => r.premia);
-  if (premiaVals.length > 0) {
-    const avgPrema = premiaVals.reduce((a, b) => a + b, 0) / premiaVals.length;
-    rows.forEach(r => { if (r.premia != null) r.ekstra = +(r.premia - avgPrema).toFixed(2); });
-  }
+  // Ekstra marża = premia - 2560 PLN/1000l
+  rows.forEach(r => { if (r.premia != null) r.ekstra = +(r.premia - 2560).toFixed(2); });
   return rows;
 }
 
@@ -1751,7 +1747,8 @@ function openCheckModal(dateStr) {
     const color   = col === "premia" ? "#ffcc66" : "#a78bfa";
     const fillCol = col === "premia" ? "rgba(255,204,102,.12)" : "rgba(167,139,250,.12)";
     const serLabel = col === "premia" ? "Premia lądowa (PLN/1000l)" : "Ekstra marża (PLN/1000l)";
-    const titleStr = col === "premia" ? `Premia lądowa — ${dateStr}` : `Ekstra marża — ${dateStr}`;
+    const serName  = col === "premia" ? "Premia lądowa" : "Ekstra marża";
+    const titleStr = dateStr ? `${serName} — ${dateStr}` : serName;
     setTitle("checkModalTitle", titleStr + offsetLabel);
     const yMin = y.length ? Math.min(...y) : 0, yMax = y.length ? Math.max(...y) : 0;
     const pad = Math.max((yMax - yMin) * 0.1, 10);
@@ -1784,7 +1781,7 @@ function openCheckModal(dateStr) {
       const d = new Date(e.date + "T12:00:00Z");
       return `${String(d.getUTCDate()).padStart(2, "0")}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${d.getUTCFullYear()}` === dateStr;
     });
-    setTitle("checkModalTitle", `ICE vs Orlen \u2014 ${dateStr}${offsetLabel}`);
+    setTitle("checkModalTitle", dateStr ? `ICE vs Orlen \u2014 ${dateStr}${offsetLabel}` : `ICE vs Orlen${offsetLabel}`);
     const traces = [
       { x: iceX, y: iceY, type: "scatter", mode: "lines", name: "ICE Low Sulphur (PLN/1000l)", line: { color: "#4dd0ff", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>ICE</extra>" },
       { x: orlenX, y: orlenY, type: "scatter", mode: "lines", name: `Orlen Ekodiesel${offsetLabel}`, line: { color: "#ffcc66", width: 2 }, hovertemplate: "%{x|%d-%m-%Y}<br><b>%{y:.0f} PLN/1000l</b><extra>Orlen</extra>" },
@@ -1818,12 +1815,12 @@ document.getElementById("checkDualAxisBtn").addEventListener("click", () => {
   drawCheckCharts(currentCheckOffset);
 });
 
-// Klik nagłówka → tylko przełącza wykres (jak w tabeli stóp), bez sortowania
+// Klik nagłówka → otwiera modal z pełnym wykresem danej serii (jak FRA/WIBOR/stopy)
 document.getElementById("checkTable").querySelector("thead").addEventListener("click", e => {
   const th = e.target.closest("th[data-col]");
   if (!th) return;
   checkChartCol = th.dataset.col;
-  renderCheckMainChart(checkChartCol, currentCheckOffset);
+  openCheckModal(null);
 });
 
 document.getElementById("checkModalBtnClose").addEventListener("click", () => {
