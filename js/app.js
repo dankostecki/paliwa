@@ -1473,8 +1473,6 @@ let checkIce = [];
 let checkDiesel = [];
 let currentCheckOffset = 0;
 let checkDualAxis = false;
-let checkSortCol = "date";
-let checkSortAsc = false;
 let checkChartCol = "pln"; // aktywna kolumna: pln | orlen | premia | ekstra
 const DAY_MS = 24 * 3600 * 1000;
 
@@ -1711,14 +1709,8 @@ function renderCheckTable(offset) {
     thOrlen.textContent = `EKODIESEL${lbl}`;
   }
 
-  let rows = buildCheckRows(offset);
-
-  const sortVal = { date: r => r.date, pln: r => r.pln ?? -Infinity, orlen: r => r.orlen ?? -Infinity, premia: r => r.premia ?? -Infinity, ekstra: r => r.ekstra ?? -Infinity };
-  rows.sort((a, b) => {
-    const va = sortVal[checkSortCol]?.(a) ?? a.date;
-    const vb = sortVal[checkSortCol]?.(b) ?? b.date;
-    return checkSortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
-  });
+  // Zawsze: od najnowszych (date desc)
+  const rows = buildCheckRows(offset).sort((a, b) => (a.date < b.date ? 1 : -1));
 
   tbody.innerHTML = "";
   const fS = v => v != null ? (v >= 0 ? "+" : "") + v.toFixed(0) : "—";
@@ -1727,21 +1719,12 @@ function renderCheckTable(offset) {
     const tr = document.createElement("tr");
     tr.innerHTML =
       `<td>${r.dateStr}</td>` +
-      `<td class="num">${r.pln != null ? r.pln.toFixed(0) : "—"}</td>` +
       `<td class="num">${r.orlen != null ? r.orlen.toFixed(0) : "—"}</td>` +
+      `<td class="num">${r.pln != null ? r.pln.toFixed(0) : "—"}</td>` +
       `<td class="num ${sc(r.premia)}">${fS(r.premia)}</td>` +
       `<td class="num ${sc(r.ekstra)}">${fS(r.ekstra)}</td>`;
     tr.addEventListener("click", () => openCheckModal(r.dateStr));
     tbody.appendChild(tr);
-  });
-
-  document.querySelectorAll("#checkTable th[data-col]").forEach(th => {
-    const col = th.dataset.col;
-    const isSort = col === checkSortCol;
-    const isChart = col === checkChartCol;
-    th.classList.toggle("sort-active", isSort);
-    th.classList.toggle("sort-asc", isSort && checkSortAsc);
-    th.classList.toggle("chart-active", isChart);
   });
 }
 
@@ -1835,20 +1818,12 @@ document.getElementById("checkDualAxisBtn").addEventListener("click", () => {
   drawCheckCharts(currentCheckOffset);
 });
 
+// Klik nagłówka → tylko przełącza wykres (jak w tabeli stóp), bez sortowania
 document.getElementById("checkTable").querySelector("thead").addEventListener("click", e => {
   const th = e.target.closest("th[data-col]");
   if (!th) return;
-  const col = th.dataset.col;
-  if (checkSortCol === col) {
-    checkSortAsc = !checkSortAsc;
-  } else {
-    checkSortCol = col;
-    checkSortAsc = false;
-  }
-  // Kliknięcie kolumny przełącza też główny wykres
-  checkChartCol = col;
-  renderCheckMainChart(col, currentCheckOffset);
-  renderCheckTable(currentCheckOffset);
+  checkChartCol = th.dataset.col;
+  renderCheckMainChart(checkChartCol, currentCheckOffset);
 });
 
 document.getElementById("checkModalBtnClose").addEventListener("click", () => {

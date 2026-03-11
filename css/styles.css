@@ -619,10 +619,6 @@ tbody tr:active{ transform: translateY(1px); }
 #checkTable thead th.num{ text-align:right; }
 #checkTable thead th.clickable{ cursor:pointer; transition:color .15s,background .15s; user-select:none; }
 #checkTable thead th.clickable:hover{ color:#fff; background:rgba(77,208,255,.10); }
-#checkTable thead th.clickable::after{ content:" \25B6"; font-size:9px; opacity:.35; vertical-align:middle; }
-#checkTable thead th.sort-active::after{ content:" \25BC"; opacity:.85; }
-#checkTable thead th.sort-active.sort-asc::after{ content:" \25B2"; opacity:.85; }
-#checkTable thead th.chart-active{ color:#4dd0ff; background:rgba(77,208,255,.08); }
 #checkTable tbody td{
   padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.05);
   color:rgba(255,255,255,.86); vertical-align:middle;
