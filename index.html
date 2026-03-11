@@ -146,19 +146,15 @@
         <div class="check-tablebox">
           <table id="checkTable">
             <colgroup>
-              <col class="ck1"><col class="ck2"><col class="ck3"><col class="ck4">
-              <col class="ck5"><col class="ck6"><col class="ck7"><col class="ck8">
+              <col class="ck1"><col class="ck2"><col class="ck3"><col class="ck4"><col class="ck5">
             </colgroup>
             <thead>
               <tr>
-                <th>LP</th>
                 <th data-col="date" class="clickable">DATA</th>
-                <th data-col="usd" class="num clickable">ULS $/t</th>
-                <th data-col="usdpln" class="num clickable">$/PLN</th>
-                <th data-col="pln" class="num clickable">ULS PLN</th>
-                <th data-col="orlen" class="num clickable" id="checkThOrlen">ORLEN</th>
+                <th data-col="orlen" class="num clickable" id="checkThOrlen">EKODIESEL</th>
+                <th data-col="pln" class="num clickable">ICE PLN</th>
                 <th data-col="premia" class="num clickable">PREMIA</th>
-                <th data-col="ekstra" class="num clickable">EKSTRA</th>
+                <th data-col="ekstra" class="num clickable">EKSTRA PREMIA</th>
               </tr>
             </thead>
             <tbody id="checkTbody"></tbody>
@@ -166,9 +162,9 @@
         </div>
       </div>
       <div class="footnote">
-        Metodologia: ICE Low Sulphur Gasoil (USD/tonę) × 0,845 kg/l × USD/PLN = PLN/1000l.
+        Metodologia: ICE Low Sulphur Gasoil (USD/tonę) × 0,845 kg/l × USD/PLN = ICE PLN/1000l.
         Przesunięcie przesuwa ceny Orlen w lewo o N dni (Orlen reaguje N dni po ICE).
-        PREMIA = Orlen − ULS PLN. EKSTRA = PREMIA − średnia(PREMIA).
+        PREMIA = Orlen Ekodiesel − ICE PLN. EKSTRA = PREMIA − średnia(PREMIA).
         Źródło: stooq.pl (ICE LF.F front month, USD/PLN), Orlen.
       </div>
     </div><!-- /checkPanel -->
