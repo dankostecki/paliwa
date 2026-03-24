@@ -1708,6 +1708,20 @@ function buildCheckRows(offset) {
 
   // Ekstra marża = premia - 2535 PLN/1000l
   rows.forEach(r => { if (r.premia != null) r.ekstra = +(r.premia - 2535).toFixed(2); });
+
+  // Narastająca średnia ekstra od 9 marca (każdy wiersz = śr. od 2026-03-09 do tej daty)
+  const EKSTRA_AVG_FROM = "2026-03-09";
+  const sorted = [...rows].sort((a, b) => (a.date < b.date ? -1 : 1));
+  let avgSum = 0, avgCount = 0;
+  sorted.forEach(r => {
+    if (r.date >= EKSTRA_AVG_FROM && r.ekstra != null) {
+      avgSum += r.ekstra;
+      avgCount++;
+      r.avgEkstra = +(avgSum / avgCount).toFixed(0);
+    } else {
+      r.avgEkstra = null;
+    }
+  });
   return rows;
 }
 
@@ -1734,7 +1748,8 @@ function renderCheckTable(offset) {
       `<td class="num">${r.orlen != null ? r.orlen.toFixed(0) : "—"}</td>` +
       `<td class="num">${r.pln != null ? r.pln.toFixed(0) : "—"}</td>` +
       `<td class="num ${sc(r.premia)}">${fS(r.premia)}</td>` +
-      `<td class="num ${sc(r.ekstra)}">${fS(r.ekstra)}</td>`;
+      `<td class="num ${sc(r.ekstra)}">${fS(r.ekstra)}</td>` +
+      `<td class="num ${sc(r.avgEkstra)}">${fS(r.avgEkstra)}</td>`;
     tr.addEventListener("click", () => openCheckModal(r.dateStr));
     tbody.appendChild(tr);
   });
@@ -1760,16 +1775,16 @@ function openCheckModal(dateStr) {
     hovermode: "x unified",
   };
 
-  if (col === "premia" || col === "ekstra") {
+  if (col === "premia" || col === "ekstra" || col === "avgEkstra") {
     const allRows = buildCheckRows(offset);
     const rows = allRows.filter(r => r[col] != null);
     const x = rows.map(r => new Date(r.date + "T12:00:00Z"));
     const y = rows.map(r => r[col]);
     const picked = rows.find(r => r.dateStr === dateStr);
-    const color   = col === "premia" ? "#ffcc66" : "#a78bfa";
-    const fillCol = col === "premia" ? "rgba(255,204,102,.12)" : "rgba(167,139,250,.12)";
-    const serLabel = col === "premia" ? "Premia lądowa (PLN/1000l)" : "Ekstra marża (PLN/1000l)";
-    const serName  = col === "premia" ? "Premia lądowa" : "Ekstra marża";
+    const color   = col === "premia" ? "#ffcc66" : col === "ekstra" ? "#a78bfa" : "#34d399";
+    const fillCol = col === "premia" ? "rgba(255,204,102,.12)" : col === "ekstra" ? "rgba(167,139,250,.12)" : "rgba(52,211,153,.12)";
+    const serLabel = col === "premia" ? "Premia lądowa (PLN/1000l)" : col === "ekstra" ? "Ekstra marża (PLN/1000l)" : "Śr. ekstra premia lądowa od 9 marca (PLN/1000l)";
+    const serName  = col === "premia" ? "Premia lądowa" : col === "ekstra" ? "Ekstra marża" : "Śr. ekstra premia od 9 marca";
     const titleStr = dateStr ? `${serName} — ${dateStr}` : serName;
     setTitle("checkModalTitle", titleStr + offsetLabel);
     const yMin = y.length ? Math.min(...y) : 0, yMax = y.length ? Math.max(...y) : 0;

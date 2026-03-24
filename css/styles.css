@@ -602,12 +602,13 @@ tbody tr:active{ transform: translateY(1px); }
   box-shadow: var(--shadow);
   max-height: 65vh;
 }
-#checkTable{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:560px; }
+#checkTable{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:680px; }
 #checkTable col.ck1{ width:120px; }
 #checkTable col.ck2{ width:110px; }
 #checkTable col.ck3{ width:120px; }
 #checkTable col.ck4{ width:105px; }
 #checkTable col.ck5{ width:125px; }
+#checkTable col.ck6{ width:120px; }
 #checkTable thead th{
   text-align:left; padding:14px 10px;
   color:rgba(255,255,255,.78); font-weight:900; letter-spacing:.7px;
