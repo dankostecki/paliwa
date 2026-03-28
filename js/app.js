@@ -2107,6 +2107,7 @@ function renderNewsFeed() {
 }
 
 const NEWS_SOURCES = ["RPP", "Paliwa"];
+const API_BASE = window.location.hostname.endsWith(".vercel.app") ? "" : "https://paliwa.vercel.app";
 
 const FILTER_OUT_KEYWORDS = ["pogoda", "prognoza pogody", "weather", "temperatura", "opady", "zachmurzenie"];
 const MAX_NEWS_AGE_MS = 180 * 24 * 60 * 60 * 1000; // 180 dni
@@ -2174,7 +2175,7 @@ function buildTweetHtml(article) {
 
 async function fetchNitterRSS() {
   try {
-    const res = await fetch("/api/orlen-feed", { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(`${API_BASE}/api/orlen-feed`, { signal: AbortSignal.timeout(10000) });
     if (res.ok) return await res.text();
   } catch {}
   return null;
@@ -2187,7 +2188,7 @@ async function fetchAndParseRSS() {
   try {
     const fetchPromises = NEWS_SOURCES.map(async (source) => {
       try {
-        const res = await fetch(`/api/news-feed?source=${source}`, { signal: AbortSignal.timeout(10000) });
+        const res = await fetch(`${API_BASE}/api/news-feed?source=${source}`, { signal: AbortSignal.timeout(10000) });
         if (!res.ok) return [];
         const text = await res.text();
 
