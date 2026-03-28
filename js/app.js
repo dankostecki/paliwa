@@ -2072,7 +2072,7 @@ function renderNewsFeed() {
   feedDiv.innerHTML = "";
   if (activeNewsFilter === "OrlenX" && toShow.length === 0) {
     feedDiv.innerHTML = `
-      <div style="padding:16px 12px;">
+      <div style="padding:16px 12px;" id="orlenXEmbedWrap">
         <a class="twitter-timeline"
            data-theme="dark"
            data-chrome="noheader nofooter noborders transparent"
@@ -2081,14 +2081,21 @@ function renderNewsFeed() {
           Wczytywanie @b_prasoweORLEN...
         </a>
       </div>`;
+    const wrap = document.getElementById("orlenXEmbedWrap");
+    const activate = () => window.twttr && window.twttr.widgets && window.twttr.widgets.load(wrap);
     if (window.twttr && window.twttr.widgets) {
-      window.twttr.widgets.load(feedDiv);
+      activate();
     } else if (!document.getElementById("twitter-wjs")) {
       const s = document.createElement("script");
       s.id = "twitter-wjs";
       s.src = "https://platform.twitter.com/widgets.js";
       s.async = true;
+      s.charset = "utf-8";
+      s.onload = activate;
       document.head.appendChild(s);
+    } else {
+      const poll = setInterval(() => { if (window.twttr && window.twttr.widgets) { clearInterval(poll); activate(); } }, 200);
+      setTimeout(() => clearInterval(poll), 10000);
     }
     return;
   }
