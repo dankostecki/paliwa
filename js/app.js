@@ -2077,13 +2077,7 @@ function renderNewsFeed() {
   }
 }
 
-const Q_PALIWA = '("ceny paliw" OR "benzyna" OR "Iran" OR "diesel" OR "ON" OR "LPG" OR "ropa Brent" OR "ropa WTI") AND ("Polska" OR "Orlen" OR "stacje paliw") AND ("prognoza" OR "prognozy" OR "e-petrol" OR "Reflex" OR "podwyżki" OR "obniżki")';
-const Q_RPP = '("stopy procentowe" OR "stopami procentowymi" OR "stóp procentowych" OR "inflacja" OR "polityka pieniężna" OR "RPP" OR "Iran") AND ("Glapiński" OR "Ireneusz Dąbrowski" OR "Iwona Duda" OR "Janczyk" OR "Kotecki" OR "Litwiniuk" OR "Masłowska" OR "Tyrowicz" OR "Wronowski" OR "Zarzecki")';
-
-const RSS_FEEDS = {
-  "RPP": `https://news.google.com/rss/search?q=${encodeURIComponent(Q_RPP)}&hl=pl&gl=PL&ceid=PL:pl`,
-  "Paliwa": `https://news.google.com/rss/search?q=${encodeURIComponent(Q_PALIWA)}&hl=pl&gl=PL&ceid=PL:pl`
-};
+const NEWS_SOURCES = ["RPP", "Paliwa"];
 
 const FILTER_OUT_KEYWORDS = ["pogoda", "prognoza pogody", "weather", "temperatura", "opady", "zachmurzenie"];
 const MAX_NEWS_AGE_MS = 180 * 24 * 60 * 60 * 1000; // 180 dni
@@ -2149,35 +2143,11 @@ function buildTweetHtml(article) {
   `;
 }
 
-async function fetchRSSText(url) {
+async function fetchNitterRSS() {
   try {
-    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch("/api/orlen-feed", { signal: AbortSignal.timeout(10000) });
     if (res.ok) return await res.text();
   } catch {}
-  try {
-    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
-    if (res.ok) {
-      const data = await res.json();
-      return data.contents || null;
-    }
-  } catch {}
-  return null;
-}
-
-const NITTER_INSTANCES = [
-  "https://nitter.privacydev.net",
-  "https://nitter.poast.org",
-  "https://nitter.1d4.us",
-  "https://nitter.fdn.fr",
-];
-const ORLEN_X_HANDLE = "b_prasoweORLEN";
-
-async function fetchNitterRSS() {
-  for (const instance of NITTER_INSTANCES) {
-    const url = `${instance}/${ORLEN_X_HANDLE}/with_replies/rss`;
-    const text = await fetchRSSText(url);
-    if (text) return text;
-  }
   return null;
 }
 
@@ -2186,37 +2156,28 @@ async function fetchAndParseRSS() {
   const indicator = document.getElementById("newsStatusIndicator");
 
   try {
-    const fetchPromises = Object.entries(RSS_FEEDS).map(async ([source, url]) => {
-      const text = await fetchRSSText(url);
-      if (!text) return [];
+    const fetchPromises = NEWS_SOURCES.map(async (source) => {
+      try {
+        const res = await fetch(`/api/news-feed?source=${source}`, { signal: AbortSignal.timeout(10000) });
+        if (!res.ok) return [];
+        const text = await res.text();
 
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(text, "text/xml");
-
-      const entries = Array.from(xml.querySelectorAll("entry, item"));
-      return entries.map(entry => {
-        const id = entry.querySelector("id")?.textContent || entry.querySelector("guid")?.textContent || "";
-        const title = entry.querySelector("title")?.textContent || "Brak tytułu";
-
-        let link = "";
-        const linkNode = entry.querySelector("link");
-        if (linkNode) {
-          link = linkNode.getAttribute("href") || linkNode.textContent || "";
-        }
-
-        const published = entry.querySelector("published")?.textContent || entry.querySelector("updated")?.textContent || entry.querySelector("pubDate")?.textContent || "";
-
-        const summaryNode = entry.querySelector("summary") || entry.querySelector("content") || entry.querySelector("description");
-        const summary = summaryNode ? summaryNode.textContent : "";
-
-        let timestamp = Date.now();
-        if (published) {
-          const parsedDate = new Date(published);
-          if (!isNaN(parsedDate.getTime())) timestamp = parsedDate.getTime();
-        }
-
-        return { id, source, title, link, summary, timestamp };
-      });
+        const xml = new DOMParser().parseFromString(text, "text/xml");
+        const entries = Array.from(xml.querySelectorAll("entry, item"));
+        return entries.map(entry => {
+          const id = entry.querySelector("id")?.textContent || entry.querySelector("guid")?.textContent || "";
+          const title = entry.querySelector("title")?.textContent || "Brak tytułu";
+          let link = "";
+          const linkNode = entry.querySelector("link");
+          if (linkNode) link = linkNode.getAttribute("href") || linkNode.textContent || "";
+          const published = entry.querySelector("published")?.textContent || entry.querySelector("updated")?.textContent || entry.querySelector("pubDate")?.textContent || "";
+          const summaryNode = entry.querySelector("summary") || entry.querySelector("content") || entry.querySelector("description");
+          const summary = summaryNode ? summaryNode.textContent : "";
+          let timestamp = Date.now();
+          if (published) { const d = new Date(published); if (!isNaN(d.getTime())) timestamp = d.getTime(); }
+          return { id, source, title, link, summary, timestamp };
+        });
+      } catch { return []; }
     });
 
     const orlenXPromise = (async () => {
