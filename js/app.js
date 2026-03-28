@@ -2070,6 +2070,28 @@ function renderNewsFeed() {
   if (!feedDiv) return;
   const toShow = activeNewsFilter ? allNews.filter(a => a.source === activeNewsFilter) : allNews;
   feedDiv.innerHTML = "";
+  if (activeNewsFilter === "OrlenX" && toShow.length === 0) {
+    feedDiv.innerHTML = `
+      <div style="padding:16px 12px;">
+        <a class="twitter-timeline"
+           data-theme="dark"
+           data-chrome="noheader nofooter noborders transparent"
+           data-tweet-limit="30"
+           href="https://twitter.com/b_prasoweORLEN/with_replies">
+          Wczytywanie @b_prasoweORLEN...
+        </a>
+      </div>`;
+    if (window.twttr && window.twttr.widgets) {
+      window.twttr.widgets.load(feedDiv);
+    } else if (!document.getElementById("twitter-wjs")) {
+      const s = document.createElement("script");
+      s.id = "twitter-wjs";
+      s.src = "https://platform.twitter.com/widgets.js";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    return;
+  }
   if (toShow.length === 0) {
     feedDiv.innerHTML = `<div class="p-6 text-center text-gray-500 text-sm font-bold uppercase tracking-widest">Brak artykułów</div>`;
   } else {
