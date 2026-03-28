@@ -2164,20 +2164,11 @@ async function fetchRSSText(url) {
   return null;
 }
 
-const NITTER_INSTANCES = [
-  "https://nitter.privacydev.net",
-  "https://nitter.poast.org",
-  "https://nitter.1d4.us",
-  "https://nitter.fdn.fr",
-];
-const ORLEN_X_HANDLE = "b_prasoweORLEN";
-
 async function fetchNitterRSS() {
-  for (const instance of NITTER_INSTANCES) {
-    const url = `${instance}/${ORLEN_X_HANDLE}/with_replies/rss`;
-    const text = await fetchRSSText(url);
-    if (text) return text;
-  }
+  try {
+    const res = await fetch("/api/orlen-feed", { signal: AbortSignal.timeout(10000) });
+    if (res.ok) return await res.text();
+  } catch {}
   return null;
 }
 
