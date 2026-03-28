@@ -2070,32 +2070,15 @@ function renderNewsFeed() {
   if (!feedDiv) return;
   const toShow = activeNewsFilter ? allNews.filter(a => a.source === activeNewsFilter) : allNews;
   feedDiv.innerHTML = "";
-  if (activeNewsFilter === "OrlenX" && toShow.length === 0) {
-    feedDiv.innerHTML = `
-      <div style="padding:16px 12px;" id="orlenXEmbedWrap">
-        <a class="twitter-timeline"
-           data-theme="dark"
-           data-chrome="noheader nofooter noborders transparent"
-           data-tweet-limit="30"
-           href="https://twitter.com/b_prasoweORLEN/with_replies">
-          Wczytywanie @b_prasoweORLEN...
-        </a>
-      </div>`;
-    const wrap = document.getElementById("orlenXEmbedWrap");
-    const activate = () => window.twttr && window.twttr.widgets && window.twttr.widgets.load(wrap);
-    if (window.twttr && window.twttr.widgets) {
-      activate();
-    } else if (!document.getElementById("twitter-wjs")) {
+  if (activeNewsFilter === "OrlenX") {
+    feedDiv.innerHTML = `<div style="padding:12px;"><rssapp-wall id="pe3hhZeRcVPoDAuU"></rssapp-wall></div>`;
+    if (!document.getElementById("rssapp-wjs")) {
       const s = document.createElement("script");
-      s.id = "twitter-wjs";
-      s.src = "https://platform.twitter.com/widgets.js";
+      s.id = "rssapp-wjs";
+      s.src = "https://widget.rss.app/v1/wall.js";
+      s.type = "text/javascript";
       s.async = true;
-      s.charset = "utf-8";
-      s.onload = activate;
       document.head.appendChild(s);
-    } else {
-      const poll = setInterval(() => { if (window.twttr && window.twttr.widgets) { clearInterval(poll); activate(); } }, 200);
-      setTimeout(() => clearInterval(poll), 10000);
     }
     return;
   }
