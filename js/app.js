@@ -2069,20 +2069,7 @@ function renderNewsFeed() {
   const feedDiv = document.getElementById("newsFeed");
   if (!feedDiv) return;
   const toShow = activeNewsFilter ? allNews.filter(a => a.source === activeNewsFilter) : allNews;
-  if (activeNewsFilter === "OrlenX") {
-    if (!feedDiv.querySelector("rssapp-wall")) {
-      feedDiv.innerHTML = `<div style="padding:12px;min-height:500px;"><rssapp-wall id="pe3hhZeRcVPoDAuU"></rssapp-wall></div>`;
-      if (!document.getElementById("rssapp-wjs")) {
-        const s = document.createElement("script");
-        s.id = "rssapp-wjs";
-        s.src = "https://widget.rss.app/v1/wall.js";
-        s.type = "text/javascript";
-        s.async = true;
-        document.head.appendChild(s);
-      }
-    }
-    return;
-  }
+  feedDiv.innerHTML = "";
   if (toShow.length === 0) {
     feedDiv.innerHTML = `<div class="p-6 text-center text-gray-500 text-sm font-bold uppercase tracking-widest">Brak artykułów</div>`;
   } else {
