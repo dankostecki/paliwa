@@ -730,6 +730,18 @@ tbody tr:active{ transform: translateY(1px); }
   background: #ff9900;
   border-radius: 3px 3px 0 0;
 }
+.news-filter-btn.active-orlenx {
+  color: #fff;
+  background: rgba(255,255,255,.08);
+}
+.news-filter-btn.active-orlenx::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: #fff;
+  border-radius: 3px 3px 0 0;
+}
 .news-filter-btn .dot {
   width: 7px; height: 7px;
   border-radius: 50%;

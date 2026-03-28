@@ -2057,8 +2057,10 @@ function toggleNewsFilter(source) {
 
   const btnRPP = document.getElementById("filterBtnRPP");
   const btnPaliwa = document.getElementById("filterBtnPaliwa");
+  const btnOrlenX = document.getElementById("filterBtnOrlenX");
   if (btnRPP) btnRPP.classList.toggle("active-rpp", activeNewsFilter === "RPP");
   if (btnPaliwa) btnPaliwa.classList.toggle("active-paliwa", activeNewsFilter === "Paliwa");
+  if (btnOrlenX) btnOrlenX.classList.toggle("active-orlenx", activeNewsFilter === "OrlenX");
 
   renderNewsFeed();
 }
@@ -2087,6 +2089,7 @@ const FILTER_OUT_KEYWORDS = ["pogoda", "prognoza pogody", "weather", "temperatur
 const MAX_NEWS_AGE_MS = 180 * 24 * 60 * 60 * 1000; // 180 dni
 
 function isRelevantArticle(article) {
+  if (article.source === "OrlenX") return Date.now() - article.timestamp < MAX_NEWS_AGE_MS;
   if (Date.now() - article.timestamp > MAX_NEWS_AGE_MS) return false;
   const title = article.title.toLowerCase();
   // Odfiltruj artykuły pisane z perspektywy przeszłości (Google News czasem resurface'uje stare treści)
@@ -2099,11 +2102,12 @@ function isRelevantArticle(article) {
 }
 
 function buildTweetHtml(article) {
+  const isOrlenX = article.source === "OrlenX";
   const isPaliwa = article.source === "Paliwa";
-  const iconColor = isPaliwa ? "text-[#ff9900]" : "text-[#1da1f2]";
-  const stripColor = isPaliwa ? "bg-[#ff9900]" : "bg-[#1da1f2]";
-  const sourceHandle = isPaliwa ? "@GNews_Paliwa" : "@GNews_RPP";
-  const sourceLabel = isPaliwa ? "News Paliwa" : "News RPP";
+  const iconColor = isOrlenX ? "text-white" : isPaliwa ? "text-[#ff9900]" : "text-[#1da1f2]";
+  const stripColor = isOrlenX ? "bg-white" : isPaliwa ? "bg-[#ff9900]" : "bg-[#1da1f2]";
+  const sourceHandle = isOrlenX ? "@b_prasoweORLEN" : isPaliwa ? "@GNews_Paliwa" : "@GNews_RPP";
+  const sourceLabel = isOrlenX ? "Orlen Biuro Prasowe" : isPaliwa ? "News Paliwa" : "News RPP";
 
   const timeDiffMs = Date.now() - article.timestamp;
   const hours = Math.max(1, Math.floor(timeDiffMs / (1000 * 60 * 60)));
@@ -2115,8 +2119,11 @@ function buildTweetHtml(article) {
     <article class="p-5 flex gap-4 hover:bg-[rgba(255,255,255,0.02)] transition-colors relative group duration-200">
       <div class="absolute left-0 top-0 bottom-0 w-[4px] opacity-0 group-hover:opacity-100 transition-opacity ${stripColor}"></div>
       
-      <div class="flex-shrink-0 w-12 h-12 rounded-full border-2 border-[rgba(255,255,255,0.08)] bg-[#0a0f16] flex items-center justify-center ${iconColor}">
-        <svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg>
+      <div class="flex-shrink-0 w-12 h-12 rounded-full border-2 border-[rgba(255,255,255,0.08)] ${isOrlenX ? "bg-black" : "bg-[#0a0f16]"} flex items-center justify-center ${iconColor}">
+        ${isOrlenX
+          ? `<svg fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`
+          : `<svg fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg>`
+        }
       </div>
       
       <div class="flex-1 min-w-0">
@@ -2134,7 +2141,7 @@ function buildTweetHtml(article) {
         <div class="mt-3 flex gap-6">
           <a href="${article.link}" target="_blank" class="news-read-link">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-            Czytaj artykuł
+            ${isOrlenX ? "Zobacz na X" : "Czytaj artykuł"}
           </a>
         </div>
       </div>
@@ -2154,6 +2161,23 @@ async function fetchRSSText(url) {
       return data.contents || null;
     }
   } catch {}
+  return null;
+}
+
+const NITTER_INSTANCES = [
+  "https://nitter.privacydev.net",
+  "https://nitter.poast.org",
+  "https://nitter.1d4.us",
+  "https://nitter.fdn.fr",
+];
+const ORLEN_X_HANDLE = "b_prasoweORLEN";
+
+async function fetchNitterRSS() {
+  for (const instance of NITTER_INSTANCES) {
+    const url = `${instance}/${ORLEN_X_HANDLE}/with_replies/rss`;
+    const text = await fetchRSSText(url);
+    if (text) return text;
+  }
   return null;
 }
 
@@ -2195,7 +2219,23 @@ async function fetchAndParseRSS() {
       });
     });
 
-    const results = await Promise.all(fetchPromises);
+    const orlenXPromise = (async () => {
+      const text = await fetchNitterRSS();
+      if (!text) return [];
+      const xml = new DOMParser().parseFromString(text, "text/xml");
+      return Array.from(xml.querySelectorAll("item")).map(item => {
+        const rawLink = item.querySelector("link")?.textContent?.trim() || "";
+        const xLink = rawLink.replace(/^https?:\/\/[^/]+\//, "https://x.com/").replace(/#m$/, "");
+        const pubDate = item.querySelector("pubDate")?.textContent || "";
+        const timestamp = pubDate ? (new Date(pubDate).getTime() || Date.now()) : Date.now();
+        const title = item.querySelector("title")?.textContent || "";
+        const desc = item.querySelector("description")?.textContent || "";
+        const id = item.querySelector("guid")?.textContent || rawLink || (title + timestamp);
+        return { id, source: "OrlenX", title, link: xLink, summary: desc, timestamp };
+      });
+    })();
+
+    const results = await Promise.all([...fetchPromises, orlenXPromise]);
     const newArticles = [];
 
     results.flat().filter(isRelevantArticle).forEach(art => {
