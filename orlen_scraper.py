@@ -15,6 +15,7 @@ import json
 import re
 import logging
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 # ===== KONFIGURACJA =====
@@ -30,7 +31,7 @@ CSV_FILES = {
 }
 
 ORLEN_URL = "https://www.orlen.pl/pl/dla-biznesu/hurtowe-ceny-paliw"
-CET = timezone(timedelta(hours=1))
+WARSAW = ZoneInfo("Europe/Warsaw")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -186,7 +187,7 @@ def main():
     log.info("=" * 50)
     log.info("START — scraper cen paliw Orlen")
 
-    date_str = datetime.now(CET).strftime("%d-%m-%Y")
+    date_str = datetime.now(WARSAW).strftime("%d-%m-%Y")
     log.info(f"Data: {date_str}")
 
     prices = scrape_orlen_playwright()
