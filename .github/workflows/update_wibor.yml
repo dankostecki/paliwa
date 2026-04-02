@@ -2,7 +2,7 @@ name: Update WIBOR 3M
 
 on:
   schedule:
-    - cron: '0 7 * * 1-5'   # Pon-Pt 07:00 UTC (08:00 CET / 09:00 CEST)
+    - cron: '0 6 * * 1-5'   # Pon-Pt 06:00 UTC (07:00 CET / 08:00 CEST)
   workflow_dispatch:
 
 jobs:

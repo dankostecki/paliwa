@@ -2,9 +2,8 @@ name: Aktualizuj ceny paliw
 
 on:
   schedule:
-    # 5:00 UTC = 6:00 CET (zima) / 7:00 CEST (lato)
-    # Mozesz zmienic na "4 5 * * *" jesli chcesz 6:00 latem
-    - cron: '0 5 * * *'
+    # 4:00 UTC = 5:00 CET (zima) / 6:00 CEST (lato)
+    - cron: '0 4 * * *'
   workflow_dispatch: # mozliwosc recznego odpalenia z zakladki Actions
 
 jobs:
