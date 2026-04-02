@@ -2,7 +2,7 @@ name: Update ICE & USDPLN Data
 
 on:
   schedule:
-    - cron: '0 18 * * 1-5'  # 18:00 UTC = 19:00 CET (po zamknięciu ICE Gasoil futures)
+    - cron: '0 17 * * 1-5'  # 17:00 UTC = 18:00 CET / 19:00 CEST (po zamknięciu ICE Gasoil futures)
   workflow_dispatch:
 
 jobs:
