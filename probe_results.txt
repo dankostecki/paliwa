@@ -1,61 +1,50 @@
 ==============================================================================
-PROBE 2026-09-10
+PROBE runda 2 — 2026-09-10
 ==============================================================================
 
-### yfinance — kandydaci na gasoil + FX
-yfinance 1.7.0
-  --   LF=F         pusta seria
-  --   QS=F         pusta seria
-  --   7F=F         pusta seria
-  --   G=F          pusta seria
-  --   LGO=F        pusta seria
-  --   GAS=F        pusta seria
-  --   ULS=F        pusta seria
-  --   GOIL=F       pusta seria
-  OK   HO=F         n= 23 last=      4.5985 @2026-09-10 cur=USD
-  OK   BZ=F         n= 23 last=    102.3800 @2026-09-10 cur=USD
-  OK   CL=F         n= 23 last=     97.7300 @2026-09-10 cur=USD
-  OK   RB=F         n= 23 last=      3.0803 @2026-09-10 cur=USD
-  OK   USDPLN=X     n= 24 last=      3.7094 @2026-09-10 cur=PLN
-  OK   PLN=X        n= 24 last=      3.7094 @2026-09-10 cur=PLN
+### A. Yahoo symbol search — co Yahoo w ogole ma
+  'gasoil': 7 trafien
+     ^SPGGO2IT        INDEX      SNP       S&P GSCI Gasoil 2X Inverse (USD
+     ^SPGSGOP         INDEX      SNP       S&P GSCI Gasoil ER
+     ^SPDYGOP         INDEX      SNP       S&P GSCI Gasoil Dynamic Roll ER
+     ^SPGSXGP         INDEX      SNP       S&P GSCI Petroleum ex Gasoil ER
+     ^SGC3MGOP        INDEX      SNP       S&P GSCI Gasoil Curve 3 Month (
+     ^SPGSXGTR        INDEX      SNP       S&P GSCI Petroleum ex Gasoil TR
+     ^SPMCGOP         INDEX      SNP       S&P GSCI Gasoil Multiple Contra
+  'low sulphur gasoil': 1 trafien
+     B4N1.DE          EQUITY     GER       BNP Paribas Issuance B.V.     O
+  'ICE gasoil': 0 trafien
+  'gas oil futures': 0 trafien
+  'diesel futures': 0 trafien
 
-### stooq — warianty host / endpoint / User-Agent
-  stooq.pl   lf.f      json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   lf.f      json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   lf.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   lf.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   cb.f      json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   cb.f      json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   cb.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   cb.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   usdpln    json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   usdpln    json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   usdpln    csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   usdpln    csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   plopln3m  json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   plopln3m  json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.pl   plopln3m  csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.pl   plopln3m  csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  lf.f      json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  lf.f      json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  lf.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  lf.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  cb.f      json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  cb.f      json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  cb.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  cb.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  usdpln    json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  usdpln    json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  usdpln    csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  usdpln    csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  plopln3m  json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  plopln3m  json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
-  stooq.com  plopln3m  csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
-  stooq.com  plopln3m  csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+### B. datowane kontrakty NYMEX (European Low Sulphur Gasoil, root 7F)
+  --   7FU26.NYM      pusta
+  --   7FV26.NYM      pusta
+  --   7FX26.NYM      pusta
+  --   7FZ26.NYM      pusta
+  --   7F=F           pusta
+  --   LFU26.NYM      pusta
+  --   LFV26.NYM      pusta
+  --   LFX26.NYM      pusta
+  --   LFZ26.NYM      pusta
+  --   LF=F           pusta
+  --   QSU26.NYM      pusta
+  --   QSV26.NYM      pusta
+  --   QSX26.NYM      pusta
+  --   QSZ26.NYM      pusta
+  --   QS=F           pusta
 
-### NBP — kurs USD (zapas dla USD/PLN)
-  HTTP 200 :: {"table":"A","currency":"dolar amerykański","code":"USD","rates":[{"no":"172/A/NBP/2026","effectiveDate":"2026-09-04","mid":3.7145},{"no":"173/A/NBP/2026","effectiveDate":"2026-09-07","mid":3.7085},{"
+### C. stooq CSV — pelna tresc odpowiedzi (796 B)
+  HTTP 200 ct=text/html; charset=utf-8
+  TRESC: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce="47BXxcA0S4A3iQ5R2S5jJA"> (async()=>{const c="AAAAAGqigdCowaT3_Aj7QZ_ZhlyRa1GoNL7dVftE8bgi_lmTei8AqH-oAX4",d=4,t="0".repeat(d),e=new TextEncoder;let n=0;while(1){const h=await crypto.subtle.digest("SHA-256",e.encode(c+n)),x=Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");if(x.startsWith(t))break;n++}const r=await fetch("/__verify",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"c="+encodeURIComponen
 
-### investing.com — czy w ogole odpowiada
-  HTTP 403 len=3 https://www.investing.com/commodities/london-gas-oil :: 403
-  HTTP 403 len=3 https://api.investing.com/api/financialdata/8833/historical/ :: 403
+### C2. stooq z cookie: najpierw strona instrumentu, potem CSV
+  strona: HTTP 200 len=796 cookies=[]
+  CSV po cookie: HTTP 200 len=796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript an
+
+### D. inne zrodla
+  EIA Rotterdam ULSD (bez klucza)  HTTP 403 len=    163 :: {   "error": {     "code": "API_KEY_MISSING",     "message": "No api_key was supplied.  Please register for one at https://www.eia
+  Yahoo chart 7FV26.NYM            HTTP 404 len=    108 :: {"chart":{"result":null,"error":{"code":"Not Found","description":"No data found, symbol may be delisted"}}}
+  Yahoo chart LF=F                 HTTP 404 len=    108 :: {"chart":{"result":null,"error":{"code":"Not Found","description":"No data found, symbol may be delisted"}}}
+  Barchart LF*0                    HTTP 202 len=      0 :: 
+  marketwatch gasoil               HTTP 401 len=    775 :: <html lang="en"><head><title>marketwatch.com</title><style>#cmsg{animation: A 1.5s;}@keyframes A{0%{opacity:0;}99%{opacity:0;}100%
