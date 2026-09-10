@@ -206,6 +206,57 @@ def tradingview_quote(symbol, lo=None, hi=None):
     return close, desc
 
 
+def tradingview_history(symbol, exchange, start, lo=None, hi=None, n_bars=400):
+    """
+    Historia dzienna z TradingView. Zwraca {"RRRR-MM-DD": close} — ten sam
+    kontrakt co yf_series() i stooq_csv_series(), wiec wywolujacy nie musi
+    tego traktowac inaczej.
+
+    DATOWANIE: ICE otwiera sesje poniedzialkowa w niedziele o 22:00, a
+    TradingView znakuje slupki czasem OTWARCIA. Bez korekty caly poniedzialek
+    laduje pod niedziela — w surowej serii widac pon=0, NDZ=60. Slupek
+    otwarty w niedziele przesuwamy wiec na poniedzialek.
+
+    Zweryfikowane wobec danych referencyjnych uzytkownika (arkusz Google,
+    2026-01-09..2026-03-05): 38/40 wartosci identycznych co do grosza,
+    40/40 w tolerancji 0,5%, sredni blad 0,02%.
+    """
+    try:
+        from tvDatafeed import TvDatafeed, Interval
+    except ImportError:
+        log.warning("tvdatafeed nie zainstalowany")
+        return {}
+
+    try:
+        df = TvDatafeed().get_hist(symbol=symbol, exchange=exchange,
+                                   interval=Interval.in_daily, n_bars=n_bars)
+    except Exception as e:
+        log.warning(f"TradingView {exchange}:{symbol}: {type(e).__name__}: {e}")
+        return {}
+
+    if df is None or not len(df):
+        log.warning(f"TradingView {exchange}:{symbol}: pusta seria")
+        return {}
+
+    out, skipped = {}, 0
+    for idx, row in df.iterrows():
+        d = idx.date()
+        if idx.weekday() == 6:          # niedziela 22:00 = otwarcie poniedzialku
+            d = d + timedelta(days=1)
+        if d < start:
+            continue
+        close = float(row["close"])
+        if lo is not None and not (lo <= close <= hi):
+            skipped += 1
+            continue
+        out[d.isoformat()] = close
+
+    if skipped:
+        log.warning(f"TradingView {symbol}: pominieto {skipped} slupkow poza pasmem {lo}-{hi}")
+    log.info(f"TradingView {exchange}:{symbol}: {len(out)} notowan od {start}")
+    return out
+
+
 # ===== NBP (zapasowo dla USD/PLN) =====
 
 def nbp_usdpln_series(start):
