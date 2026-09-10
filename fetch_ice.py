@@ -115,7 +115,8 @@ def import_from_sheets():
 def get_gasoil(start):
     """Seria gasoilu w USD/tone. Yahoo, zapasowo stooq."""
     log.info("Gasoil — szukam symbolu w Yahoo Finance...")
-    sym, series = pick_symbol(GASOIL_SYMBOLS, start, GASOIL_MIN, GASOIL_MAX)
+    sym, series = pick_symbol(GASOIL_SYMBOLS, start, GASOIL_MIN, GASOIL_MAX,
+                              currency="USD")
     if series:
         log.info(f"Gasoil: uzywam Yahoo '{sym}' ({len(series)} notowan)")
         return series
@@ -130,6 +131,8 @@ def get_gasoil(start):
 def get_usdpln(start):
     """Seria USD/PLN. Yahoo, zapasowo NBP, na koncu stooq."""
     log.info("USD/PLN — szukam symbolu w Yahoo Finance...")
+    # Bez kontroli waluty: pasmo 2,5-6,0 i tak jednoznacznie identyfikuje kurs
+    # USD/PLN, a Yahoo raportuje walute par walutowych niekonsekwentnie.
     sym, series = pick_symbol(USDPLN_SYMBOLS, start, USDPLN_MIN, USDPLN_MAX)
     if series:
         log.info(f"USD/PLN: uzywam Yahoo '{sym}' ({len(series)} notowan)")

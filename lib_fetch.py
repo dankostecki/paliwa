@@ -52,28 +52,49 @@ def yf_series(symbol, start):
     return out
 
 
-def pick_symbol(candidates, start, lo, hi):
+def yf_meta(symbol):
+    """Waluta i nazwa instrumentu z Yahoo. Zwraca (currency, name), moga byc None."""
+    try:
+        import yfinance as yf
+        fi = yf.Ticker(symbol).fast_info
+        return (getattr(fi, "currency", None), getattr(fi, "quote_type", None))
+    except Exception:
+        return (None, None)
+
+
+def pick_symbol(candidates, start, lo, hi, currency=None):
     """
     Probuje kolejne symbole i zwraca (symbol, seria) dla pierwszego, ktory da
-    dane w wiarygodnym pasmie lo..hi.
+    dane w wiarygodnym pasmie lo..hi (i w oczekiwanej walucie, jesli podana).
 
     Yahoo nie ma stabilnego, udokumentowanego symbolu ciaglego dla ICE Low
     Sulphur Gasoil, a nazwy kontraktow potrafia sie zmieniac przy rolowaniu.
     Zamiast zaszywac jeden symbol na sztywno, sprawdzamy liste i logujemy
     zwyciezce — dzieki temu skrypt sam sie naprawia, gdy symbol sie zmieni.
-    Pasmo lo..hi chroni przed cichym wzieciem instrumentu w zlej jednostce
-    (np. HO=F jest w USD/galon, nie USD/tone — poziom cen rozjechalby premie).
+
+    Pasmo lo..hi jest tu glowna ochrona przed wzieciem zlego instrumentu.
+    NIE da sie tego zastapic porownaniem z ostatnia wartoscia w archiwum:
+    gasoil potrafi zmienic sie o 94% w ciagu 3 miesiecy (2026-01-26 -> 2026-04-29
+    w tym wlasnie archiwum), wiec kazdy prog procentowy dawalby falszywe alarmy.
     """
     for sym in candidates:
         series = yf_series(sym, start)
         if not series:
             log.info(f"  {sym}: brak danych")
             continue
+
         last = series[max(series)]
         if not (lo <= last <= hi):
             log.info(f"  {sym}: ostatnia wartosc {last} poza pasmem {lo}-{hi}, odrzucam")
             continue
-        log.info(f"  {sym}: OK — {len(series)} notowan, ostatnie {last}")
+
+        cur, qtype = yf_meta(sym)
+        if currency and cur and cur.upper() != currency.upper():
+            log.warning(f"  {sym}: waluta {cur}, oczekiwano {currency} — odrzucam")
+            continue
+
+        log.info(f"  {sym}: OK — {len(series)} notowan, ostatnie {last} "
+                 f"(waluta={cur or '?'}, typ={qtype or '?'})")
         return sym, series
     return None, {}
 
