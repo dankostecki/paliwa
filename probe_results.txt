@@ -1,20 +1,24 @@
 ==============================================================================
-PROBE runda 8 — 2026-09-10
+SONDA TradingView — historia ICEEUR:ULS1! — 2026-09-10
+kotwice do sprawdzenia: {'2026-06-04': 1076.37, '2026-09-10': 1391.25}
 ==============================================================================
 
-### A. ostatnie kandydatury na HISTORIE dzienna
-  [404] businessinsider hist       len=  186822 :: <!DOCTYPE html> <html lang="en-US">  <head>   <script id="fenrir-console-script" >(()=>{var e={15517(){if(window.Fenrir=window.Fenrir||{config:{}},!window.Fenrir.console){window.Fenrir.console={};cons
-  [404] businessinsider gasoil     len=  186731 :: <!DOCTYPE html> <html lang="en-US">  <head>   <script id="fenrir-console-script" >(()=>{var e={15517(){if(window.Fenrir=window.Fenrir||{config:{}},!window.Fenrir.console){window.Fenrir.console={};cons
-  [404] finanzen.net gasoil        len=  251413 ::  <!DOCTYPE html> <html lang="de"> <head>     <meta charset="utf-8">     <meta name="viewport" content="width=device-width, initial-scale=1.0">   <link rel="preconnect" href="//c.finanzen.net">
-  [404] finanzen.net hist          len=  251420 ::  <!DOCTYPE html> <html lang="de"> <head>     <meta charset="utf-8">     <meta name="viewport" content="width=device-width, initial-scale=1.0">   <link rel="preconnect" href="//c.finanzen.net">
-  [200] boerse.de                  len=  213115 :: <!DOCTYPE html> <html lang="de">     <head>         <meta charset="utf-8">         <title>Brent Rohöl EUR | Euro  Brent Rohölpreis aktuell | Euro Brent Rohölkurs heute - boerse.de</title>         <met
-  [403] investing api v2           len=       3 :: 403
-  [401] wsj quote                  len=     470 :: {"url":"https://geo.captcha-delivery.com/captcha/?initialCid=AHrlqAAAAAMA_l8XgS65eQYAgoNHGQ==&cid=UV0NYcJjfBu2ay3Qwv0DPoDr3OXT2zR_xF9fbGptWfEeHHqoDrgB1I8KxGwy8oNzystA5Nu19lmcNiSGrIGpc8YRRW0~T9YetYMK9j
-  [200] TV scanner futures scan    len= 1633739 :: {"totalCount":53615,"data":[{"s":"EUREX:FCXIX2026","d":[]},{"s":"NYMEX:TFUG2028","d":[]},{"s":"COMEX:HGSX2028","d":[]},{"s":"ICEEUR:CP11!","d":[]},{"s":"EURONEXT:FT7U2026","d":[]},{"s":"OSE:NK225MX202
+### DROGA 1: biblioteka tvdatafeed
+  import OK
+  get_hist: 250 wierszy, kolumny=['symbol', 'open', 'high', 'low', 'close', 'volume']
 
-### B. TEST: pelne pobranie przez TradingView + yfinance (to co wdrozymy)
-  TradingView ICEEUR:ULS1! -> {'close': 1391, 'description': 'Low Sulphur Gasoil Futures', 'high': 1403.5, 'low': 1368.5, 'open': 1400.25, 'pricescale': 100, 'update_mode': 'delayed_streaming_600'}
-  USDPLN=X -> 3.71045 @2026-09-10
-  WYNIK: 1391 USD/t x 0.845 x 3.71045 = 4361.24 PLN/1000l
-  ostatni wpis w archiwum: 2026-06-04 = 3318.98 PLN/1000l (1076.37 USD/t)
-  zmiana USD/t przez luke: +29.2%
+  --- kontrola kotwic dla: tvdatafeed ULS1! ---
+     slupkow: 250, zakres 2025-09-23 .. 2026-09-10
+     2026-06-04: 1079.5 vs 1076.37 -> 0.291% [OK]
+     2026-09-10: 1413.5 vs 1391.25 -> 1.599% [ROZJAZD]
+     ostatnie 5: [('2026-09-04', 1395.0), ('2026-09-06', 1460.25), ('2026-09-08', 1439.75), ('2026-09-09', 1472.75), ('2026-09-10', 1413.5)]
+
+### DROGA 2: surowy WebSocket data.tradingview.com
+  odebrano 47462 znakow, series_completed=True
+  sparsowano slupkow: 300
+
+  --- kontrola kotwic dla: raw websocket ---
+     slupkow: 300, zakres 2025-07-15 .. 2026-09-10
+     2026-06-04: 1079.5 vs 1076.37 -> 0.291% [OK]
+     2026-09-10: 1413.5 vs 1391.25 -> 1.599% [ROZJAZD]
+     ostatnie 5: [('2026-09-04', 1395.0), ('2026-09-06', 1460.25), ('2026-09-08', 1439.75), ('2026-09-09', 1472.75), ('2026-09-10', 1413.5)]
