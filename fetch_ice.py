@@ -273,11 +273,25 @@ def main(refresh_from=None):
         # znana data byla po prostu pomijana. Odswiezamy wartosc powyzej
         # refresh_boundary, gdy zrodlo podaje inna — TradingView jest tu
         # autorytatywne. Starszych wpisow nie ruszamy.
-        if d >= refresh_boundary and old.get("ice_usd_tonne") != entry["ice_usd_tonne"]:
+        if d < refresh_boundary or old.get("ice_usd_tonne") == entry["ice_usd_tonne"]:
+            continue
+
+        if refresh_from:
+            # Tryb podmiany zrodla: korygujemy WYLACZNIE notowanie instrumentu
+            # i przeliczamy wynik. Kursu USD/PLN nie ruszamy — dwa zrodla FX
+            # roznia sie momentem snapshotu, a nie poprawnoscia (sprawdzone:
+            # raz odstaje stooq, raz yfinance), wiec podmiana wniosloby szum
+            # zamiast poprawy. Zapisany kurs zostaje.
+            fx_kept = old["usdpln"]
+            log.info(f"  ~{d}: {old['ice_usd_tonne']} -> {entry['ice_usd_tonne']} USD/t "
+                     f"(kurs {fx_kept} bez zmian)")
+            old["ice_usd_tonne"] = entry["ice_usd_tonne"]
+            old["ice_pln_1000l"] = round(entry["ice_usd_tonne"] * DENSITY * fx_kept, 2)
+        else:
             log.info(f"  ~{d}: {old.get('ice_usd_tonne')} -> {entry['ice_usd_tonne']} USD/t "
                      f"(korekta do zamkniecia)")
             old.update(entry)
-            refreshed += 1
+        refreshed += 1
 
     only_gasoil = sorted(set(gasoil) - set(usdpln))
     only_fx = sorted(set(usdpln) - set(gasoil))
