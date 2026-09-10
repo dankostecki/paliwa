@@ -1,8 +1,6 @@
 name: Update ICE & USDPLN Data
 
 on:
-  push:
-    branches: [claude/fix-mobile-share-button-EpJjn]   # TYMCZASOWE: weryfikacja przed scaleniem
   schedule:
     - cron: '0 17 * * 1-5'  # 17:00 UTC = 18:00 CET / 19:00 CEST (po zamknięciu ICE Gasoil futures)
   workflow_dispatch:
