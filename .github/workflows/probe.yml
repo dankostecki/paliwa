@@ -15,7 +15,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install requests yfinance
+      - run: pip install requests yfinance websocket-client
+      - run: pip install tvdatafeed || pip install git+https://github.com/rongardF/tvdatafeed.git || echo 'tvdatafeed niedostepny'
+        continue-on-error: true
       - run: python tools/probe_sources.py
         continue-on-error: true
       - run: |
