@@ -1,41 +1,25 @@
 ==============================================================================
-SONDA 3 — datowanie i zgodnosc serii
+SONDA 4 — ktore zrodlo archiwum jest wiarygodne
 ==============================================================================
-archiwum: 104 wpisow 2026-01-09..2026-06-04
-archiwum: 67/104 wartosci to wielokrotnosc ticku 0.25 ICE
-  przyklady nie-tickowe: [1076.37, 1128.24, 1080.12, 1077.87, 1019.87, 1030.62, 1029.74, 1067.99]
 
-### ULS1!
-  slupkow 300, dni tygodnia: pon=60  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=0
-  wielokrotnosc ticku 0.25: 300/300
-  pokrycie 104 dni | sredni blad 1.074% | mediana 0.431% | max 13.274% | w tol. 0.5%: 55/104
+### ARKUSZ (<= 2026-03-05)
+  dni: 40  (2026-01-09 .. 2026-03-05)
+  IDENTYCZNE co do grosza: 38/40
+  w tolerancji 0.5%:       40/40
+  sredni blad:             0.0200%
+  max blad:                0.431%
+  archiwum tickowe (0.25): 40/40
 
-### ULS2!
-  slupkow 300, dni tygodnia: pon=60  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=0
-  wielokrotnosc ticku 0.25: 300/300
-  pokrycie 104 dni | sredni blad 4.249% | mediana 2.048% | max 20.470% | w tol. 0.5%: 9/104
+### STOOQ  (>  2026-03-05)
+  dni: 64  (2026-03-06 .. 2026-06-04)
+  IDENTYCZNE co do grosza: 0/64
+  w tolerancji 0.5%:       15/64
+  sredni blad:             1.7334%
+  max blad:                13.274%
+  archiwum tickowe (0.25): 27/64
 
-### ULS3!
-  brak danych
-
-### wniosek dla ULS1! po poprawnym datowaniu — najgorsze dni
-  2026-04-10 (pt)  TV=  1145.00  arch=  1320.25  13.274%
-  2026-03-09 (pon)  TV=  1166.00  arch=  1068.87   9.087%
-  2026-03-10 (wt)  TV=  1042.50  arch=   975.37   6.883%
-  2026-04-09 (czw)  TV=  1402.25  arch=  1323.25   5.970%
-  2026-03-23 (pon)  TV=  1287.75  arch=  1227.37   4.919%
-  2026-03-11 (sr)  TV=  1097.00  arch=  1045.99   4.877%
-  2026-05-21 (czw)  TV=  1172.50  arch=  1127.24   4.015%
-  2026-03-16 (pon)  TV=  1160.00  arch=  1121.99   3.388%
-  2026-04-24 (pt)  TV=  1249.00  arch=  1214.50   2.841%
-  2026-03-26 (czw)  TV=  1337.00  arch=  1303.49   2.571%
-
-  najlepsze 5:
-  2026-01-15  TV=   641.00  arch=   641.00   0.000%
-  2026-01-14  TV=   659.25  arch=   659.25   0.000%
-  2026-01-13  TV=   655.00  arch=   655.00   0.000%
-  2026-01-12  TV=   626.50  arch=   626.50   0.000%
-  2026-01-09  TV=   632.25  arch=   632.25   0.000%
-
-### luka 2026-06-05..2026-09-09 po poprawnym datowaniu
-  slupkow: 69 | pon=14  wt=14  sr=14  czw=13  pt=14  SOB=0  NDZ=0
+### wniosek
+  arkusz: 38/40 identycznych z TradingView
+  stooq:  0/64 identycznych z TradingView
+  => TradingView odtwarza dane z arkusza uzytkownika co do grosza.
+     Rozjazd dotyczy WYLACZNIE okresu, ktory dokladal stooq.
