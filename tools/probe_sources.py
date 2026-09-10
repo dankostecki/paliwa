@@ -1,90 +1,64 @@
 #!/usr/bin/env python3
-"""Runda 2: szukamy zrodla dla ICE Low Sulphur Gasoil."""
-import json
+"""Runda 3: arkusz Google uzytkownika + legalne darmowe zrodla gasoilu."""
 from datetime import date
-import requests
+import requests, json
 
-OUT = []
+OUT=[]
 def log(*a):
-    s = " ".join(str(x) for x in a); print(s, flush=True); OUT.append(s)
+    s=" ".join(str(x) for x in a); print(s,flush=True); OUT.append(s)
+UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
+log("="*78); log("PROBE runda 3 —", date.today().isoformat()); log("="*78)
 
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
-log("="*78); log("PROBE runda 2 —", date.today().isoformat()); log("="*78)
-
-# ---------- A. wyszukiwarka symboli Yahoo ----------
-log("\n### A. Yahoo symbol search — co Yahoo w ogole ma")
-for q in ["gasoil", "low sulphur gasoil", "ICE gasoil", "gas oil futures", "diesel futures"]:
-    try:
-        r = requests.get("https://query2.finance.yahoo.com/v1/finance/search",
-                         params={"q": q, "quotesCount": 12, "newsCount": 0},
-                         timeout=25, headers={"User-Agent": UA})
-        if r.status_code != 200:
-            log(f"  '{q}': HTTP {r.status_code}"); continue
-        qs = r.json().get("quotes", [])
-        log(f"  '{q}': {len(qs)} trafien")
-        for x in qs:
-            log("     %-16s %-10s %-9s %s" % (x.get("symbol"), x.get("quoteType"),
-                                              x.get("exchange"), (x.get("shortname") or "")[:44]))
-    except Exception as e:
-        log(f"  '{q}': {type(e).__name__}: {str(e)[:70]}")
-
-# ---------- B. datowane kontrakty NYMEX 7F ----------
-log("\n### B. datowane kontrakty NYMEX (European Low Sulphur Gasoil, root 7F)")
+SHEET=("https://docs.google.com/spreadsheets/d/"
+       "1FRfB6Xctk00eTAyR_8MM3tM1D1UBPYO4F4yZFlhlzMM/export?format=csv")
+log("\n### A. Arkusz Google (zrodlo pierwotnego importu w fetch_ice.py)")
 try:
-    import yfinance as yf
-    MC = {9:"U",10:"V",11:"X",12:"Z",1:"F",2:"G",3:"H",4:"J",5:"K",6:"M",7:"N",8:"Q"}
-    cands = []
-    for root in ["7F", "LF", "QS"]:
-        for m in [9,10,11,12]:
-            cands.append(f"{root}{MC[m]}26.NYM")
-        cands.append(f"{root}=F")
-    for s in cands:
-        try:
-            h = yf.Ticker(s).history(period="5d")
-            if len(h):
-                log(f"  OK   {s:14s} n={len(h)} last={h['Close'].iloc[-1]:.3f} @{h.index[-1].date()}")
-            else:
-                log(f"  --   {s:14s} pusta")
-        except Exception as e:
-            log(f"  ERR  {s:14s} {type(e).__name__}")
+    r=requests.get(SHEET,timeout=30,headers={"User-Agent":UA})
+    log(f"  HTTP {r.status_code} len={len(r.text)} ct={r.headers.get('content-type')}")
+    if r.status_code==200 and "text/csv" in (r.headers.get("content-type") or ""):
+        lines=r.text.strip().splitlines()
+        log(f"  wierszy: {len(lines)}")
+        log("  NAGLOWEK: "+lines[0][:150])
+        log("  PIERWSZE 3:"); [log("    "+l[:150]) for l in lines[1:4]]
+        log("  OSTATNIE 6:"); [log("    "+l[:150]) for l in lines[-6:]]
+    else:
+        log("  TRESC: "+r.text[:250].replace("\n"," "))
 except Exception as e:
-    log("  yfinance blad:", e)
+    log(f"  {type(e).__name__}: {str(e)[:120]}")
 
-# ---------- C. co dokladnie zwraca stooq CSV ----------
-log("\n### C. stooq CSV — pelna tresc odpowiedzi (796 B)")
-s = requests.Session(); s.headers.update({"User-Agent": UA})
-try:
-    r = s.get("https://stooq.pl/q/d/l/?s=lf.f&i=d", timeout=25)
-    log(f"  HTTP {r.status_code} ct={r.headers.get('content-type')}")
-    log("  TRESC: " + r.text[:700].replace("\n", " "))
-except Exception as e:
-    log(f"  {type(e).__name__}: {e}")
-
-log("\n### C2. stooq z cookie: najpierw strona instrumentu, potem CSV")
-try:
-    p = s.get("https://stooq.pl/q/?s=lf.f", timeout=25)
-    log(f"  strona: HTTP {p.status_code} len={len(p.text)} cookies={list(s.cookies.keys())}")
-    r2 = s.get("https://stooq.pl/q/d/l/?s=lf.f&i=d", timeout=25,
-               headers={"Referer": "https://stooq.pl/q/?s=lf.f"})
-    log(f"  CSV po cookie: HTTP {r2.status_code} len={len(r2.text)} :: {r2.text[:200].replace(chr(10),' ')}")
-except Exception as e:
-    log(f"  {type(e).__name__}: {e}")
-
-# ---------- D. inne darmowe zrodla ----------
-log("\n### D. inne zrodla")
-tries = [
- ("EIA Rotterdam ULSD (bez klucza)", "https://api.eia.gov/v2/petroleum/pri/spt/data/?frequency=daily&data[0]=value&length=3"),
- ("Yahoo chart 7FV26.NYM", "https://query1.finance.yahoo.com/v8/finance/chart/7FV26.NYM?range=1mo&interval=1d"),
- ("Yahoo chart LF=F",      "https://query1.finance.yahoo.com/v8/finance/chart/LF=F?range=1mo&interval=1d"),
- ("Barchart LF*0",         "https://www.barchart.com/futures/quotes/LF*0"),
- ("marketwatch gasoil",    "https://www.marketwatch.com/investing/future/lf00"),
+log("\n### B. inne legalne darmowe zrodla dla gasoilu / ropy")
+tries=[
+ ("AlphaVantage BRENT demo","https://www.alphavantage.co/query?function=BRENT&interval=daily&apikey=demo"),
+ ("EIA bez klucza","https://api.eia.gov/v2/petroleum/pri/spt/data/?frequency=daily&length=2"),
+ ("EC Oil Bulletin","https://energy.ec.europa.eu/data-and-analysis/weekly-oil-bulletin_en"),
+ ("Yahoo ^SPGSGOP (indeks gasoil)","https://query1.finance.yahoo.com/v8/finance/chart/%5ESPGSGOP?range=1mo&interval=1d"),
+ ("Yahoo HO=F","https://query1.finance.yahoo.com/v8/finance/chart/HO=F?range=5d&interval=1d"),
 ]
-for name, url in tries:
+for name,url in tries:
     try:
-        r = requests.get(url, timeout=25, headers={"User-Agent": UA})
-        log(f"  {name:32s} HTTP {r.status_code} len={len(r.text):7d} :: {r.text[:130].replace(chr(10),' ')}")
+        r=requests.get(url,timeout=30,headers={"User-Agent":UA})
+        log(f"  {name:32s} HTTP {r.status_code} len={len(r.text):8d} :: {r.text[:160].replace(chr(10),' ')}")
     except Exception as e:
         log(f"  {name:32s} {type(e).__name__}: {str(e)[:60]}")
 
+log("\n### C. korelacja HO=F vs archiwum ICE (czy HO moglby sluzyc za proxy)")
+try:
+    import yfinance as yf
+    h=yf.Ticker("HO=F").history(start="2026-01-09",end="2026-06-06")
+    ho={d.date().isoformat():float(v) for d,v in zip(h.index,h["Close"])}
+    ice=json.load(open("data/ice_history.json"))
+    pairs=[(e["ice_usd_tonne"],ho[e["date"]]) for e in ice if e["date"] in ho]
+    log(f"  wspolnych dni: {len(pairs)}")
+    if len(pairs)>5:
+        n=len(pairs); sx=sum(p[0] for p in pairs); sy=sum(p[1] for p in pairs)
+        mx,my=sx/n,sy/n
+        cov=sum((a-mx)*(b-my) for a,b in pairs)
+        vx=sum((a-mx)**2 for a,b in pairs)**.5; vy=sum((b-my)**2 for a,b in pairs)**.5
+        log(f"  korelacja Pearsona ICE(USD/t) vs HO=F(USD/gal): {cov/(vx*vy):.4f}")
+        log(f"  sredni przelicznik USD/t na USD/gal: {mx/my:.2f}")
+        for a,b in pairs[:5]: log(f"    ICE={a:8.2f}  HO={b:7.4f}  iloraz={a/b:7.2f}")
+        for a,b in pairs[-5:]: log(f"    ICE={a:8.2f}  HO={b:7.4f}  iloraz={a/b:7.2f}")
+except Exception as e:
+    log(f"  {type(e).__name__}: {str(e)[:100]}")
+
 open("probe_results.txt","w",encoding="utf-8").write("\n".join(OUT)+"\n")
-log("\nzapisano")
