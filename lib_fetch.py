@@ -160,6 +160,52 @@ def stooq_last_json(symbol):
         return {}
 
 
+# ===== TRADINGVIEW =====
+
+TV_SCANNER = "https://scanner.tradingview.com/symbol"
+
+
+def tradingview_quote(symbol, lo=None, hi=None):
+    """
+    Biezace notowanie z publicznego scannera TradingView.
+
+    Jedyne znalezione dzialajace zrodlo prawdziwego ICE Low Sulphur Gasoil
+    (ICEEUR:ULS1!). Yahoo nie ma tego kontraktu w ogole, stooq postawil
+    zapore anty-botowa, investing.com i Barchart zwracaja 403.
+
+    UWAGA: zwraca tylko biezacy odczyt, bez serii historycznej — dlatego
+    uzupelnia archiwum wylacznie o dzien dzisiejszy.
+
+    Zwraca (close, description) albo (None, None).
+    """
+    try:
+        r = requests.get(
+            TV_SCANNER,
+            params={"symbol": symbol,
+                    "fields": "close,open,high,low,description,update_mode",
+                    "no_404": "true"},
+            timeout=TIMEOUT, headers=HEADERS)
+        r.raise_for_status()
+        d = r.json() or {}
+    except Exception as e:
+        log.warning(f"TradingView {symbol}: {type(e).__name__}: {e}")
+        return None, None
+
+    close = d.get("close")
+    desc = d.get("description")
+    if close is None:
+        log.warning(f"TradingView {symbol}: brak pola close")
+        return None, None
+    close = float(close)
+
+    if lo is not None and not (lo <= close <= hi):
+        log.warning(f"TradingView {symbol}: {close} poza pasmem {lo}-{hi}, odrzucam")
+        return None, None
+
+    log.info(f"TradingView {symbol}: {close} ({desc}, {d.get('update_mode')})")
+    return close, desc
+
+
 # ===== NBP (zapasowo dla USD/PLN) =====
 
 def nbp_usdpln_series(start):
