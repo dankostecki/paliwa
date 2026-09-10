@@ -1,50 +1,41 @@
 ==============================================================================
-PROBE runda 2 — 2026-09-10
+PROBE runda 3 — 2026-09-10
 ==============================================================================
 
-### A. Yahoo symbol search — co Yahoo w ogole ma
-  'gasoil': 7 trafien
-     ^SPGGO2IT        INDEX      SNP       S&P GSCI Gasoil 2X Inverse (USD
-     ^SPGSGOP         INDEX      SNP       S&P GSCI Gasoil ER
-     ^SPDYGOP         INDEX      SNP       S&P GSCI Gasoil Dynamic Roll ER
-     ^SPGSXGP         INDEX      SNP       S&P GSCI Petroleum ex Gasoil ER
-     ^SGC3MGOP        INDEX      SNP       S&P GSCI Gasoil Curve 3 Month (
-     ^SPGSXGTR        INDEX      SNP       S&P GSCI Petroleum ex Gasoil TR
-     ^SPMCGOP         INDEX      SNP       S&P GSCI Gasoil Multiple Contra
-  'low sulphur gasoil': 1 trafien
-     B4N1.DE          EQUITY     GER       BNP Paribas Issuance B.V.     O
-  'ICE gasoil': 0 trafien
-  'gas oil futures': 0 trafien
-  'diesel futures': 0 trafien
+### A. Arkusz Google (zrodlo pierwotnego importu w fetch_ice.py)
+  HTTP 200 len=1197 ct=text/csv; charset=utf-8
+  wierszy: 41
+  NAGLOWEK: Data,LF,USDPLN
+  PIERWSZE 3:
+    2026-03-05,"1109,25","3,68343"
+    2026-03-04,997,"3,6695"
+    2026-03-03,1009,"3,69771"
+  OSTATNIE 6:
+    2026-01-16,"654,75","3,63829"
+    2026-01-15,641,"3,62814"
+    2026-01-14,"659,25","3,61633"
+    2026-01-13,655,"3,61772"
+    2026-01-12,"626,5","3,60923"
+    2026-01-09,"632,25","3,62003"
 
-### B. datowane kontrakty NYMEX (European Low Sulphur Gasoil, root 7F)
-  --   7FU26.NYM      pusta
-  --   7FV26.NYM      pusta
-  --   7FX26.NYM      pusta
-  --   7FZ26.NYM      pusta
-  --   7F=F           pusta
-  --   LFU26.NYM      pusta
-  --   LFV26.NYM      pusta
-  --   LFX26.NYM      pusta
-  --   LFZ26.NYM      pusta
-  --   LF=F           pusta
-  --   QSU26.NYM      pusta
-  --   QSV26.NYM      pusta
-  --   QSX26.NYM      pusta
-  --   QSZ26.NYM      pusta
-  --   QS=F           pusta
+### B. inne legalne darmowe zrodla dla gasoilu / ropy
+  AlphaVantage BRENT demo          HTTP 200 len=     220 :: {     "Information": "The **demo** API key is for demo purposes only. Please claim your free API key at (https://www.alphavantage.co/support/#api-key) to explor
+  EIA bez klucza                   HTTP 403 len=     163 :: {   "error": {     "code": "API_KEY_MISSING",     "message": "No api_key was supplied.  Please register for one at https://www.eia.gov/opendata/register.php"   
+  EC Oil Bulletin                  HTTP 200 len=  103227 :: <!DOCTYPE html> <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">   <head>     <meta charset="utf-8" /> <meta name="description" content="Information a
+  Yahoo ^SPGSGOP (indeks gasoil)   HTTP 200 len=    1253 :: {"chart":{"result":[{"meta":{"currency":"USD","symbol":"^SPGSGOP","exchangeName":"SNP","fullExchangeName":"SNP","instrumentType":"INDEX","firstTradeDate":null,"
+  Yahoo HO=F                       HTTP 200 len=    1601 :: {"chart":{"result":[{"meta":{"currency":"USD","symbol":"HO=F","exchangeName":"NYM","fullExchangeName":"NY Mercantile","instrumentType":"FUTURE","firstTradeDate"
 
-### C. stooq CSV — pelna tresc odpowiedzi (796 B)
-  HTTP 200 ct=text/html; charset=utf-8
-  TRESC: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script nonce="47BXxcA0S4A3iQ5R2S5jJA"> (async()=>{const c="AAAAAGqigdCowaT3_Aj7QZ_ZhlyRa1GoNL7dVftE8bgi_lmTei8AqH-oAX4",d=4,t="0".repeat(d),e=new TextEncoder;let n=0;while(1){const h=await crypto.subtle.digest("SHA-256",e.encode(c+n)),x=Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");if(x.startsWith(t))break;n++}const r=await fetch("/__verify",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"c="+encodeURIComponen
-
-### C2. stooq z cookie: najpierw strona instrumentu, potem CSV
-  strona: HTTP 200 len=796 cookies=[]
-  CSV po cookie: HTTP 200 len=796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript an
-
-### D. inne zrodla
-  EIA Rotterdam ULSD (bez klucza)  HTTP 403 len=    163 :: {   "error": {     "code": "API_KEY_MISSING",     "message": "No api_key was supplied.  Please register for one at https://www.eia
-  Yahoo chart 7FV26.NYM            HTTP 404 len=    108 :: {"chart":{"result":null,"error":{"code":"Not Found","description":"No data found, symbol may be delisted"}}}
-  Yahoo chart LF=F                 HTTP 404 len=    108 :: {"chart":{"result":null,"error":{"code":"Not Found","description":"No data found, symbol may be delisted"}}}
-  Barchart LF*0                    HTTP 202 len=      0 :: 
-  marketwatch gasoil               HTTP 401 len=    775 :: <html lang="en"><head><title>marketwatch.com</title><style>#cmsg{animation: A 1.5s;}@keyframes A{0%{opacity:0;}99%{opacity:0;}100%
+### C. korelacja HO=F vs archiwum ICE (czy HO moglby sluzyc za proxy)
+  wspolnych dni: 101
+  korelacja Pearsona ICE(USD/t) vs HO=F(USD/gal): 0.9794
+  sredni przelicznik USD/t na USD/gal: 300.40
+    ICE= 1076.37  HO= 3.6738  iloraz= 292.99
+    ICE= 1128.24  HO= 3.8481  iloraz= 293.19
+    ICE= 1080.12  HO= 3.6987  iloraz= 292.03
+    ICE= 1077.87  HO= 3.6394  iloraz= 296.17
+    ICE= 1019.87  HO= 3.5373  iloraz= 288.32
+    ICE=  641.00  HO= 2.2083  iloraz= 290.27
+    ICE=  659.25  HO= 2.2819  iloraz= 288.90
+    ICE=  655.00  HO= 2.2384  iloraz= 292.62
+    ICE=  626.50  HO= 2.1544  iloraz= 290.80
+    ICE=  632.25  HO= 2.1350  iloraz= 296.14
