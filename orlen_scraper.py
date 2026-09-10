@@ -67,19 +67,29 @@ def scrape_orlen_playwright():
         return None
 
 
+# Dokladnie 4-5 cyfr, z opcjonalna spacja tysiecy ("6 410" albo "6410").
+# Poprzednie \d[\s\d]*\d{3} lapalo dowolnie dlugi ciag cyfr i spacji.
+PRICE_RE = r'(\d{1,2}[\s ]?\d{3})'
+
+# Odstep miedzy nazwa paliwa a cena. Bylo 100 znakow — tak szeroka luka
+# pozwalala obu wzorcom trafic w to samo pole, gdy layout strony sie przesunal
+# (stad identyczne pb95 == diesel w archiwum: 21-04, 26-04 i 30-06-2026).
+GAP = r'[\s\S]{0,40}?'
+
+
 def parse_orlen_text(text):
     text = re.sub(r'[\t ]+', ' ', text)
     prices = {}
 
     pb95 = re.search(
-        r'(?:Eurosuper\s*95|Benzyna\s*bezołowiowa\s*-?\s*Eurosuper\s*95)\s*[\s\S]{0,100}?(\d[\s\d]*\d{3})',
+        r'(?:Eurosuper\s*95|Benzyna\s*bezołowiowa\s*-?\s*Eurosuper\s*95)\s*' + GAP + PRICE_RE,
         text, re.IGNORECASE
     )
     if pb95:
         prices["pb95"] = int(pb95.group(1).replace(" ", "").replace("\u00a0", ""))
 
     diesel = re.search(
-        r'(?:Olej\s*Nap(?:ę|e)dowy\s*Ekodiesel|Ekodiesel)\s*[\s\S]{0,100}?(\d[\s\d]*\d{3})',
+        r'(?:Olej\s*Nap(?:ę|e)dowy\s*Ekodiesel|Ekodiesel)\s*' + GAP + PRICE_RE,
         text, re.IGNORECASE
     )
     if diesel:
@@ -181,6 +191,66 @@ def append_csv(filepath, date_str, price):
     return True
 
 
+# ===== WALIDACJA =====
+
+# Cala historia 2022-2026 miesci sie w 4470-7704 PLN/m3.
+PRICE_MIN = 3000
+PRICE_MAX = 9000
+
+# Najwiekszy prawdziwy ruch dzien-do-dnia w historii to -12,15% (31-12-2022,
+# zmiana VAT na paliwa). Najmniejszy znany artefakt parsera to +15,07%.
+# 15% to jedyny prog, ktory oddziela jedno od drugiego bez falszywych alarmow —
+# sprawdzone na calym archiwum 2022-2026.
+MAX_DAILY_MOVE_PCT = 15.0
+
+
+def last_price(filepath):
+    """Ostatnia zapisana cena z archiwum (JSON posortowany DESC) lub None."""
+    data = load_json(filepath)
+    return data[0].get("cena_pln_m3") if data else None
+
+
+def validate_prices(prices):
+    """Sprawdza komplet cen przed zapisem. Zwraca liste bledow (pusta = OK)."""
+    errors = []
+    pb95 = prices.get("pb95")
+    diesel = prices.get("diesel")
+
+    # Oba archiwa maja identyczna liczbe wpisow przez cale 2022-2026 — ceny
+    # zawsze przychodza para. Brak jednej oznacza, ze layout strony sie zmienil
+    # i druga tez jest podejrzana, wiec nie zapisujemy niczego.
+    for key in ("pb95", "diesel"):
+        if prices.get(key) is None:
+            errors.append(f"brak ceny {key} — parser nie znalazl jej na stronie")
+
+    # Obie ceny identyczne = parser wzial jedna liczbe dla obu paliw.
+    # Realny spread to +170..+1538 PLN, nigdy 0.
+    if pb95 is not None and diesel is not None and pb95 == diesel:
+        errors.append(
+            f"pb95 == diesel == {pb95} — parser zwrocil te sama liczbe dla obu paliw"
+        )
+
+    for key in ("pb95", "diesel"):
+        price = prices.get(key)
+        if price is None:
+            continue
+
+        if not (PRICE_MIN <= price <= PRICE_MAX):
+            errors.append(f"{key}={price} poza zakresem {PRICE_MIN}-{PRICE_MAX} PLN/m3")
+            continue
+
+        prev = last_price(JSON_FILES[key])
+        if prev:
+            move = abs(price - prev) / prev * 100
+            if move > MAX_DAILY_MOVE_PCT:
+                errors.append(
+                    f"{key}: skok {prev} -> {price} ({move:.1f}%) "
+                    f"przekracza limit {MAX_DAILY_MOVE_PCT}%"
+                )
+
+    return errors
+
+
 # ===== MAIN =====
 
 def main():
@@ -190,24 +260,40 @@ def main():
     date_str = datetime.now(WARSAW).strftime("%d-%m-%Y")
     log.info(f"Data: {date_str}")
 
-    prices = scrape_orlen_playwright()
+    # Bierzemy pierwsze zrodlo, ktore da KOMPLET cen. Niekompletny odczyt
+    # zwykle znaczy, ze layout strony sie zmienil, wiec warto sprobowac
+    # drugiego zrodla zanim sie poddamy.
+    prices = None
+    for name, scraper in (("orlen.pl", scrape_orlen_playwright),
+                          ("cenypaliw.fyi", scrape_fallback)):
+        result = scraper()
+        if not result:
+            continue
+        prices = result
+        if "pb95" in result and "diesel" in result:
+            log.info(f"Komplet cen ze zrodla: {name}")
+            break
+        log.warning(f"{name}: niekompletne dane ({sorted(result)}), probuje dalej")
+
     if not prices:
-        prices = scrape_fallback()
-    if not prices:
-        log.error("Nie udalo sie pobrac danych!")
+        log.error("Nie udalo sie pobrac danych z zadnego zrodla!")
         sys.exit(1)
 
+    log.info(f"Odczytane ceny: pb95={prices.get('pb95')} diesel={prices.get('diesel')}")
+
+    # Walidacja jest calo-albo-nic: jesli parser pomylil pola, zadna z cen
+    # nie jest wiarygodna, wiec nie zapisujemy ani jednej.
+    errors = validate_prices(prices)
+    if errors:
+        for err in errors:
+            log.error(f"WALIDACJA: {err}")
+        log.error("Odrzucam caly komplet danych — nic nie zapisuje")
+        sys.exit(1)
+
+    # Po walidacji obie ceny na pewno sa obecne i sensowne.
     updated = 0
     for key in ["pb95", "diesel"]:
-        if key not in prices:
-            log.warning(f"Brak ceny {key}")
-            continue
-
         price = prices[key]
-        if not (2000 <= price <= 15000):
-            log.warning(f"Cena {key}={price} poza zakresem, pomijam")
-            continue
-
         if append_json(JSON_FILES[key], date_str, price):
             updated += 1
         append_csv(CSV_FILES[key], date_str, price)

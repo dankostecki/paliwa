@@ -1,40 +1,37 @@
 #!/usr/bin/env python3
 """
-fetch_wibor.py — Pobiera WIBOR 3M ze stooq.pl (CSV) i dopisuje do archiwum.
-Jeden wpis dziennie. Pomija jeśli dzisiejsza data już istnieje.
+fetch_wibor.py — Pobiera WIBOR 3M i dopisuje do archiwum.
+
+Zrodlo: stooq (symbol plopln3m). Yahoo Finance nie ma WIBOR-u, a NBP go nie
+publikuje (NBP podaje stopy referencyjne, nie fixingi WIBOR), wiec nie ma tu
+sensownego zamiennika — zostaje stooq, ale odpytywany przez endpoint CSV,
+ktory zwraca cala historie i pozwala uzupelnic luke za jednym razem.
 """
-import requests
 import json
+import logging
 import os
-from datetime import date, timedelta
+import sys
+from datetime import date, datetime, timedelta
+
+from lib_fetch import stooq_csv_series, stooq_last_json
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+log = logging.getLogger("fetch_wibor")
 
 HISTORY_FILE = "data/wibor_history.json"
+SYMBOL = "plopln3m"
 
+# WIBOR 3M w calej historii archiwum miesci sie w okolicach 0,2-8%.
+WIBOR_MIN, WIBOR_MAX = 0.0, 15.0
 
-import re
-
-def fetch_stooq_json(symbol):
-    url = f"https://stooq.pl/q/l/?s={symbol}&f=sd2t2ohlcvn&h=&e=json"
-    resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
-    resp.raise_for_status()
-    fixed = re.sub(r'"volume":,', '"volume":null,', resp.text)
-    data = json.loads(fixed)
-    symbols = data.get("symbols", [])
-    if not symbols:
-        return None
-    s = symbols[0]
-    close = s.get("close")
-    date_str = s.get("date")
-    if not close or not date_str:
-        return None
-    return date_str, float(close)
-
-def fetch_wibor():
-    # Pobiera z użyciem API JSON dla symbolu plopln3m
-    result = fetch_stooq_json("plopln3m")
-    if not result:
-        raise RuntimeError("stooq: brak danych w odpowiedzi JSON dla WIBOR 3M")
-    return result
+STALE_AFTER_DAYS = 7
 
 
 def load_history():
@@ -51,19 +48,49 @@ def save_history(history):
 
 
 def main():
-    record_date, wibor_3m = fetch_wibor()
+    log.info("=" * 50)
+    log.info("START — WIBOR 3M")
 
     history = load_history()
+    existing = {e["date"] for e in history}
 
-    if history and history[0].get("date") == record_date:
-        print(f"WIBOR: brak zmian (data: {record_date}), pomijam")
+    if existing:
+        last_date = datetime.strptime(max(existing), "%Y-%m-%d").date()
+        start = last_date + timedelta(days=1)
+    else:
+        last_date = None
+        start = date.today() - timedelta(days=365)
+    log.info(f"Ostatni wpis: {last_date}, uzupelniam od {start}")
+
+    series = stooq_csv_series(SYMBOL, start) or stooq_last_json(SYMBOL)
+    if not series:
+        log.error(f"stooq nie zwrocil danych dla {SYMBOL}")
+        sys.exit(1)
+
+    added = 0
+    for d in sorted(series):
+        if d in existing:
+            continue
+        value = series[d]
+        if not (WIBOR_MIN <= value <= WIBOR_MAX):
+            log.warning(f"  {d}: {value}% poza pasmem {WIBOR_MIN}-{WIBOR_MAX}, pomijam")
+            continue
+        history.append({"date": d, "wibor_3m": value})
+        added += 1
+        log.info(f"  +{d}: {value}%")
+
+    if added:
+        history.sort(key=lambda e: e["date"], reverse=True)
+        save_history(history)
+        log.info(f"KONIEC — dopisano {added} wpisow (ostatni: {history[0]['date']})")
         return
 
-    entry = {"date": record_date, "wibor_3m": wibor_3m}
-    history.append(entry)
-    history.sort(key=lambda e: e["date"], reverse=True)
-    save_history(history)
-    print(f"WIBOR: dodano wpis dla {record_date} ({wibor_3m}%)")
+    age = (date.today() - last_date).days if last_date else 999
+    if age > STALE_AFTER_DAYS:
+        log.error(f"Brak nowych danych, a ostatni wpis ma {age} dni ({last_date})")
+        sys.exit(1)
+
+    log.info(f"Brak nowych notowan (ostatni wpis sprzed {age} dni) — to normalne")
 
 
 if __name__ == "__main__":
