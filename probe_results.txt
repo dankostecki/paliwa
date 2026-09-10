@@ -1,24 +1,52 @@
 ==============================================================================
-SONDA TradingView — historia ICEEUR:ULS1! — 2026-09-10
-kotwice do sprawdzenia: {'2026-06-04': 1076.37, '2026-09-10': 1391.25}
+SONDA 2 — mapowanie dat
 ==============================================================================
+wzorzec (archiwum): 104 wpisow, 2026-01-09 .. 2026-06-04
+TV: 300 slupkow
 
-### DROGA 1: biblioteka tvdatafeed
-  import OK
-  get_hist: 250 wierszy, kolumny=['symbol', 'open', 'high', 'low', 'close', 'volume']
+### surowe znaczniki czasu — ostatnie 12 slupkow
+  index=2026-08-26 00:00:00  (typ Timestamp)  weekday=2  close=1239.5
+  index=2026-08-27 00:00:00  (typ Timestamp)  weekday=3  close=1221.75
+  index=2026-08-28 00:00:00  (typ Timestamp)  weekday=4  close=1280.0
+  index=2026-08-30 22:00:00  (typ Timestamp)  weekday=6  close=1347.75
+  index=2026-09-01 00:00:00  (typ Timestamp)  weekday=1  close=1419.75
+  index=2026-09-02 00:00:00  (typ Timestamp)  weekday=2  close=1432.25
+  index=2026-09-03 00:00:00  (typ Timestamp)  weekday=3  close=1424.75
+  index=2026-09-04 00:00:00  (typ Timestamp)  weekday=4  close=1395.0
+  index=2026-09-06 22:00:00  (typ Timestamp)  weekday=6  close=1460.25
+  index=2026-09-08 00:00:00  (typ Timestamp)  weekday=1  close=1439.75
+  index=2026-09-09 00:00:00  (typ Timestamp)  weekday=2  close=1472.75
+  index=2026-09-10 00:00:00  (typ Timestamp)  weekday=3  close=1417.25
 
-  --- kontrola kotwic dla: tvdatafeed ULS1! ---
-     slupkow: 250, zakres 2025-09-23 .. 2026-09-10
-     2026-06-04: 1079.5 vs 1076.37 -> 0.291% [OK]
-     2026-09-10: 1413.5 vs 1391.25 -> 1.599% [ROZJAZD]
-     ostatnie 5: [('2026-09-04', 1395.0), ('2026-09-06', 1460.25), ('2026-09-08', 1439.75), ('2026-09-09', 1472.75), ('2026-09-10', 1413.5)]
+### rozklad dni tygodnia w calej serii
+  pon=0  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=60
 
-### DROGA 2: surowy WebSocket data.tradingview.com
-  odebrano 47462 znakow, series_completed=True
-  sparsowano slupkow: 300
+### dopasowanie do archiwum przy przesunieciu -1 / 0 / +1 dnia
+  offset -1: pokrycie  83 dni, sredni blad  3.788%, w tolerancji 0.5%: 7/83
+  offset +0: pokrycie  83 dni, sredni blad  1.038%, w tolerancji 0.5%: 42/83
+  offset +1: pokrycie  83 dni, sredni blad  3.152%, w tolerancji 0.5%: 21/83
 
-  --- kontrola kotwic dla: raw websocket ---
-     slupkow: 300, zakres 2025-07-15 .. 2026-09-10
-     2026-06-04: 1079.5 vs 1076.37 -> 0.291% [OK]
-     2026-09-10: 1413.5 vs 1391.25 -> 1.599% [ROZJAZD]
-     ostatnie 5: [('2026-09-04', 1395.0), ('2026-09-06', 1460.25), ('2026-09-08', 1439.75), ('2026-09-09', 1472.75), ('2026-09-10', 1413.5)]
+  NAJLEPSZE: offset +0 (sredni blad 1.038%, 42/83 w tolerancji)
+
+### po korekcie offset +0 — rozklad dni tygodnia
+  pon=0  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=60
+
+### 12 najwiekszych rozbieznosci wobec archiwum (offset +0)
+  2026-04-10  TV=  1145.00  archiwum=  1320.25  13.274%
+  2026-03-10  TV=  1042.50  archiwum=   975.37   6.883%
+  2026-04-09  TV=  1402.25  archiwum=  1323.25   5.970%
+  2026-03-11  TV=  1097.00  archiwum=  1045.99   4.877%
+  2026-05-21  TV=  1172.50  archiwum=  1127.24   4.015%
+  2026-04-24  TV=  1249.00  archiwum=  1214.50   2.841%
+  2026-03-26  TV=  1337.00  archiwum=  1303.49   2.571%
+  2026-04-08  TV=  1247.00  archiwum=  1221.37   2.098%
+  2026-04-14  TV=  1135.50  archiwum=  1113.00   2.022%
+  2026-05-05  TV=  1294.75  archiwum=  1271.00   1.869%
+  2026-05-07  TV=  1141.25  archiwum=  1162.75   1.849%
+  2026-05-19  TV=  1210.00  archiwum=  1232.37   1.815%
+
+### co wpadnie w luke 2026-06-05..2026-09-09 (offset +0)
+  slupkow do dopisania: 69
+  pierwsze 5: [('2026-06-05', 1062.0), ('2026-06-07', 1070.75), ('2026-06-09', 1028.0), ('2026-06-10', 1039.5), ('2026-06-11', 1031.75)]
+  ostatnie 5: [('2026-09-03', 1424.75), ('2026-09-04', 1395.0), ('2026-09-06', 1460.25), ('2026-09-08', 1439.75), ('2026-09-09', 1472.75)]
+  dni tygodnia w luce: pon=0  wt=14  sr=14  czw=13  pt=14  SOB=0  NDZ=14
