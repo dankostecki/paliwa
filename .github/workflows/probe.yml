@@ -1,0 +1,26 @@
+name: Probe data sources (tymczasowy)
+
+on:
+  push:
+    branches: [probe/data-sources]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests yfinance
+      - run: python tools/probe_sources.py
+        continue-on-error: true
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add probe_results.txt
+          git diff --cached --quiet || git commit -m "probe: wyniki diagnostyki zrodel"
+          git push
