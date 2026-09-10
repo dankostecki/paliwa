@@ -1,41 +1,31 @@
 ==============================================================================
-PROBE runda 3 — 2026-09-10
+PROBE runda 4 — PRAWDZIWY ICE gasoil — 2026-09-10
 ==============================================================================
 
-### A. Arkusz Google (zrodlo pierwotnego importu w fetch_ice.py)
-  HTTP 200 len=1197 ct=text/csv; charset=utf-8
-  wierszy: 41
-  NAGLOWEK: Data,LF,USDPLN
-  PIERWSZE 3:
-    2026-03-05,"1109,25","3,68343"
-    2026-03-04,997,"3,6695"
-    2026-03-03,1009,"3,69771"
-  OSTATNIE 6:
-    2026-01-16,"654,75","3,63829"
-    2026-01-15,641,"3,62814"
-    2026-01-14,"659,25","3,61633"
-    2026-01-13,655,"3,61772"
-    2026-01-12,"626,5","3,60923"
-    2026-01-09,"632,25","3,62003"
+### A. theice.com — oficjalne dane opoznione
+  [403] ICE getContracts g/oil p=254           len=    4542 :: <!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]--> <!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]--> <!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <!
+  [403] ICE getContracts p=4331                len=    4542 :: <!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]--> <!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]--> <!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <!
+  [403] ICE HistoricalChart 254                len=    4542 :: <!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]--> <!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]--> <!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <!
+  [200] ICE productGuide spec                  len=   44415 :: {   "specId" : 34361119,   "productId" : 5817,   "hubId" : 9373,   "isOption" : false,   "isOptionNotLinked" : false,   "isSpread" : false,   "liveDate" : null,   "groupId" : 18,   "typeId" : 1,   "typeName" : "Futures",   "displa
+  [404] ICE productGuide search                len=   66018 :: <!DOCTYPE html><html lang="en" data-is-cms-page="true" class="scroll-smooth"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1"/><meta http-equiv="X-UA-Compatible" con
 
-### B. inne legalne darmowe zrodla dla gasoilu / ropy
-  AlphaVantage BRENT demo          HTTP 200 len=     220 :: {     "Information": "The **demo** API key is for demo purposes only. Please claim your free API key at (https://www.alphavantage.co/support/#api-key) to explor
-  EIA bez klucza                   HTTP 403 len=     163 :: {   "error": {     "code": "API_KEY_MISSING",     "message": "No api_key was supplied.  Please register for one at https://www.eia.gov/opendata/register.php"   
-  EC Oil Bulletin                  HTTP 200 len=  103227 :: <!DOCTYPE html> <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">   <head>     <meta charset="utf-8" /> <meta name="description" content="Information a
-  Yahoo ^SPGSGOP (indeks gasoil)   HTTP 200 len=    1253 :: {"chart":{"result":[{"meta":{"currency":"USD","symbol":"^SPGSGOP","exchangeName":"SNP","fullExchangeName":"SNP","instrumentType":"INDEX","firstTradeDate":null,"
-  Yahoo HO=F                       HTTP 200 len=    1601 :: {"chart":{"result":[{"meta":{"currency":"USD","symbol":"HO=F","exchangeName":"NYM","fullExchangeName":"NY Mercantile","instrumentType":"FUTURE","firstTradeDate"
+### B. Nasdaq Data Link (dawny Quandl) — CHRIS/ICE_G1
+  [403] quandl CHRIS/ICE_G1                    len=     886 :: <html style="height:100%"><head><META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW"><meta name="format-detection" content="telephone=no"><meta name="viewport" content="initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=
+  [403] nasdaq CHRIS/ICE_G1                    len=     884 :: <html style="height:100%"><head><META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW"><meta name="format-detection" content="telephone=no"><meta name="viewport" content="initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=
+  [403] quandl CHRIS/ICE_G2                    len=     887 :: <html style="height:100%"><head><META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW"><meta name="format-detection" content="telephone=no"><meta name="viewport" content="initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=
+  [403] nasdaq CHRIS/ICE_G2                    len=     888 :: <html style="height:100%"><head><META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW"><meta name="format-detection" content="telephone=no"><meta name="viewport" content="initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=
 
-### C. korelacja HO=F vs archiwum ICE (czy HO moglby sluzyc za proxy)
-  wspolnych dni: 101
-  korelacja Pearsona ICE(USD/t) vs HO=F(USD/gal): 0.9794
-  sredni przelicznik USD/t na USD/gal: 300.40
-    ICE= 1076.37  HO= 3.6738  iloraz= 292.99
-    ICE= 1128.24  HO= 3.8481  iloraz= 293.19
-    ICE= 1080.12  HO= 3.6987  iloraz= 292.03
-    ICE= 1077.87  HO= 3.6394  iloraz= 296.17
-    ICE= 1019.87  HO= 3.5373  iloraz= 288.32
-    ICE=  641.00  HO= 2.2083  iloraz= 290.27
-    ICE=  659.25  HO= 2.2819  iloraz= 288.90
-    ICE=  655.00  HO= 2.2384  iloraz= 292.62
-    ICE=  626.50  HO= 2.1544  iloraz= 290.80
-    ICE=  632.25  HO= 2.1350  iloraz= 296.14
+### C. TradingView — ICEEUR:ULS1! (Low Sulphur Gasoil)
+  [scanner GET-params] 405 :: 
+  [200] TV scanner symbol                      len=      37 :: {"close":1394.5,"currency_code":null}
+  [ERR] TV history ULS1!                       ConnectionError: HTTPSConnectionPool(host='history.tradingview.com', port=443): Max ret
+
+### D. investing.com — endpointy wykresowe (inne niz strona)
+  [403] tvc4.investing.com history 8833        len=       3 :: 403
+  [403] tvc6.investing.com history 8833        len=       3 :: 403
+
+### E. polskie portale kwotujace gasoil
+  [404] biznesradar gasoil                     len=   30395 :: <!doctype html> <html dir="ltr" lang="pl">  <head> 	   									<meta charset="utf-8" /> 	<meta name="viewport" content="width=1024"> 	<title>Błąd 404 - BiznesRadar.pl</title> 				<link rel="apple-touch-icon" sizes="57x5
+  [200] bankier surowce                        len=  570779 :: <!DOCTYPE html> <html lang="pl"> <head>     <link rel="preload" href="https://static.bankier.pl/css/main.min.css?v=260722" as="style">     <link type="text/css" rel="stylesheet" href="https://static.bankier.pl/css/main.min.css?v=2
+  [200] money.pl surowce                       len=  313684 :: <!DOCTYPE html><html lang="pl-PL"><head><title>Notowania surowców online - Money.pl</title><meta charSet="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=9;IE=10;IE=11;IE=Edge,chrome=1"/><meta name="viewport" content="width
+  [200] stooq strona lf.f (kontrola)           len=     796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></head><body><noscript>This site requires JavaScript to verify your browser. Please enable JavaScript and reload.</noscript><script no
