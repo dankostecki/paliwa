@@ -1,56 +1,95 @@
 ==============================================================================
-PROBE runda 6 — HISTORIA — 2026-09-10
+PROBE runda 7 — onvista — 2026-09-10
 ==============================================================================
 
-### A. FT — wyszukiwarka symboli
-  'gas oil': HTTP 200 len=2607
-     OGDC:LSE           Oil and Gas Development Co Ltd
-     37OC:LSE           Oil and Gas Development Co Ltd
-     PRD:LSE            Predator Oil & Gas Holdings PLC
-     UOG:LSE            United Oil & Gas PLC
-     JOG:LSE            Jersey Oil and Gas PLC
-     IOGP:LSE:USD       iShares Oil & Gas Exploration & Production UCITS ETF
-     SPOG:LSE:GBX       iShares Oil & Gas Exploration & Production UCITS ETF
-     XLE3:LSE:USD       Leverage Shares 3x Long Oil & Gas ETP Securities
-     XLGS:LSE:USD       Leverage Shares -3x Short Oil & Gas ETP Securities
-     SXLG:LSE:GBX       Leverage Shares -3x Short Oil & Gas ETP Securities
-  'gasoil': HTTP 200 len=1703
-     G52:IOM            S&P GSCI GasOil Index Total Return
-     CTQSER:RCT         UBS CMCI Components USD Excess Return ICE Gasoil Ind
-     CTQSPI1Y:RCT       UBS CMCI Components Gasoil ICE USD Price Index 1 Yea
-     CTQSPI:RCT         UBS CMCI Components USD Price Index ICE Gasoil Index
-     CTQSTR3M:RCT       UBS CMCI Components Gasoil ICE USD Total Return 3 Mo
-     B4N1:FRA:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
-     B4N1:GER:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
-  'low sulphur gasoil': HTTP 200 len=467
-     B4N1:FRA:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
-     B4N1:GER:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
-  'ICE gasoil': HTTP 200 len=1718
-     CTQSEMT:RCT        UBS CMCI Components ICE Gasoil EUR Monthly Hedged TR
-     CTQSGMT:RCT        UBS CMCI Components ICE Gasoil GBP Monthly Hedged TR
-     CTQSTR:RCT         UBS CMCI Components USD Total Return ICE Gasoil Inde
-     CTQSPI:RCT         UBS CMCI Components USD Price Index ICE Gasoil Index
-     CTQSER:RCT         UBS CMCI Components USD Excess Return ICE Gasoil Ind
-     B4N1:FRA:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
-     B4N1:GER:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
+### A. onvista search — pelna odpowiedz
+  'gasoil': HTTP 200
+     type=Instrument entity=INDEX        id=17671070     S&P GSCI GasOil
+     type=Instrument entity=INDEX        id=306755375    S&P GSCI GASOIL MULTIPLE CONTRACT (USD)
+     type=Instrument entity=INDEX        id=317078387    S&P GSCI GASOIL PRE-ROLL (USD)
+     type=Instrument entity=INDEX        id=349631777    S&P GSCI GASOIL INVERSE (USD) TR
+     type=Instrument entity=INDEX        id=349631779    S&P GSCI GASOIL INVERSE (USD) TR
+     type=Instrument entity=INDEX        id=306755387    S&P GSCI GASOIL MULTIPLE CONTRACT (USD) TR
+     type=Instrument entity=INDEX        id=306755392    S&P GSCI GASOIL MULTIPLE CONTRACT (USD) ER
+     type=Instrument entity=INDEX        id=323803815    S&P GSCI GASOIL CURVE 3 MONTH (USD) ER
+     type=Instrument entity=INDEX        id=323803835    S&P GSCI GASOIL CURVE 3 MONTH (USD) TR
+     type=Instrument entity=INDEX        id=349631778    S&P GSCI GASOIL 2X INVERSE (USD) TR
+  'gasöl': HTTP 200
+     type=Instrument entity=DERIVATIVE   id=15312464     WisdomTree Gasoline ETC
+     type=Instrument entity=INDEX        id=17671078     S&P GSCI UNLEADED GASOLINE INDEX EXCESS RETURN
+     type=Instrument entity=DERIVATIVE   id=20342617     UBS CMCI Gasoline EUR TR Index ETC
+     type=Instrument entity=FUND         id=19759281     UNITED STATES GASOLINE FUND - USD ACC
+     type=Instrument entity=INDEX        id=17671076     S&P GSCI UNLEADED GASOLINE INDEX
+     type=Instrument entity=INDEX        id=17671081     S&P GSCI UNLEADED GASOLINE INDEX TOTAL RETURN
+     type=Instrument entity=INDEX        id=145434341    UNITED SATES GASOLINE FUND, LP (INTRADAY INDICATIV
+     type=Instrument entity=INDEX        id=105940604    DOW JONES COMMODITY INDEX UNLEADED GASOLINE
+     type=Instrument entity=INDEX        id=105940673    DOW JONES COMMODITY INDEX UNLEADED GASOLINE TR
+     type=Instrument entity=INDEX        id=105940757    DOW JONES COMMODITY INDEX UNLEADED GASOLINE ER
+  'low sulphur': HTTP 200
 
-### B. FT chartapi/series dla znalezionych symboli
-  OGDC:LSE             HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: OGDC:LSE . Error Message:  (For Price Errors, look up MDF Status Codes 
-  37OC:LSE             HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: 37OC:LSE . Error Message: DataAdapter for symbol \"37OC:LSE\" is invali
-  PRD:LSE              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: PRD:LSE . Error Message:  (For Price Errors, look up MDF Status Codes a
-  UOG:LSE              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: UOG:LSE . Error Message:  (For Price Errors, look up MDF Status Codes a
-  JOG:LSE              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: JOG:LSE . Error Message:  (For Price Errors, look up MDF Status Codes a
-  IOGP:LSE:USD         HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IOGP:LSE:USD . Error Message:  (For Price Errors, look up MDF Status Co
-  SPOG:LSE:GBX         HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: SPOG:LSE:GBX . Error Message:  (For Price Errors, look up MDF Status Co
-  XLE3:LSE:USD         HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: XLE3:LSE:USD . Error Message: DataAdapter for symbol \"XLE3:LSE:USD\" i
-  IOM:GAS              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IOM:GAS . Error Message:  (For Price Errors, look up MDF Status Codes a
-  IFEU:LF              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IFEU:LF . Error Message:  (For Price Errors, look up MDF Status Codes a
-  GASOIL:IOM           HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: GASOIL:IOM . Error Message:  (For Price Errors, look up MDF Status Code
-  LF:IEU               HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: LF:IEU . Error Message:  (For Price Errors, look up MDF Status Codes at
-  IFEU:GAS             HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IFEU:GAS . Error Message:  (For Price Errors, look up MDF Status Codes 
+### B. szczegoly instrumentow (szukamy tego w USD/tone, ~1394)
+  OK INDEX/17671070 S&P GSCI GasOil                    last=1249.5587 cur=USD idNot=None
+  OK INDEX/306755375 S&P GSCI GASOIL MULTIPLE CONTRACT  last=1320.206 cur=USD idNot=None
+  OK INDEX/317078387 S&P GSCI GASOIL PRE-ROLL (USD)     last=620.8676 cur=USD idNot=None
+  OK INDEX/349631777 S&P GSCI GASOIL INVERSE (USD) TR   last=8048.55 cur=AUD idNot=None
+  OK INDEX/349631779 S&P GSCI GASOIL INVERSE (USD) TR   last=3478.7681 cur=USD idNot=None
+  OK INDEX/306755387 S&P GSCI GASOIL MULTIPLE CONTRACT  last=4281.5707 cur=USD idNot=None
+  OK INDEX/306755392 S&P GSCI GASOIL MULTIPLE CONTRACT  last=2407.1715 cur=USD idNot=None
+  OK INDEX/323803815 S&P GSCI GASOIL CURVE 3 MONTH (USD last=44.5484 cur=USD idNot=None
+  OK INDEX/323803835 S&P GSCI GASOIL CURVE 3 MONTH (USD last=75.7231 cur=USD idNot=None
+  OK INDEX/349631778 S&P GSCI GASOIL 2X INVERSE (USD) T last=270.1837 cur=USD idNot=None
+  OK DERIVATIVE/15312464 WisdomTree Gasoline ETC            last=87.3 cur=EUR idNot=None
+  OK INDEX/17671078 S&P GSCI UNLEADED GASOLINE INDEX E last=3905.8402 cur=USD idNot=None
+  OK DERIVATIVE/20342617 UBS CMCI Gasoline EUR TR Index ETC last=434.52 cur=EUR idNot=None
+  OK FUND/19759281 UNITED STATES GASOLINE FUND - USD  last=133.52 cur=USD idNot=None
+  OK INDEX/17671076 S&P GSCI UNLEADED GASOLINE INDEX   last=667.7089 cur=USD idNot=None
+  OK INDEX/17671081 S&P GSCI UNLEADED GASOLINE INDEX T last=12687.122 cur=USD idNot=None
+  OK INDEX/145434341 UNITED SATES GASOLINE FUND, LP (IN last=133.4149 cur=USD idNot=None
+  OK INDEX/105940604 DOW JONES COMMODITY INDEX UNLEADED last=861.05 cur=USD idNot=None
+  OK INDEX/105940673 DOW JONES COMMODITY INDEX UNLEADED last=4113.069 cur=USD idNot=None
+  OK INDEX/105940757 DOW JONES COMMODITY INDEX UNLEADED last=2313.6603 cur=USD idNot=None
 
-### C. portale DE/EU z historia gasoilu
-  [200] onvista search       len=   3983 :: {"expires":1789039030986,"searchValue":"gasoil","list":[{"type":"Instrument","entityType":"INDEX","entityAttributes":["INSTRUMENT"],"entityValue":"17671070","name":"S&P GSCI GasOil
-  [404] finanzen.net         len= 252018 ::  <!DOCTYPE html> <html lang="de"> <head>     <meta charset="utf-8">     <meta name="viewport" content="width=device-width, initial-scale=1.0">   <link rel="preconnect" href
-  [404] ariva                len= 242219 ::   <!DOCTYPE html> <html lang="de" 	data-first-contact-2="Y2026-M09-D10" > <head> <title>404 Fehler - ARIVA.DE</title> <script> 		    window.performance.mark("first-loaded-script");
-  [405] boerse-frankfurt     len=    156 :: {"timestamp":"2026-09-10T10:17:13.468Z","status":405,"error":"Method Not Allowed","message":"Method 'GET' is not supported.","path":"/search/equity_search"}
+### C. proba historii dziennej dla kazdego kandydata
+  *** INDEX/17671070 S&P GSCI GasOil :: {"expires":1789039117367,"entityType":"INDEX","entityValue":"17671070","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":17671070,"
+  [403] len=   217 INDEX/17671070
+  *** INDEX/306755375 S&P GSCI GASOIL MULTIPLE CONTR :: {"expires":1789039118249,"entityType":"INDEX","entityValue":"306755375","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":306755375
+  [403] len=   217 INDEX/306755375
+  *** INDEX/317078387 S&P GSCI GASOIL PRE-ROLL (USD) :: {"expires":1789039119124,"entityType":"INDEX","entityValue":"317078387","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":317078387
+  [403] len=   217 INDEX/317078387
+  *** INDEX/349631777 S&P GSCI GASOIL INVERSE (USD)  :: {"expires":1789039119994,"entityType":"INDEX","entityValue":"349631777","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":349631777
+  [403] len=   217 INDEX/349631777
+  *** INDEX/349631779 S&P GSCI GASOIL INVERSE (USD)  :: {"expires":1789039120863,"entityType":"INDEX","entityValue":"349631779","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":349631779
+  [403] len=   217 INDEX/349631779
+  *** INDEX/306755387 S&P GSCI GASOIL MULTIPLE CONTR :: {"expires":1789039121736,"entityType":"INDEX","entityValue":"306755387","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":306755387
+  [403] len=   217 INDEX/306755387
+  *** INDEX/306755392 S&P GSCI GASOIL MULTIPLE CONTR :: {"expires":1789039122604,"entityType":"INDEX","entityValue":"306755392","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":306755392
+  [403] len=   217 INDEX/306755392
+  *** INDEX/323803815 S&P GSCI GASOIL CURVE 3 MONTH  :: {"expires":1789039123492,"entityType":"INDEX","entityValue":"323803815","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":323803815
+  [403] len=   217 INDEX/323803815
+  *** INDEX/323803835 S&P GSCI GASOIL CURVE 3 MONTH  :: {"expires":1789039124362,"entityType":"INDEX","entityValue":"323803835","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":323803835
+  [403] len=   217 INDEX/323803835
+  *** INDEX/349631778 S&P GSCI GASOIL 2X INVERSE (US :: {"expires":1789039125245,"entityType":"INDEX","entityValue":"349631778","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":349631778
+  [403] len=   217 INDEX/349631778
+  *** DERIVATIVE/15312464 WisdomTree Gasoline ETC :: {"expires":1789039126140,"entityType":"DERIVATIVE","entityValue":"15312464","market":{"name":"London Stock Exchange","codeMarket":"_LSE","nameExchange":"London Stock Exchange","codeExchange":"LSE","idNotation":15753389,"isoCountry":"GB","codeExchangeGoogle":"L
+  [403] len=   217 DERIVATIVE/15312464
+  *** INDEX/17671078 S&P GSCI UNLEADED GASOLINE IND :: {"expires":1789039127025,"entityType":"INDEX","entityValue":"17671078","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":17671078,"
+  [403] len=   217 INDEX/17671078
+  *** DERIVATIVE/20342617 UBS CMCI Gasoline EUR TR Index :: {"expires":1789039127916,"entityType":"DERIVATIVE","entityValue":"20342617","market":{"name":"Stuttgart","codeMarket":"_STU","nameExchange":"Stuttgart","codeExchange":"STU","idNotation":22768914,"isoCountry":"DE"},"idInstrument":20342617,"idNotation":22768914,
+  [403] len=   217 DERIVATIVE/20342617
+  *** FUND/19759281 UNITED STATES GASOLINE FUND -  :: {"expires":1789039128787,"entityType":"FUND","entityValue":"19759281","market":{"name":"NYSE Arca","codeMarket":"_NAL","nameExchange":"NYSE Arca","codeExchange":"NAL","idNotation":21876826,"isoCountry":"US","codeExchangeGoogle":"NYSEARCA"},"idInstrument":19759
+  [403] len=   217 FUND/19759281
+  *** INDEX/17671076 S&P GSCI UNLEADED GASOLINE IND :: {"expires":1789039129653,"entityType":"INDEX","entityValue":"17671076","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":17671076,"
+  [403] len=   217 INDEX/17671076
+  *** INDEX/17671081 S&P GSCI UNLEADED GASOLINE IND :: {"expires":1789039130544,"entityType":"INDEX","entityValue":"17671081","market":{"name":"S&P INDICES","codeMarket":"@_SAPI","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"S&P INDICES","codeContributor":"SAPI","idNotation":17671081,"
+  [403] len=   217 INDEX/17671081
+  *** INDEX/145434341 UNITED SATES GASOLINE FUND, LP :: {"expires":1789039131417,"entityType":"INDEX","entityValue":"145434341","market":{"name":"NYSE Global Index Service","codeMarket":"_NYI","nameExchange":"NYSE Global Index Service","codeExchange":"NYI","idNotation":145434341,"isoCountry":"US","codeExchangeGoogl
+  [403] len=   217 INDEX/145434341
+  *** INDEX/105940604 DOW JONES COMMODITY INDEX UNLE :: {"expires":1789039132285,"entityType":"INDEX","entityValue":"105940604","market":{"name":"DOW JONES","codeMarket":"@_DJ","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"DOW JONES","codeContributor":"DJ","idNotation":105940604,"isoCou
+  [403] len=   217 INDEX/105940604
+  *** INDEX/105940673 DOW JONES COMMODITY INDEX UNLE :: {"expires":1789039133162,"entityType":"INDEX","entityValue":"105940673","market":{"name":"DOW JONES","codeMarket":"@_DJ","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"DOW JONES","codeContributor":"DJ","idNotation":105940673,"isoCou
+  [403] len=   217 INDEX/105940673
+  *** INDEX/105940757 DOW JONES COMMODITY INDEX UNLE :: {"expires":1789039134040,"entityType":"INDEX","entityValue":"105940757","market":{"name":"DOW JONES","codeMarket":"@_DJ","nameExchange":"außerbörslich USA","codeExchange":"@US","nameContributor":"DOW JONES","codeContributor":"DJ","idNotation":105940757,"isoCou
+  [403] len=   217 INDEX/105940757
+
+### D. kontrola: TradingView scanner (dziala, ale tylko biezace)
+  TV: 200 :: {"close":1391.25,"description":"Low Sulphur Gasoil Futures","high":1403.5,"low":1368.5,"open":1400.25,"update_mode":"delayed_streaming_600"}
