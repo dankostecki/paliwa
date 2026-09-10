@@ -12,8 +12,15 @@ Gestosc kontraktowa ICE Low Sulphur Gasoil: 0,845 kg/l (specyfikacja ICE).
 
 Skrypt uzupelnia CALA luke miedzy ostatnim wpisem a dniem dzisiejszym, a gdy
 zadne zrodlo nie odpowiada i archiwum jest przeterminowane — konczy sie bledem
-(kod 1). Poprzednia wersja robila w tej sytuacji print + return, wiec workflow
-swiecil na zielono przez 3 miesiace nie pobierajac nic.
+(kod 1).
+
+Historia awarii: ostatni udany przebieg 2026-06-04, pierwsza porazka
+2026-06-05, potem ok. 70 czerwonych przebiegow pod rzad. Poprzednia wersja
+przewracala sie niezlapanym wyjatkiem ze stooq (raise_for_status / float("N/D")),
+ale miala tez ciche przejscie: gdy stooq zwrocil poprawny JSON z pusta lista
+"symbols", robila print + return z kodem 0. Nowy kod lapie wyjatki zrodel i
+sprowadza obie sciezki do jednego, jawnego zachowania: albo sa dane, albo
+kod 1 z komunikatem.
 """
 import csv
 import io
@@ -214,7 +221,8 @@ def main():
 
     # Nic nie dopisano. Jesli archiwum jest swieze, to normalne (weekend,
     # swieto). Jesli stare — zadne zrodlo nie dziala i trzeba o tym glosno
-    # powiedziec, zamiast konczyc zielono jak poprzednia wersja.
+    # powiedziec, zamiast konczyc kodem 0 (co robila poprzednia wersja, gdy
+    # stooq zwrocil poprawny JSON z pusta lista "symbols").
     age = (date.today() - last_date).days
     if age > STALE_AFTER_DAYS:
         log.error(f"Brak nowych danych, a ostatni wpis ma {age} dni "
