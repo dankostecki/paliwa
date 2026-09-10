@@ -1,9 +1,423 @@
 [
   {
     "date": "2026-09-10",
-    "ice_usd_tonne": 1391.25,
-    "usdpln": 3.71071,
-    "ice_pln_1000l": 4362.33
+    "ice_usd_tonne": 1422.75,
+    "usdpln": 3.72015,
+    "ice_pln_1000l": 4472.45
+  },
+  {
+    "date": "2026-09-09",
+    "ice_usd_tonne": 1472.75,
+    "usdpln": 3.70752,
+    "ice_pln_1000l": 4613.91
+  },
+  {
+    "date": "2026-09-08",
+    "ice_usd_tonne": 1439.75,
+    "usdpln": 3.70457,
+    "ice_pln_1000l": 4506.94
+  },
+  {
+    "date": "2026-09-07",
+    "ice_usd_tonne": 1460.25,
+    "usdpln": 3.70977,
+    "ice_pln_1000l": 4577.53
+  },
+  {
+    "date": "2026-09-04",
+    "ice_usd_tonne": 1395.0,
+    "usdpln": 3.71505,
+    "ice_pln_1000l": 4379.21
+  },
+  {
+    "date": "2026-09-03",
+    "ice_usd_tonne": 1424.75,
+    "usdpln": 3.7337,
+    "ice_pln_1000l": 4495.05
+  },
+  {
+    "date": "2026-09-02",
+    "ice_usd_tonne": 1432.25,
+    "usdpln": 3.73895,
+    "ice_pln_1000l": 4525.07
+  },
+  {
+    "date": "2026-09-01",
+    "ice_usd_tonne": 1419.75,
+    "usdpln": 3.72331,
+    "ice_pln_1000l": 4466.81
+  },
+  {
+    "date": "2026-08-31",
+    "ice_usd_tonne": 1347.75,
+    "usdpln": 3.74273,
+    "ice_pln_1000l": 4262.4
+  },
+  {
+    "date": "2026-08-28",
+    "ice_usd_tonne": 1280.0,
+    "usdpln": 3.7164,
+    "ice_pln_1000l": 4019.66
+  },
+  {
+    "date": "2026-08-27",
+    "ice_usd_tonne": 1221.75,
+    "usdpln": 3.69553,
+    "ice_pln_1000l": 3815.19
+  },
+  {
+    "date": "2026-08-26",
+    "ice_usd_tonne": 1239.5,
+    "usdpln": 3.68401,
+    "ice_pln_1000l": 3858.55
+  },
+  {
+    "date": "2026-08-25",
+    "ice_usd_tonne": 1242.5,
+    "usdpln": 3.68814,
+    "ice_pln_1000l": 3872.22
+  },
+  {
+    "date": "2026-08-24",
+    "ice_usd_tonne": 1254.25,
+    "usdpln": 3.68606,
+    "ice_pln_1000l": 3906.64
+  },
+  {
+    "date": "2026-08-21",
+    "ice_usd_tonne": 1311.75,
+    "usdpln": 3.69177,
+    "ice_pln_1000l": 4092.06
+  },
+  {
+    "date": "2026-08-20",
+    "ice_usd_tonne": 1300.0,
+    "usdpln": 3.6948,
+    "ice_pln_1000l": 4058.74
+  },
+  {
+    "date": "2026-08-19",
+    "ice_usd_tonne": 1296.25,
+    "usdpln": 3.73116,
+    "ice_pln_1000l": 4086.86
+  },
+  {
+    "date": "2026-08-18",
+    "ice_usd_tonne": 1299.0,
+    "usdpln": 3.7207,
+    "ice_pln_1000l": 4084.04
+  },
+  {
+    "date": "2026-08-17",
+    "ice_usd_tonne": 1279.25,
+    "usdpln": 3.7202,
+    "ice_pln_1000l": 4021.41
+  },
+  {
+    "date": "2026-08-14",
+    "ice_usd_tonne": 1243.0,
+    "usdpln": 3.73529,
+    "ice_pln_1000l": 3923.31
+  },
+  {
+    "date": "2026-08-13",
+    "ice_usd_tonne": 1250.75,
+    "usdpln": 3.73326,
+    "ice_pln_1000l": 3945.62
+  },
+  {
+    "date": "2026-08-12",
+    "ice_usd_tonne": 1249.75,
+    "usdpln": 3.72349,
+    "ice_pln_1000l": 3932.15
+  },
+  {
+    "date": "2026-08-11",
+    "ice_usd_tonne": 1324.5,
+    "usdpln": 3.72283,
+    "ice_pln_1000l": 4166.6
+  },
+  {
+    "date": "2026-08-10",
+    "ice_usd_tonne": 1304.75,
+    "usdpln": 3.71731,
+    "ice_pln_1000l": 4098.39
+  },
+  {
+    "date": "2026-08-07",
+    "ice_usd_tonne": 1197.0,
+    "usdpln": 3.72975,
+    "ice_pln_1000l": 3772.51
+  },
+  {
+    "date": "2026-08-06",
+    "ice_usd_tonne": 1172.75,
+    "usdpln": 3.71863,
+    "ice_pln_1000l": 3685.06
+  },
+  {
+    "date": "2026-08-05",
+    "ice_usd_tonne": 1170.25,
+    "usdpln": 3.7239,
+    "ice_pln_1000l": 3682.42
+  },
+  {
+    "date": "2026-08-04",
+    "ice_usd_tonne": 1136.0,
+    "usdpln": 3.7442,
+    "ice_pln_1000l": 3594.13
+  },
+  {
+    "date": "2026-08-03",
+    "ice_usd_tonne": 1206.25,
+    "usdpln": 3.72856,
+    "ice_pln_1000l": 3800.45
+  },
+  {
+    "date": "2026-07-31",
+    "ice_usd_tonne": 1319.25,
+    "usdpln": 3.73565,
+    "ice_pln_1000l": 4164.38
+  },
+  {
+    "date": "2026-07-30",
+    "ice_usd_tonne": 1298.5,
+    "usdpln": 3.76905,
+    "ice_pln_1000l": 4135.52
+  },
+  {
+    "date": "2026-07-29",
+    "ice_usd_tonne": 1308.5,
+    "usdpln": 3.79712,
+    "ice_pln_1000l": 4198.41
+  },
+  {
+    "date": "2026-07-28",
+    "ice_usd_tonne": 1224.5,
+    "usdpln": 3.7994,
+    "ice_pln_1000l": 3931.25
+  },
+  {
+    "date": "2026-07-27",
+    "ice_usd_tonne": 1233.0,
+    "usdpln": 3.78641,
+    "ice_pln_1000l": 3945.0
+  },
+  {
+    "date": "2026-07-24",
+    "ice_usd_tonne": 1235.0,
+    "usdpln": 3.80511,
+    "ice_pln_1000l": 3970.92
+  },
+  {
+    "date": "2026-07-23",
+    "ice_usd_tonne": 1291.5,
+    "usdpln": 3.79008,
+    "ice_pln_1000l": 4136.18
+  },
+  {
+    "date": "2026-07-22",
+    "ice_usd_tonne": 1227.5,
+    "usdpln": 3.79445,
+    "ice_pln_1000l": 3935.75
+  },
+  {
+    "date": "2026-07-21",
+    "ice_usd_tonne": 1205.75,
+    "usdpln": 3.79431,
+    "ice_pln_1000l": 3865.87
+  },
+  {
+    "date": "2026-07-20",
+    "ice_usd_tonne": 1201.5,
+    "usdpln": 3.79734,
+    "ice_pln_1000l": 3855.32
+  },
+  {
+    "date": "2026-07-17",
+    "ice_usd_tonne": 1178.25,
+    "usdpln": 3.77825,
+    "ice_pln_1000l": 3761.71
+  },
+  {
+    "date": "2026-07-16",
+    "ice_usd_tonne": 1164.0,
+    "usdpln": 3.76565,
+    "ice_pln_1000l": 3703.82
+  },
+  {
+    "date": "2026-07-15",
+    "ice_usd_tonne": 1129.5,
+    "usdpln": 3.78316,
+    "ice_pln_1000l": 3610.75
+  },
+  {
+    "date": "2026-07-14",
+    "ice_usd_tonne": 1133.75,
+    "usdpln": 3.80429,
+    "ice_pln_1000l": 3644.58
+  },
+  {
+    "date": "2026-07-13",
+    "ice_usd_tonne": 1082.25,
+    "usdpln": 3.79437,
+    "ice_pln_1000l": 3469.96
+  },
+  {
+    "date": "2026-07-10",
+    "ice_usd_tonne": 1008.0,
+    "usdpln": 3.78533,
+    "ice_pln_1000l": 3224.19
+  },
+  {
+    "date": "2026-07-09",
+    "ice_usd_tonne": 1043.0,
+    "usdpln": 3.7692,
+    "ice_pln_1000l": 3321.93
+  },
+  {
+    "date": "2026-07-08",
+    "ice_usd_tonne": 1098.75,
+    "usdpln": 3.77065,
+    "ice_pln_1000l": 3500.84
+  },
+  {
+    "date": "2026-07-07",
+    "ice_usd_tonne": 973.25,
+    "usdpln": 3.74571,
+    "ice_pln_1000l": 3080.46
+  },
+  {
+    "date": "2026-07-06",
+    "ice_usd_tonne": 972.75,
+    "usdpln": 3.7483,
+    "ice_pln_1000l": 3081.0
+  },
+  {
+    "date": "2026-07-03",
+    "ice_usd_tonne": 943.5,
+    "usdpln": 3.75219,
+    "ice_pln_1000l": 2991.46
+  },
+  {
+    "date": "2026-07-02",
+    "ice_usd_tonne": 926.5,
+    "usdpln": 3.77088,
+    "ice_pln_1000l": 2952.19
+  },
+  {
+    "date": "2026-07-01",
+    "ice_usd_tonne": 932.0,
+    "usdpln": 3.76486,
+    "ice_pln_1000l": 2964.98
+  },
+  {
+    "date": "2026-06-30",
+    "ice_usd_tonne": 931.5,
+    "usdpln": 3.75382,
+    "ice_pln_1000l": 2954.7
+  },
+  {
+    "date": "2026-06-29",
+    "ice_usd_tonne": 907.25,
+    "usdpln": 3.76412,
+    "ice_pln_1000l": 2885.67
+  },
+  {
+    "date": "2026-06-26",
+    "ice_usd_tonne": 881.25,
+    "usdpln": 3.76613,
+    "ice_pln_1000l": 2804.47
+  },
+  {
+    "date": "2026-06-25",
+    "ice_usd_tonne": 913.5,
+    "usdpln": 3.77125,
+    "ice_pln_1000l": 2911.06
+  },
+  {
+    "date": "2026-06-24",
+    "ice_usd_tonne": 881.0,
+    "usdpln": 3.75556,
+    "ice_pln_1000l": 2795.81
+  },
+  {
+    "date": "2026-06-23",
+    "ice_usd_tonne": 882.25,
+    "usdpln": 3.73427,
+    "ice_pln_1000l": 2783.9
+  },
+  {
+    "date": "2026-06-22",
+    "ice_usd_tonne": 878.75,
+    "usdpln": 3.70944,
+    "ice_pln_1000l": 2754.42
+  },
+  {
+    "date": "2026-06-19",
+    "ice_usd_tonne": 905.0,
+    "usdpln": 3.71258,
+    "ice_pln_1000l": 2839.1
+  },
+  {
+    "date": "2026-06-18",
+    "ice_usd_tonne": 863.75,
+    "usdpln": 3.6862,
+    "ice_pln_1000l": 2690.44
+  },
+  {
+    "date": "2026-06-17",
+    "ice_usd_tonne": 906.0,
+    "usdpln": 3.64845,
+    "ice_pln_1000l": 2793.14
+  },
+  {
+    "date": "2026-06-16",
+    "ice_usd_tonne": 897.25,
+    "usdpln": 3.66496,
+    "ice_pln_1000l": 2778.69
+  },
+  {
+    "date": "2026-06-15",
+    "ice_usd_tonne": 933.75,
+    "usdpln": 3.65455,
+    "ice_pln_1000l": 2883.51
+  },
+  {
+    "date": "2026-06-12",
+    "ice_usd_tonne": 967.25,
+    "usdpln": 3.66771,
+    "ice_pln_1000l": 2997.72
+  },
+  {
+    "date": "2026-06-11",
+    "ice_usd_tonne": 1031.75,
+    "usdpln": 3.68445,
+    "ice_pln_1000l": 3212.21
+  },
+  {
+    "date": "2026-06-10",
+    "ice_usd_tonne": 1039.5,
+    "usdpln": 3.6741,
+    "ice_pln_1000l": 3227.25
+  },
+  {
+    "date": "2026-06-09",
+    "ice_usd_tonne": 1028.0,
+    "usdpln": 3.67605,
+    "ice_pln_1000l": 3193.24
+  },
+  {
+    "date": "2026-06-08",
+    "ice_usd_tonne": 1070.75,
+    "usdpln": 3.68157,
+    "ice_pln_1000l": 3331.02
+  },
+  {
+    "date": "2026-06-05",
+    "ice_usd_tonne": 1062.0,
+    "usdpln": 3.64621,
+    "ice_pln_1000l": 3272.07
   },
   {
     "date": "2026-06-04",

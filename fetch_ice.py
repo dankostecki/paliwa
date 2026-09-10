@@ -4,13 +4,9 @@ fetch_ice.py — Pobiera ICE Low Sulphur Gasoil i USD/PLN, przelicza na PLN/1000
 i dopisuje do archiwum.
 
 Zrodla (w kolejnosci prob):
-  gasoil  — Yahoo (brak kontraktu), stooq (zapora anty-botowa),
-            TradingView ICEEUR:ULS1! <- JEDYNE DZIALAJACE (tylko dzien biezacy)
+  gasoil  — TradingView ICEEUR:ULS1! (historia dzienna) <- PODSTAWOWE,
+            zapasowo Yahoo (brak kontraktu), stooq (zapora), scanner TV
   USD/PLN — Yahoo Finance (USDPLN=X) <- dziala, zapasowo API NBP, potem stooq
-
-OGRANICZENIE: nie znaleziono darmowego zrodla SERII HISTORYCZNEJ ICE gasoilu,
-dlatego luki wstecz (np. 2026-06-05..2026-09-09) nie da sie uzupelnic
-automatycznie. TradingView dopisuje wylacznie dzien biezacy.
 
 Wzor: ICE [USD/tone] x 0,845 [kg/l] x USD/PLN = ICE [PLN/1000l]
 Gestosc kontraktowa ICE Low Sulphur Gasoil: 0,845 kg/l (specyfikacja ICE).
@@ -42,6 +38,7 @@ from lib_fetch import (
     pick_symbol,
     stooq_csv_series,
     stooq_last_json,
+    tradingview_history,
     tradingview_quote,
     yf_series,
 )
@@ -79,7 +76,9 @@ GASOIL_SYMBOLS = ["LF=F", "QS=F", "7F=F", "G=F", "LGO=F", "GAS=F"]
 # proof-of-work), investing.com/Barchart/WSJ zwracaja 403/401, FT i onvista
 # maja tylko ETC-y i indeksy. Zadne z nich nie daje serii historycznej,
 # dlatego TradingView uzupelnia archiwum tylko o dzien biezacy.
-TV_GASOIL_SYMBOL = "ICEEUR:ULS1!"
+TV_GASOIL_SYMBOL = "ICEEUR:ULS1!"   # dla scannera (fallback, bez historii)
+TV_GASOIL_EXCHANGE = "ICEEUR"
+TV_GASOIL_TICKER = "ULS1!"
 GASOIL_MIN, GASOIL_MAX = 300.0, 3000.0  # USD/tone — pasmo wiarygodnosci
 
 USDPLN_SYMBOLS = ["USDPLN=X", "PLN=X"]
@@ -90,6 +89,11 @@ STOOQ_USDPLN = "usdpln"
 
 # Po tylu dniach bez nowego wpisu uznajemy archiwum za przeterminowane.
 STALE_AFTER_DAYS = 7
+
+# Zawsze pobieraj co najmniej tyle dni wstecz, nawet gdy archiwum wyglada na
+# aktualne. Bez tego start = max(data)+1, wiec pojedyncza dziura w srodku serii
+# nigdy by sie nie zabliznila. Duplikaty i tak odsiewa sprawdzenie `in existing`.
+BACKFILL_LOOKBACK_DAYS = 21
 
 
 # ===== ARCHIWUM =====
@@ -134,8 +138,23 @@ def import_from_sheets():
 # ===== ZRODLA =====
 
 def get_gasoil(start):
-    """Seria gasoilu w USD/tone. Yahoo, zapasowo stooq."""
-    log.info("Gasoil — szukam symbolu w Yahoo Finance...")
+    """
+    Seria gasoilu w USD/tone.
+
+    TradingView jest zrodlem podstawowym, bo jako jedyne faktycznie dziala i bo
+    odtwarza dane referencyjne uzytkownika co do grosza. Dla porownania: wpisy,
+    ktore w okresie 2026-03-06..2026-06-04 dokladal stooq, rozjezdzaly sie z ta
+    seria srednio o 1,73% (max 13,27%), zaden nie byl identyczny.
+
+    Yahoo i stooq zostaja nizej jako zapas, gdyby kiedys wrocily.
+    """
+    log.info("Gasoil — TradingView (historia dzienna)...")
+    series = tradingview_history(TV_GASOIL_TICKER, TV_GASOIL_EXCHANGE, start,
+                                 GASOIL_MIN, GASOIL_MAX)
+    if series:
+        return series
+
+    log.warning("Gasoil: TradingView nie dal historii, probuje Yahoo...")
     sym, series = pick_symbol(GASOIL_SYMBOLS, start, GASOIL_MIN, GASOIL_MAX,
                               currency="USD")
     if series:
@@ -148,20 +167,18 @@ def get_gasoil(start):
         log.info(f"Gasoil: uzywam stooq '{STOOQ_GASOIL}' ({len(series)} notowan)")
         return series
 
-    log.warning("Gasoil: stooq nie dal danych, probuje TradingView...")
+    # Ostatnia deska ratunku: scanner TradingView. Zwraca migawke bez daty,
+    # wiec przypisujemy dzien biezacy i tylko w dni robocze (w weekend oddalby
+    # piatkowe zamkniecie pod sobotnia data).
+    log.warning("Gasoil: stooq nie dal danych, probuje scanner TradingView...")
     close, desc = tradingview_quote(TV_GASOIL_SYMBOL, GASOIL_MIN, GASOIL_MAX)
     if close is None:
         return {}
-
-    # TradingView nie podaje daty notowania — przypisujemy dzien biezacy.
-    # W weekend zwrocilby piatkowe zamkniecie, ktore trafiloby pod sobotnia
-    # date, wiec zapisujemy tylko w dni robocze.
     today = date.today()
     if today.weekday() >= 5:
-        log.info("Gasoil: weekend — TradingView zwrocilby piatkowe zamkniecie, pomijam")
+        log.info("Gasoil: weekend — scanner oddalby piatkowe zamkniecie, pomijam")
         return {}
-
-    log.info(f"Gasoil: uzywam TradingView '{TV_GASOIL_SYMBOL}' ({desc}) — tylko {today}")
+    log.info(f"Gasoil: scanner '{TV_GASOIL_SYMBOL}' ({desc}) — tylko {today}")
     return {today.isoformat(): close}
 
 
@@ -209,32 +226,45 @@ def main():
 
     existing = {e["date"] for e in history}
     last_date = datetime.strptime(max(existing), "%Y-%m-%d").date()
-    start = last_date + timedelta(days=1)
-    log.info(f"Ostatni wpis: {last_date}, uzupelniam od {start} do {date.today()}")
-
-    if start > date.today():
-        log.info("Archiwum aktualne — nic do zrobienia")
-        return
+    start = min(last_date + timedelta(days=1),
+                date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS))
+    log.info(f"Ostatni wpis: {last_date}, pobieram od {start} do {date.today()}")
 
     gasoil = get_gasoil(start)
     usdpln = get_usdpln(start)
 
     # Laczymy PO DACIE. Poprzednia wersja brala date z ICE i doklejala kurs
     # z dowolnego innego dnia, co cicho mieszalo notowania z roznych sesji.
-    added = 0
+    by_date = {e["date"]: e for e in history}
+    refresh_from = (date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS)).isoformat()
+    added = refreshed = 0
+
     for d in sorted(set(gasoil) & set(usdpln)):
-        if d in existing:
-            continue
         ice_usd, fx = gasoil[d], usdpln[d]
-        history.append({
+        entry = {
             "date": d,
             "ice_usd_tonne": round(ice_usd, 2),
             "usdpln": round(fx, 5),
             "ice_pln_1000l": round(ice_usd * DENSITY * fx, 2),
-        })
-        added += 1
-        log.info(f"  +{d}: {ice_usd:.2f} USD/t x {fx:.5f} = "
-                 f"{round(ice_usd * DENSITY * fx, 2)} PLN/1000l")
+        }
+
+        old = by_date.get(d)
+        if old is None:
+            history.append(entry)
+            by_date[d] = entry
+            added += 1
+            log.info(f"  +{d}: {ice_usd:.2f} USD/t x {fx:.5f} = {entry['ice_pln_1000l']} PLN/1000l")
+            continue
+
+        # Wpis zlapany w trakcie sesji zamarzalby na zawsze, bo dawniej kazda
+        # znana data byla po prostu pomijana. W oknie ostatnich
+        # BACKFILL_LOOKBACK_DAYS dni odswiezamy wartosc, gdy zrodlo podaje inna
+        # — TradingView jest tu autorytatywne. Starszych wpisow nie ruszamy.
+        if d >= refresh_from and old.get("ice_usd_tonne") != entry["ice_usd_tonne"]:
+            log.info(f"  ~{d}: {old.get('ice_usd_tonne')} -> {entry['ice_usd_tonne']} USD/t "
+                     f"(korekta do zamkniecia)")
+            old.update(entry)
+            refreshed += 1
 
     only_gasoil = sorted(set(gasoil) - set(usdpln))
     only_fx = sorted(set(usdpln) - set(gasoil))
@@ -243,10 +273,11 @@ def main():
     if only_fx:
         log.info(f"Pominieto {len(only_fx)} dni bez notowania gasoilu: {only_fx[:5]}")
 
-    if added:
+    if added or refreshed:
         history.sort(key=lambda e: e["date"], reverse=True)
         save_history(history)
-        log.info(f"KONIEC — dopisano {added} wpisow (ostatni: {history[0]['date']})")
+        log.info(f"KONIEC — dopisano {added}, skorygowano {refreshed} "
+                 f"(ostatni: {history[0]['date']})")
         return
 
     # Nic nie dopisano. Jesli archiwum jest swieze, to normalne (weekend,
