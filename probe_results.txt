@@ -1,0 +1,61 @@
+==============================================================================
+PROBE 2026-09-10
+==============================================================================
+
+### yfinance — kandydaci na gasoil + FX
+yfinance 1.7.0
+  --   LF=F         pusta seria
+  --   QS=F         pusta seria
+  --   7F=F         pusta seria
+  --   G=F          pusta seria
+  --   LGO=F        pusta seria
+  --   GAS=F        pusta seria
+  --   ULS=F        pusta seria
+  --   GOIL=F       pusta seria
+  OK   HO=F         n= 23 last=      4.5985 @2026-09-10 cur=USD
+  OK   BZ=F         n= 23 last=    102.3800 @2026-09-10 cur=USD
+  OK   CL=F         n= 23 last=     97.7300 @2026-09-10 cur=USD
+  OK   RB=F         n= 23 last=      3.0803 @2026-09-10 cur=USD
+  OK   USDPLN=X     n= 24 last=      3.7094 @2026-09-10 cur=PLN
+  OK   PLN=X        n= 24 last=      3.7094 @2026-09-10 cur=PLN
+
+### stooq — warianty host / endpoint / User-Agent
+  stooq.pl   lf.f      json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   lf.f      json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   lf.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   lf.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   cb.f      json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   cb.f      json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   cb.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   cb.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   usdpln    json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   usdpln    json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   usdpln    csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   usdpln    csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   plopln3m  json ua=chrome HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   plopln3m  json ua=old    HTTP 404 len=   279 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.pl   plopln3m  csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.pl   plopln3m  csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  lf.f      json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  lf.f      json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  lf.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  lf.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  cb.f      json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  cb.f      json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  cb.f      csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  cb.f      csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  usdpln    json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  usdpln    json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  usdpln    csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  usdpln    csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  plopln3m  json ua=chrome HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  plopln3m  json ua=old    HTTP 404 len=   271 :: <meta charset=utf-8><title>Stooq</title><center style=font-family:arial;margin-top:50px><p><a href=/
+  stooq.com  plopln3m  csv  ua=chrome HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+  stooq.com  plopln3m  csv  ua=old    HTTP 200 len=   796 :: <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"></he
+
+### NBP — kurs USD (zapas dla USD/PLN)
+  HTTP 200 :: {"table":"A","currency":"dolar amerykański","code":"USD","rates":[{"no":"172/A/NBP/2026","effectiveDate":"2026-09-04","mid":3.7145},{"no":"173/A/NBP/2026","effectiveDate":"2026-09-07","mid":3.7085},{"
+
+### investing.com — czy w ogole odpowiada
+  HTTP 403 len=3 https://www.investing.com/commodities/london-gas-oil :: 403
+  HTTP 403 len=3 https://api.investing.com/api/financialdata/8833/historical/ :: 403
