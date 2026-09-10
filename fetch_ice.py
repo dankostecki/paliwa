@@ -235,20 +235,36 @@ def main():
 
     # Laczymy PO DACIE. Poprzednia wersja brala date z ICE i doklejala kurs
     # z dowolnego innego dnia, co cicho mieszalo notowania z roznych sesji.
-    added = 0
+    by_date = {e["date"]: e for e in history}
+    refresh_from = (date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS)).isoformat()
+    added = refreshed = 0
+
     for d in sorted(set(gasoil) & set(usdpln)):
-        if d in existing:
-            continue
         ice_usd, fx = gasoil[d], usdpln[d]
-        history.append({
+        entry = {
             "date": d,
             "ice_usd_tonne": round(ice_usd, 2),
             "usdpln": round(fx, 5),
             "ice_pln_1000l": round(ice_usd * DENSITY * fx, 2),
-        })
-        added += 1
-        log.info(f"  +{d}: {ice_usd:.2f} USD/t x {fx:.5f} = "
-                 f"{round(ice_usd * DENSITY * fx, 2)} PLN/1000l")
+        }
+
+        old = by_date.get(d)
+        if old is None:
+            history.append(entry)
+            by_date[d] = entry
+            added += 1
+            log.info(f"  +{d}: {ice_usd:.2f} USD/t x {fx:.5f} = {entry['ice_pln_1000l']} PLN/1000l")
+            continue
+
+        # Wpis zlapany w trakcie sesji zamarzalby na zawsze, bo dawniej kazda
+        # znana data byla po prostu pomijana. W oknie ostatnich
+        # BACKFILL_LOOKBACK_DAYS dni odswiezamy wartosc, gdy zrodlo podaje inna
+        # — TradingView jest tu autorytatywne. Starszych wpisow nie ruszamy.
+        if d >= refresh_from and old.get("ice_usd_tonne") != entry["ice_usd_tonne"]:
+            log.info(f"  ~{d}: {old.get('ice_usd_tonne')} -> {entry['ice_usd_tonne']} USD/t "
+                     f"(korekta do zamkniecia)")
+            old.update(entry)
+            refreshed += 1
 
     only_gasoil = sorted(set(gasoil) - set(usdpln))
     only_fx = sorted(set(usdpln) - set(gasoil))
@@ -257,10 +273,11 @@ def main():
     if only_fx:
         log.info(f"Pominieto {len(only_fx)} dni bez notowania gasoilu: {only_fx[:5]}")
 
-    if added:
+    if added or refreshed:
         history.sort(key=lambda e: e["date"], reverse=True)
         save_history(history)
-        log.info(f"KONIEC — dopisano {added} wpisow (ostatni: {history[0]['date']})")
+        log.info(f"KONIEC — dopisano {added}, skorygowano {refreshed} "
+                 f"(ostatni: {history[0]['date']})")
         return
 
     # Nic nie dopisano. Jesli archiwum jest swieze, to normalne (weekend,
