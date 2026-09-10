@@ -1,102 +1,67 @@
 #!/usr/bin/env python3
-"""Sonda: czy anonimowy dostep do TradingView zwraca DZIENNE SLUPKI dla ICEEUR:ULS1!"""
-import json, random, re, string, sys, time
-from datetime import date, datetime, timezone
-
+"""Sonda 2: ustalic POPRAWNE mapowanie dat slupkow TV na daty sesji."""
+import json, random, re, string, time
+from datetime import date, datetime, timezone, timedelta
 OUT=[]
 def log(*a):
     s=" ".join(str(x) for x in a); print(s,flush=True); OUT.append(s)
+log("="*78); log("SONDA 2 — mapowanie dat"); log("="*78)
 
-# Kotwice: dwie niezaleznie zdobyte prawdziwe wartosci do weryfikacji serii
-ANCHORS={"2026-06-04":1076.37, "2026-09-10":1391.25}
-log("="*78); log("SONDA TradingView — historia ICEEUR:ULS1! —", date.today().isoformat())
-log("kotwice do sprawdzenia:", ANCHORS); log("="*78)
+# archiwum ze stooq: 104 wpisy 2026-01-09..2026-06-04 = wzorzec odniesienia
+ref={e["date"]:e["ice_usd_tonne"] for e in json.load(open("data/ice_history.json"))}
+log(f"wzorzec (archiwum): {len(ref)} wpisow, {min(ref)} .. {max(ref)}")
 
-def check(series, name):
-    """Porownuje serie z kotwicami. series = {data: close}"""
-    log(f"\n  --- kontrola kotwic dla: {name} ---")
-    if not series:
-        log("     brak serii"); return False
-    ds=sorted(series)
-    log(f"     slupkow: {len(ds)}, zakres {ds[0]} .. {ds[-1]}")
-    ok=True
-    for d,expect in ANCHORS.items():
-        got=series.get(d)
-        if got is None:
-            log(f"     {d}: BRAK w serii (oczekiwano {expect})"); ok=False
-        else:
-            diff=abs(got-expect)/expect*100
-            verdict="OK" if diff<=0.5 else "ROZJAZD"
-            log(f"     {d}: {got} vs {expect} -> {diff:.3f}% [{verdict}]")
-            if diff>0.5: ok=False
-    log(f"     ostatnie 5: {[(d,series[d]) for d in ds[-5:]]}")
-    return ok
+from tvDatafeed import TvDatafeed, Interval
+tv=TvDatafeed()
+df=tv.get_hist(symbol="ULS1!",exchange="ICEEUR",interval=Interval.in_daily,n_bars=300)
+log(f"TV: {len(df)} slupkow")
 
-# ---------- DROGA 1: tvdatafeed ----------
-log("\n### DROGA 1: biblioteka tvdatafeed")
-try:
-    from tvDatafeed import TvDatafeed, Interval
-    log("  import OK")
-    try:
-        tv=TvDatafeed()
-        df=tv.get_hist(symbol="ULS1!",exchange="ICEEUR",interval=Interval.in_daily,n_bars=250)
-        if df is None or len(df)==0:
-            log("  get_hist zwrocil pusto")
-        else:
-            log(f"  get_hist: {len(df)} wierszy, kolumny={list(df.columns)}")
-            s={idx.date().isoformat():float(r["close"]) for idx,r in df.iterrows()}
-            check(s,"tvdatafeed ULS1!")
-    except Exception as e:
-        log(f"  get_hist blad: {type(e).__name__}: {str(e)[:150]}")
-except ImportError as e:
-    log(f"  brak biblioteki: {e}")
-except Exception as e:
-    log(f"  blad: {type(e).__name__}: {str(e)[:120]}")
+log("\n### surowe znaczniki czasu — ostatnie 12 slupkow")
+for idx,r in list(df.iterrows())[-12:]:
+    log(f"  index={idx}  (typ {type(idx).__name__})  weekday={idx.weekday()}  close={r['close']}")
 
-# ---------- DROGA 2: surowy WebSocket ----------
-log("\n### DROGA 2: surowy WebSocket data.tradingview.com")
-try:
-    from websocket import create_connection
-    def sess(p): return p+"_"+"".join(random.choice(string.ascii_lowercase) for _ in range(12))
-    def msg(m,p):
-        body=json.dumps({"m":m,"p":p},separators=(",",":"))
-        return f"~m~{len(body)}~m~{body}"
-    ws=create_connection("wss://data.tradingview.com/socket.io/websocket?from=chart%2F",
-        header=["User-Agent: Mozilla/5.0"], origin="https://www.tradingview.com", timeout=25)
-    cs=sess("cs"); qs=sess("qs")
-    for m,p in [("set_auth_token",["unauthorized_user_token"]),
-                ("chart_create_session",[cs,""]),
-                ("quote_create_session",[qs]),
-                ("resolve_symbol",[cs,"sds_sym_1",
-                    '={"symbol":"ICEEUR:ULS1!","adjustment":"splits"}']),
-                ("create_series",[cs,"sds_1","s1","sds_sym_1","1D",300,""])]:
-        ws.send(msg(m,p))
-    raw=""; t0=time.time()
-    while time.time()-t0 < 45:
-        try: chunk=ws.recv()
-        except Exception: break
-        raw+=chunk
-        if "series_completed" in raw: break
-        for h in re.findall(r"~m~(\d+)~m~~h~\d+", chunk):
-            pass
-        for ping in re.findall(r"~m~\d+~m~(~h~\d+)", chunk):
-            ws.send(f"~m~{len(ping)}~m~{ping}")
-    ws.close()
-    log(f"  odebrano {len(raw)} znakow, series_completed={'series_completed' in raw}")
-    bars={}
-    for blob in re.findall(r'"s":\[(.*?)\],"ns"', raw, re.S):
-        for m in re.finditer(r'\{"i":\d+,"v":\[([0-9eE\.\+\-,]+)\]\}', blob):
-            v=[float(x) for x in m.group(1).split(",")]
-            if len(v)>=5:
-                d=datetime.fromtimestamp(v[0],tz=timezone.utc).date().isoformat()
-                bars[d]=v[4]
-    log(f"  sparsowano slupkow: {len(bars)}")
-    check(bars,"raw websocket")
-    if not bars and raw:
-        log("  PROBKA: "+raw[:400].replace("\n"," "))
-except ImportError:
-    log("  brak websocket-client")
-except Exception as e:
-    log(f"  blad: {type(e).__name__}: {str(e)[:150]}")
+log("\n### rozklad dni tygodnia w calej serii")
+from collections import Counter
+c=Counter(idx.weekday() for idx,_ in df.iterrows())
+names=["pon","wt","sr","czw","pt","SOB","NDZ"]
+log("  "+"  ".join(f"{names[k]}={c.get(k,0)}" for k in range(7)))
 
+log("\n### dopasowanie do archiwum przy przesunieciu -1 / 0 / +1 dnia")
+best=None
+for off in (-1,0,1):
+    s={}
+    for idx,r in df.iterrows():
+        d=(idx.date()+timedelta(days=off)).isoformat()
+        s[d]=float(r["close"])
+    common=sorted(set(s)&set(ref))
+    if not common:
+        log(f"  offset {off:+d}: brak pokrycia"); continue
+    diffs=[abs(s[d]-ref[d])/ref[d]*100 for d in common]
+    avg=sum(diffs)/len(diffs)
+    within=sum(1 for x in diffs if x<=0.5)
+    log(f"  offset {off:+d}: pokrycie {len(common):3d} dni, sredni blad {avg:6.3f}%, "
+        f"w tolerancji 0.5%: {within}/{len(common)}")
+    if best is None or avg<best[1]: best=(off,avg,len(common),within)
+
+log(f"\n  NAJLEPSZE: offset {best[0]:+d} (sredni blad {best[1]:.3f}%, {best[3]}/{best[2]} w tolerancji)")
+
+off=best[0]
+s={(idx.date()+timedelta(days=off)).isoformat():float(r["close"]) for idx,r in df.iterrows()}
+log(f"\n### po korekcie offset {off:+d} — rozklad dni tygodnia")
+c2=Counter(datetime.strptime(d,"%Y-%m-%d").weekday() for d in s)
+log("  "+"  ".join(f"{names[k]}={c2.get(k,0)}" for k in range(7)))
+
+log("\n### 12 najwiekszych rozbieznosci wobec archiwum (offset %+d)"%off)
+common=sorted(set(s)&set(ref))
+rows=sorted(((abs(s[d]-ref[d])/ref[d]*100,d,s[d],ref[d]) for d in common),reverse=True)
+for e,d,a,b in rows[:12]:
+    log(f"  {d}  TV={a:9.2f}  archiwum={b:9.2f}  {e:6.3f}%")
+
+log("\n### co wpadnie w luke 2026-06-05..2026-09-09 (offset %+d)"%off)
+gap=sorted(d for d in s if "2026-06-05"<=d<="2026-09-09")
+log(f"  slupkow do dopisania: {len(gap)}")
+log(f"  pierwsze 5: {[(d,s[d]) for d in gap[:5]]}")
+log(f"  ostatnie 5: {[(d,s[d]) for d in gap[-5:]]}")
+wd=Counter(datetime.strptime(d,"%Y-%m-%d").weekday() for d in gap)
+log("  dni tygodnia w luce: "+"  ".join(f"{names[k]}={wd.get(k,0)}" for k in range(7)))
 open("probe_results.txt","w",encoding="utf-8").write("\n".join(OUT)+"\n")
