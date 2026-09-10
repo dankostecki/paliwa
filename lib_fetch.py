@@ -13,7 +13,8 @@ import io
 import json
 import logging
 import re
-from datetime import date, datetime, timedelta
+import time
+from datetime import date, datetime, timedelta, timezone
 
 import requests
 
@@ -212,6 +213,11 @@ def tradingview_history(symbol, exchange, start, lo=None, hi=None, n_bars=400):
     kontrakt co yf_series() i stooq_csv_series(), wiec wywolujacy nie musi
     tego traktowac inaczej.
 
+    Rozmawiamy wprost protokolem WebSocket, ktorym karmia sie wykresy
+    TradingView. Alternatywa (biblioteka tvdatafeed) wymagalaby instalacji
+    z gita — pip install tvdatafeed nie przechodzi z PyPI — a daje dokladnie
+    te same liczby, wiec zostaje samo websocket-client.
+
     DATOWANIE: ICE otwiera sesje poniedzialkowa w niedziele o 22:00, a
     TradingView znakuje slupki czasem OTWARCIA. Bez korekty caly poniedzialek
     laduje pod niedziela — w surowej serii widac pon=0, NDZ=60. Slupek
@@ -222,38 +228,80 @@ def tradingview_history(symbol, exchange, start, lo=None, hi=None, n_bars=400):
     40/40 w tolerancji 0,5%, sredni blad 0,02%.
     """
     try:
-        from tvDatafeed import TvDatafeed, Interval
+        from websocket import create_connection
     except ImportError:
-        log.warning("tvdatafeed nie zainstalowany")
+        log.warning("websocket-client nie zainstalowany")
         return {}
 
+    def _sess(prefix):
+        import random, string
+        return prefix + "_" + "".join(random.choice(string.ascii_lowercase) for _ in range(12))
+
+    def _frame(method, params):
+        body = json.dumps({"m": method, "p": params}, separators=(",", ":"))
+        return f"~m~{len(body)}~m~{body}"
+
+    raw = ""
     try:
-        df = TvDatafeed().get_hist(symbol=symbol, exchange=exchange,
-                                   interval=Interval.in_daily, n_bars=n_bars)
+        ws = create_connection(
+            "wss://data.tradingview.com/socket.io/websocket?from=chart%2F",
+            header=[f"User-Agent: {HEADERS['User-Agent']}"],
+            origin="https://www.tradingview.com", timeout=30)
+        cs = _sess("cs")
+        for method, params in [
+            ("set_auth_token", ["unauthorized_user_token"]),
+            ("chart_create_session", [cs, ""]),
+            ("resolve_symbol", [cs, "sds_sym_1",
+                                '={"symbol":"%s:%s","adjustment":"splits"}' % (exchange, symbol)]),
+            ("create_series", [cs, "sds_1", "s1", "sds_sym_1", "1D", n_bars, ""]),
+        ]:
+            ws.send(_frame(method, params))
+
+        deadline = time.time() + 45
+        while time.time() < deadline:
+            try:
+                chunk = ws.recv()
+            except Exception:
+                break
+            raw += chunk
+            if "series_completed" in raw:
+                break
+            # serwer wysyla ~h~N jako heartbeat i oczekuje odbicia
+            for ping in re.findall(r"~m~\d+~m~(~h~\d+)", chunk):
+                ws.send(f"~m~{len(ping)}~m~{ping}")
+        ws.close()
     except Exception as e:
         log.warning(f"TradingView {exchange}:{symbol}: {type(e).__name__}: {e}")
         return {}
 
-    if df is None or not len(df):
-        log.warning(f"TradingView {exchange}:{symbol}: pusta seria")
-        return {}
+    if "series_completed" not in raw:
+        log.warning(f"TradingView {exchange}:{symbol}: seria nie zostala zamknieta "
+                    f"(odebrano {len(raw)} znakow)")
 
     out, skipped = {}, 0
-    for idx, row in df.iterrows():
-        d = idx.date()
-        if idx.weekday() == 6:          # niedziela 22:00 = otwarcie poniedzialku
-            d = d + timedelta(days=1)
-        if d < start:
-            continue
-        close = float(row["close"])
-        if lo is not None and not (lo <= close <= hi):
-            skipped += 1
-            continue
-        out[d.isoformat()] = close
+    for blob in re.findall(r'"s":\[(.*?)\],"ns"', raw, re.S):
+        for m in re.finditer(r'\{"i":\d+,"v":\[([0-9eE\.\+\-,]+)\]\}', blob):
+            v = [float(x) for x in m.group(1).split(",")]
+            if len(v) < 5:
+                continue
+            ts = datetime.fromtimestamp(v[0], tz=timezone.utc)
+            d = ts.date()
+            if ts.weekday() == 6:        # niedziela 22:00 = otwarcie poniedzialku
+                d = d + timedelta(days=1)
+            if d < start:
+                continue
+            close = v[4]
+            if lo is not None and not (lo <= close <= hi):
+                skipped += 1
+                continue
+            out[d.isoformat()] = close
 
     if skipped:
         log.warning(f"TradingView {symbol}: pominieto {skipped} slupkow poza pasmem {lo}-{hi}")
-    log.info(f"TradingView {exchange}:{symbol}: {len(out)} notowan od {start}")
+    if not out:
+        log.warning(f"TradingView {exchange}:{symbol}: nie sparsowano zadnego slupka")
+    else:
+        log.info(f"TradingView {exchange}:{symbol}: {len(out)} notowan od {start}")
     return out
 
 
