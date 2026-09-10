@@ -1,6 +1,8 @@
 name: Update ICE & USDPLN Data
 
 on:
+  push:
+    branches: [claude/fix-mobile-share-button-EpJjn]   # TYMCZASOWE
   schedule:
     - cron: '0 17 * * 1-5'  # 17:00 UTC = 18:00 CET / 19:00 CEST (po zamknięciu ICE Gasoil futures)
   workflow_dispatch:
@@ -16,7 +18,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install requests yfinance websocket-client
-      - run: python fetch_ice.py
+      - run: python fetch_ice.py --refresh-from 2026-03-06   # TYMCZASOWE
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

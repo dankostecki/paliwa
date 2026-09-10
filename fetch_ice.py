@@ -208,9 +208,18 @@ def get_usdpln(start):
 
 # ===== MAIN =====
 
-def main():
+def main(refresh_from=None):
+    """
+    refresh_from: gdy podane, pobiera od tej daty i NADPISUJE istniejace wpisy
+    z tego zakresu. Sluzy do swiadomej, jednorazowej podmiany zrodla — np.
+    zastapienia blokku ze stooq notowaniami ICE. Bez tego argumentu odswiezane
+    jest tylko okno BACKFILL_LOOKBACK_DAYS, zeby cron nie przepisywal historii
+    po cichu przy kazdym przebiegu.
+    """
     log.info("=" * 50)
     log.info("START — ICE Gasoil + USD/PLN")
+    if refresh_from:
+        log.info(f"TRYB PODMIANY: nadpisuje istniejace wpisy od {refresh_from}")
 
     history = load_history()
 
@@ -226,8 +235,13 @@ def main():
 
     existing = {e["date"] for e in history}
     last_date = datetime.strptime(max(existing), "%Y-%m-%d").date()
-    start = min(last_date + timedelta(days=1),
-                date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS))
+    if refresh_from:
+        start = refresh_from
+        refresh_boundary = refresh_from.isoformat()
+    else:
+        start = min(last_date + timedelta(days=1),
+                    date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS))
+        refresh_boundary = (date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS)).isoformat()
     log.info(f"Ostatni wpis: {last_date}, pobieram od {start} do {date.today()}")
 
     gasoil = get_gasoil(start)
@@ -236,7 +250,6 @@ def main():
     # Laczymy PO DACIE. Poprzednia wersja brala date z ICE i doklejala kurs
     # z dowolnego innego dnia, co cicho mieszalo notowania z roznych sesji.
     by_date = {e["date"]: e for e in history}
-    refresh_from = (date.today() - timedelta(days=BACKFILL_LOOKBACK_DAYS)).isoformat()
     added = refreshed = 0
 
     for d in sorted(set(gasoil) & set(usdpln)):
@@ -257,10 +270,10 @@ def main():
             continue
 
         # Wpis zlapany w trakcie sesji zamarzalby na zawsze, bo dawniej kazda
-        # znana data byla po prostu pomijana. W oknie ostatnich
-        # BACKFILL_LOOKBACK_DAYS dni odswiezamy wartosc, gdy zrodlo podaje inna
-        # — TradingView jest tu autorytatywne. Starszych wpisow nie ruszamy.
-        if d >= refresh_from and old.get("ice_usd_tonne") != entry["ice_usd_tonne"]:
+        # znana data byla po prostu pomijana. Odswiezamy wartosc powyzej
+        # refresh_boundary, gdy zrodlo podaje inna — TradingView jest tu
+        # autorytatywne. Starszych wpisow nie ruszamy.
+        if d >= refresh_boundary and old.get("ice_usd_tonne") != entry["ice_usd_tonne"]:
             log.info(f"  ~{d}: {old.get('ice_usd_tonne')} -> {entry['ice_usd_tonne']} USD/t "
                      f"(korekta do zamkniecia)")
             old.update(entry)
@@ -294,4 +307,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _from = None
+    if "--refresh-from" in sys.argv:
+        _raw = sys.argv[sys.argv.index("--refresh-from") + 1]
+        try:
+            _from = datetime.strptime(_raw, "%Y-%m-%d").date()
+        except ValueError:
+            log.error(f"--refresh-from: zla data '{_raw}', oczekiwano RRRR-MM-DD")
+            sys.exit(2)
+    main(_from)

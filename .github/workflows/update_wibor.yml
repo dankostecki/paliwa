@@ -1,8 +1,12 @@
 name: Update WIBOR 3M
 
 on:
-  schedule:
-    - cron: '0 6 * * 1-5'   # Pon-Pt 06:00 UTC (07:00 CET / 08:00 CEST)
+  # Harmonogram wylaczony: stooq (jedyne zrodlo WIBOR-u) postawil zapore
+  # anty-botowa 2026-06-04, a yfinance ani NBP tego wskaznika nie publikuja.
+  # Bez tego workflow konczyl sie kodem 1 codziennie. Wraca przez odkomentowanie,
+  # gdy znajdzie sie zrodlo (np. GPW Benchmark).
+  # schedule:
+  #   - cron: '0 6 * * 1-5'
   workflow_dispatch:
 
 jobs:
