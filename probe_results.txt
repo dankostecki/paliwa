@@ -1,52 +1,56 @@
 ==============================================================================
-PROBE runda 5 — HISTORIA gasoilu — 2026-09-10
+PROBE runda 6 — HISTORIA — 2026-09-10
 ==============================================================================
 
-### A. TradingView scanner — ile pol da sie wyciagnac
-  [200] TV scanner pelne pola                    len=     466 :: {"High.3M":1496.5,"High.6M":1587.5,"High.All":1665,"Low.3M":852.5,"Low.6M":852.5,"Low.All":148.25,"Perf.1M":6.4097672644029,"Perf.3M":40.433031218529706,"Perf.W":-1.795774647887324,"Perf.YTD":126.1962692619627,"change":-5.313189611271431,"change_abs":-78.25,"close":1394.5,"close|1M":null,"close|1W":null,"currency_code":null,"description":"Low Sulphur Gasoil Futures","high":1403.5,"low":1368.5,"open":1400.25,"pricescale":100,"update_mode":"delayed_streaming_600"}
+### A. FT — wyszukiwarka symboli
+  'gas oil': HTTP 200 len=2607
+     OGDC:LSE           Oil and Gas Development Co Ltd
+     37OC:LSE           Oil and Gas Development Co Ltd
+     PRD:LSE            Predator Oil & Gas Holdings PLC
+     UOG:LSE            United Oil & Gas PLC
+     JOG:LSE            Jersey Oil and Gas PLC
+     IOGP:LSE:USD       iShares Oil & Gas Exploration & Production UCITS ETF
+     SPOG:LSE:GBX       iShares Oil & Gas Exploration & Production UCITS ETF
+     XLE3:LSE:USD       Leverage Shares 3x Long Oil & Gas ETP Securities
+     XLGS:LSE:USD       Leverage Shares -3x Short Oil & Gas ETP Securities
+     SXLG:LSE:GBX       Leverage Shares -3x Short Oil & Gas ETP Securities
+  'gasoil': HTTP 200 len=1703
+     G52:IOM            S&P GSCI GasOil Index Total Return
+     CTQSER:RCT         UBS CMCI Components USD Excess Return ICE Gasoil Ind
+     CTQSPI1Y:RCT       UBS CMCI Components Gasoil ICE USD Price Index 1 Yea
+     CTQSPI:RCT         UBS CMCI Components USD Price Index ICE Gasoil Index
+     CTQSTR3M:RCT       UBS CMCI Components Gasoil ICE USD Total Return 3 Mo
+     B4N1:FRA:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
+     B4N1:GER:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
+  'low sulphur gasoil': HTTP 200 len=467
+     B4N1:FRA:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
+     B4N1:GER:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
+  'ICE gasoil': HTTP 200 len=1718
+     CTQSEMT:RCT        UBS CMCI Components ICE Gasoil EUR Monthly Hedged TR
+     CTQSGMT:RCT        UBS CMCI Components ICE Gasoil GBP Monthly Hedged TR
+     CTQSTR:RCT         UBS CMCI Components USD Total Return ICE Gasoil Inde
+     CTQSPI:RCT         UBS CMCI Components USD Price Index ICE Gasoil Index
+     CTQSER:RCT         UBS CMCI Components USD Excess Return ICE Gasoil Ind
+     B4N1:FRA:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
+     B4N1:GER:EUR       ICE LOW SULPHUR GASOIL (TR) ETC
 
-### B. TradingView — inne kontrakty i endpointy historii
-  [200] TV ICEEUR%3AULS2%21                      len=       4 :: null
-  [200] TV ICEEUR%3AULS1%21                      len=      59 :: {"close":1394.5,"description":"Low Sulphur Gasoil Futures"}
-  [ERR] udf.tradingview                          ConnectionError: HTTPSConnectionPool(host='udf.tradingview.com', port=443): M
-  [200] demo-feed                                len=      52 :: {"t":[],"o":[],"h":[],"l":[],"c":[],"v":[],"s":"ok"}
-  [403] TV symbol search                         len=     548 :: <html>
-<head><title>403 Forbidden</title></head>
-<body>
-<center><h1>403 Forbidden</h1></center>
-<hr><center>nginx</center>
-</body>
-</html>
-<!-- a padding to disable MSIE and Chrome friendly error page -->
-<!-- a padding to disable MSIE and Chrome friendly error page -->
-<!-- a padding to di
+### B. FT chartapi/series dla znalezionych symboli
+  OGDC:LSE             HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: OGDC:LSE . Error Message:  (For Price Errors, look up MDF Status Codes 
+  37OC:LSE             HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: 37OC:LSE . Error Message: DataAdapter for symbol \"37OC:LSE\" is invali
+  PRD:LSE              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: PRD:LSE . Error Message:  (For Price Errors, look up MDF Status Codes a
+  UOG:LSE              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: UOG:LSE . Error Message:  (For Price Errors, look up MDF Status Codes a
+  JOG:LSE              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: JOG:LSE . Error Message:  (For Price Errors, look up MDF Status Codes a
+  IOGP:LSE:USD         HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IOGP:LSE:USD . Error Message:  (For Price Errors, look up MDF Status Co
+  SPOG:LSE:GBX         HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: SPOG:LSE:GBX . Error Message:  (For Price Errors, look up MDF Status Co
+  XLE3:LSE:USD         HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: XLE3:LSE:USD . Error Message: DataAdapter for symbol \"XLE3:LSE:USD\" i
+  IOM:GAS              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IOM:GAS . Error Message:  (For Price Errors, look up MDF Status Codes a
+  IFEU:LF              HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IFEU:LF . Error Message:  (For Price Errors, look up MDF Status Codes a
+  GASOIL:IOM           HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: GASOIL:IOM . Error Message:  (For Price Errors, look up MDF Status Code
+  LF:IEU               HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: LF:IEU . Error Message:  (For Price Errors, look up MDF Status Codes at
+  IFEU:GAS             HTTP 400  :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IFEU:GAS . Error Message:  (For Price Errors, look up MDF Status Codes 
 
-### C. ICE productguide — kopiemy glebiej (spec 34361119 dziala)
-  [200] ICE spec                                 len=   44415 :: {
-  "specId" : 34361119,
-  "productId" : 5817,
-  "hubId" : 9373,
-  "isOption" : false,
-  "isOptionNotLinked" : false,
-  
-   klucze: specId, productId, hubId, isOption, isOptionNotLinked, isSpread, liveDate, groupId, typeId, typeName, displayTradingHours, specName, tradingPreOpen, tradingOpen, tradingClose, tradingComment, timezone, relatedSpecId, relatedSpecName, futuresType, productName, hubName, physicalCommodity, displayOrder, clearingGroup, micCode, description, marketTypeName
-   productId = 5817
-   hubId = 9373
-  [403] ICE contracts 5817/9373                  len=    4543 :: <!DOCTYPE html>
-<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
-<!--[if IE 8]>    <html class="no-
-  [404] ICE productData                          len=       0 :: 
-
-### D. FT markets — otwarty endpoint serii czasowych
-  [FT] 400 len=336 :: {"Status":0,"StatusString":"Unable to successfully retrieve any valid price or event data for XID: IOM:GAS . Error Message:  (For Price Errors, look up MDF Status Codes at https://confluence.ihsmarkit.com/display/MOD/MDE+Wisdom#MDEWisdom-MDFStatusCodes. For Exchange Errors, see the MDE Exchange info
-
-### E. inne
-  [401] WSJ gasoil                               len=     575 :: {"url":"https://geo.captcha-delivery.com/captcha/?initialCid=AHrlqAAAAAMAFmz_uL6GrYYAh-jhFA==&cid=MWEvHrW6RXf1lhylBbkGACDUPRAQu8F7cctlp0_tGKjYorsHEHAmnlA1EVmxbcS~~BMIZfbiHM5z~8Wf5A6Q4Hdv43N9Dgzn1AEyco
-  [403] barchart proxy                           len=      21 :: {"error":"Forbidden"}
-  [200] oilprice                                 len=   15914 :: <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"
-	xmlns:atom="http://www.w3.org/2005/Atom"
-	xmlns:dc="http://purl.org/dc/elements/1.1/"
-			>
-
+### C. portale DE/EU z historia gasoilu
+  [200] onvista search       len=   3983 :: {"expires":1789039030986,"searchValue":"gasoil","list":[{"type":"Instrument","entityType":"INDEX","entityAttributes":["INSTRUMENT"],"entityValue":"17671070","name":"S&P GSCI GasOil
+  [404] finanzen.net         len= 252018 ::  <!DOCTYPE html> <html lang="de"> <head>     <meta charset="utf-8">     <meta name="viewport" content="width=device-width, initial-scale=1.0">   <link rel="preconnect" href
+  [404] ariva                len= 242219 ::   <!DOCTYPE html> <html lang="de" 	data-first-contact-2="Y2026-M09-D10" > <head> <title>404 Fehler - ARIVA.DE</title> <script> 		    window.performance.mark("first-loaded-script");
+  [405] boerse-frankfurt     len=    156 :: {"timestamp":"2026-09-10T10:17:13.468Z","status":405,"error":"Method Not Allowed","message":"Method 'GET' is not supported.","path":"/search/equity_search"}
