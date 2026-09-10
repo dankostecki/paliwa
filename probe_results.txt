@@ -1,52 +1,41 @@
 ==============================================================================
-SONDA 2 — mapowanie dat
+SONDA 3 — datowanie i zgodnosc serii
 ==============================================================================
-wzorzec (archiwum): 104 wpisow, 2026-01-09 .. 2026-06-04
-TV: 300 slupkow
+archiwum: 104 wpisow 2026-01-09..2026-06-04
+archiwum: 67/104 wartosci to wielokrotnosc ticku 0.25 ICE
+  przyklady nie-tickowe: [1076.37, 1128.24, 1080.12, 1077.87, 1019.87, 1030.62, 1029.74, 1067.99]
 
-### surowe znaczniki czasu — ostatnie 12 slupkow
-  index=2026-08-26 00:00:00  (typ Timestamp)  weekday=2  close=1239.5
-  index=2026-08-27 00:00:00  (typ Timestamp)  weekday=3  close=1221.75
-  index=2026-08-28 00:00:00  (typ Timestamp)  weekday=4  close=1280.0
-  index=2026-08-30 22:00:00  (typ Timestamp)  weekday=6  close=1347.75
-  index=2026-09-01 00:00:00  (typ Timestamp)  weekday=1  close=1419.75
-  index=2026-09-02 00:00:00  (typ Timestamp)  weekday=2  close=1432.25
-  index=2026-09-03 00:00:00  (typ Timestamp)  weekday=3  close=1424.75
-  index=2026-09-04 00:00:00  (typ Timestamp)  weekday=4  close=1395.0
-  index=2026-09-06 22:00:00  (typ Timestamp)  weekday=6  close=1460.25
-  index=2026-09-08 00:00:00  (typ Timestamp)  weekday=1  close=1439.75
-  index=2026-09-09 00:00:00  (typ Timestamp)  weekday=2  close=1472.75
-  index=2026-09-10 00:00:00  (typ Timestamp)  weekday=3  close=1417.25
+### ULS1!
+  slupkow 300, dni tygodnia: pon=60  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=0
+  wielokrotnosc ticku 0.25: 300/300
+  pokrycie 104 dni | sredni blad 1.074% | mediana 0.431% | max 13.274% | w tol. 0.5%: 55/104
 
-### rozklad dni tygodnia w calej serii
-  pon=0  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=60
+### ULS2!
+  slupkow 300, dni tygodnia: pon=60  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=0
+  wielokrotnosc ticku 0.25: 300/300
+  pokrycie 104 dni | sredni blad 4.249% | mediana 2.048% | max 20.470% | w tol. 0.5%: 9/104
 
-### dopasowanie do archiwum przy przesunieciu -1 / 0 / +1 dnia
-  offset -1: pokrycie  83 dni, sredni blad  3.788%, w tolerancji 0.5%: 7/83
-  offset +0: pokrycie  83 dni, sredni blad  1.038%, w tolerancji 0.5%: 42/83
-  offset +1: pokrycie  83 dni, sredni blad  3.152%, w tolerancji 0.5%: 21/83
+### ULS3!
+  brak danych
 
-  NAJLEPSZE: offset +0 (sredni blad 1.038%, 42/83 w tolerancji)
+### wniosek dla ULS1! po poprawnym datowaniu — najgorsze dni
+  2026-04-10 (pt)  TV=  1145.00  arch=  1320.25  13.274%
+  2026-03-09 (pon)  TV=  1166.00  arch=  1068.87   9.087%
+  2026-03-10 (wt)  TV=  1042.50  arch=   975.37   6.883%
+  2026-04-09 (czw)  TV=  1402.25  arch=  1323.25   5.970%
+  2026-03-23 (pon)  TV=  1287.75  arch=  1227.37   4.919%
+  2026-03-11 (sr)  TV=  1097.00  arch=  1045.99   4.877%
+  2026-05-21 (czw)  TV=  1172.50  arch=  1127.24   4.015%
+  2026-03-16 (pon)  TV=  1160.00  arch=  1121.99   3.388%
+  2026-04-24 (pt)  TV=  1249.00  arch=  1214.50   2.841%
+  2026-03-26 (czw)  TV=  1337.00  arch=  1303.49   2.571%
 
-### po korekcie offset +0 — rozklad dni tygodnia
-  pon=0  wt=61  sr=61  czw=59  pt=59  SOB=0  NDZ=60
+  najlepsze 5:
+  2026-01-15  TV=   641.00  arch=   641.00   0.000%
+  2026-01-14  TV=   659.25  arch=   659.25   0.000%
+  2026-01-13  TV=   655.00  arch=   655.00   0.000%
+  2026-01-12  TV=   626.50  arch=   626.50   0.000%
+  2026-01-09  TV=   632.25  arch=   632.25   0.000%
 
-### 12 najwiekszych rozbieznosci wobec archiwum (offset +0)
-  2026-04-10  TV=  1145.00  archiwum=  1320.25  13.274%
-  2026-03-10  TV=  1042.50  archiwum=   975.37   6.883%
-  2026-04-09  TV=  1402.25  archiwum=  1323.25   5.970%
-  2026-03-11  TV=  1097.00  archiwum=  1045.99   4.877%
-  2026-05-21  TV=  1172.50  archiwum=  1127.24   4.015%
-  2026-04-24  TV=  1249.00  archiwum=  1214.50   2.841%
-  2026-03-26  TV=  1337.00  archiwum=  1303.49   2.571%
-  2026-04-08  TV=  1247.00  archiwum=  1221.37   2.098%
-  2026-04-14  TV=  1135.50  archiwum=  1113.00   2.022%
-  2026-05-05  TV=  1294.75  archiwum=  1271.00   1.869%
-  2026-05-07  TV=  1141.25  archiwum=  1162.75   1.849%
-  2026-05-19  TV=  1210.00  archiwum=  1232.37   1.815%
-
-### co wpadnie w luke 2026-06-05..2026-09-09 (offset +0)
-  slupkow do dopisania: 69
-  pierwsze 5: [('2026-06-05', 1062.0), ('2026-06-07', 1070.75), ('2026-06-09', 1028.0), ('2026-06-10', 1039.5), ('2026-06-11', 1031.75)]
-  ostatnie 5: [('2026-09-03', 1424.75), ('2026-09-04', 1395.0), ('2026-09-06', 1460.25), ('2026-09-08', 1439.75), ('2026-09-09', 1472.75)]
-  dni tygodnia w luce: pon=0  wt=14  sr=14  czw=13  pt=14  SOB=0  NDZ=14
+### luka 2026-06-05..2026-09-09 po poprawnym datowaniu
+  slupkow: 69 | pon=14  wt=14  sr=14  czw=13  pt=14  SOB=0  NDZ=0
