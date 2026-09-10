@@ -4,8 +4,13 @@ fetch_ice.py — Pobiera ICE Low Sulphur Gasoil i USD/PLN, przelicza na PLN/1000
 i dopisuje do archiwum.
 
 Zrodla (w kolejnosci prob):
-  gasoil  — Yahoo Finance (yfinance), zapasowo stooq
-  USD/PLN — Yahoo Finance (USDPLN=X), zapasowo oficjalne API NBP
+  gasoil  — Yahoo (brak kontraktu), stooq (zapora anty-botowa),
+            TradingView ICEEUR:ULS1! <- JEDYNE DZIALAJACE (tylko dzien biezacy)
+  USD/PLN — Yahoo Finance (USDPLN=X) <- dziala, zapasowo API NBP, potem stooq
+
+OGRANICZENIE: nie znaleziono darmowego zrodla SERII HISTORYCZNEJ ICE gasoilu,
+dlatego luki wstecz (np. 2026-06-05..2026-09-09) nie da sie uzupelnic
+automatycznie. TradingView dopisuje wylacznie dzien biezacy.
 
 Wzor: ICE [USD/tone] x 0,845 [kg/l] x USD/PLN = ICE [PLN/1000l]
 Gestosc kontraktowa ICE Low Sulphur Gasoil: 0,845 kg/l (specyfikacja ICE).
@@ -37,6 +42,7 @@ from lib_fetch import (
     pick_symbol,
     stooq_csv_series,
     stooq_last_json,
+    tradingview_quote,
     yf_series,
 )
 
@@ -66,6 +72,14 @@ HEADERS = {"User-Agent": "Mozilla/5.0"}
 # pick_symbol() w lib_fetch.py. NIE dopisywac tu HO=F: to NYMEX Heating Oil
 # notowany w USD/galon, inna gielda i inny poziom cen.
 GASOIL_SYMBOLS = ["LF=F", "QS=F", "7F=F", "G=F", "LGO=F", "GAS=F"]
+
+# TradingView — jedyne znalezione dzialajace zrodlo prawdziwego kontraktu.
+# Sprawdzone 2026-09-10: Yahoo nie ma gasoilu w ogole (wyszukiwarka symboli
+# zwraca same indeksy S&P GSCI), stooq postawil zapore anty-botowa (JS
+# proof-of-work), investing.com/Barchart/WSJ zwracaja 403/401, FT i onvista
+# maja tylko ETC-y i indeksy. Zadne z nich nie daje serii historycznej,
+# dlatego TradingView uzupelnia archiwum tylko o dzien biezacy.
+TV_GASOIL_SYMBOL = "ICEEUR:ULS1!"
 GASOIL_MIN, GASOIL_MAX = 300.0, 3000.0  # USD/tone — pasmo wiarygodnosci
 
 USDPLN_SYMBOLS = ["USDPLN=X", "PLN=X"]
@@ -132,7 +146,23 @@ def get_gasoil(start):
     series = stooq_csv_series(STOOQ_GASOIL, start) or stooq_last_json(STOOQ_GASOIL)
     if series:
         log.info(f"Gasoil: uzywam stooq '{STOOQ_GASOIL}' ({len(series)} notowan)")
-    return series
+        return series
+
+    log.warning("Gasoil: stooq nie dal danych, probuje TradingView...")
+    close, desc = tradingview_quote(TV_GASOIL_SYMBOL, GASOIL_MIN, GASOIL_MAX)
+    if close is None:
+        return {}
+
+    # TradingView nie podaje daty notowania — przypisujemy dzien biezacy.
+    # W weekend zwrocilby piatkowe zamkniecie, ktore trafiloby pod sobotnia
+    # date, wiec zapisujemy tylko w dni robocze.
+    today = date.today()
+    if today.weekday() >= 5:
+        log.info("Gasoil: weekend — TradingView zwrocilby piatkowe zamkniecie, pomijam")
+        return {}
+
+    log.info(f"Gasoil: uzywam TradingView '{TV_GASOIL_SYMBOL}' ({desc}) — tylko {today}")
+    return {today.isoformat(): close}
 
 
 def get_usdpln(start):
