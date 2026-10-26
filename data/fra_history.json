@@ -1,5 +1,14 @@
 [
   {
+    "timestamp": "2026-10-26T13:44:01+00:00",
+    "date": "2026-10-26",
+    "session": "afternoon",
+    "fra_1x4": 3.989,
+    "fra_3x6": 4.24,
+    "fra_6x9": 4.61,
+    "fra_9x12": 4.78
+  },
+  {
     "timestamp": "2026-10-23T18:54:50+00:00",
     "date": "2026-10-23",
     "session": "afternoon",
